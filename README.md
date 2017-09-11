@@ -234,24 +234,18 @@ Scenario names shall be unique per feature.
 
 Test execution shall look like this
 
+					System Under Test 
+
+						^
+					
+	TestData & ExpectedData -----> | execution engine | -----> ResultsData 
+
+						^
+				    	user actions (steps)
 
 
 
-
-TestData storage		              |---------------|
-				                          |		            |
--------------------------->	      |		            |
-				                          |   execution 	|	  ResultsData
-ExpectedData storage		          |    enigne	    | 	--------------> {Test result} 
-				                          |		            |	  ExpectedData
--------------------------->	      |		            |
-				                          |---------------|
-					                                ^
-					                                |
-					                                |
-					                                |
-				                             User actions
-
+Test result equals result of comparison beteen ResultsData & ExpectedData
 
 
 Framework will execute each scenario in a feture file.
