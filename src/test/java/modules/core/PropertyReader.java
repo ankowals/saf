@@ -10,14 +10,13 @@ public class PropertyReader {
 
     private Properties properties = new Properties();
     InputStream inputStream = null;
-    //String configDir = System.getProperty("user.dir") + "//src//test//resources//config";
     String configDir = FeatureProvider.getGlobalConfigPath();
     String default_env = "env";
 
     public PropertyReader() {
         loadProperties(configDir + "//" + default_env + ".properties");
         String act_env = checkActiveEnv();
-        if ( act_env != null && !act_env.equals(default_env) ) {
+        if ( act_env != null && !act_env.equals(default_env) && !act_env.equals("") ) {
             loadProperties(configDir + "//" + act_env + ".properties");
         }
     }
@@ -84,12 +83,23 @@ public class PropertyReader {
 
     public String checkActiveEnv() {
         String result = null;
-        if (properties.getProperty("active_env") == null || properties.getProperty("active_env").isEmpty() || properties.getProperty("active_env") == "" || properties.getProperty("active_env").equals(default_env)){
+        //check if active_env property provided as a cmd line argument if not check what is available in default env configuration file
+        String cmd_arg  = System.getProperty("active_env");
+        if ( cmd_arg != null ){
+            result = cmd_arg;
+            properties.setProperty("active_env" , result);
+            Log.info("Overwritten by CMD arg -Dactive_env=" + cmd_arg);
+            Log.info("Using environment configuration from " + result);
+        } else if (properties.getProperty("active_env") == null
+                || properties.getProperty("active_env").isEmpty()
+                || properties.getProperty("active_env") == ""
+                || properties.getProperty("active_env").equals(default_env)){
             Log.info("Using default environment configuration");
-        }else{
+        } else {
             result = properties.getProperty("active_env");
             Log.info("Using environment configuration from " + result);
         }
+
         return result;
     }
 }
