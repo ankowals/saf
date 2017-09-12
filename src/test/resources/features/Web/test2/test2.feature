@@ -1,3 +1,4 @@
+@Web
 Feature: test2
   Second search for a specific sentence using google
 

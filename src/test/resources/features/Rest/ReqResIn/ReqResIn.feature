@@ -1,3 +1,4 @@
+@reqResIn
 Feature: ReqResIn
 
   Background: Sanity check

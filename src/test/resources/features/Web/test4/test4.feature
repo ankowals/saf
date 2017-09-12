@@ -1,3 +1,4 @@
+@Web
 Feature: test4
   Next Search for a specific sentence using google
 

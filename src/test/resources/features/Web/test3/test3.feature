@@ -1,3 +1,4 @@
+@Web
 Feature: test3
   Use selenium java with cucumber-jvm and navigate to website
 

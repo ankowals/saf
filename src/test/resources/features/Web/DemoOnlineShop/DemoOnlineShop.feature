@@ -1,4 +1,4 @@
-@Web
+@demoOnline
 Feature: DemoOnlineShop
 
   Scenario: Verify sum of 2 items equals total price
