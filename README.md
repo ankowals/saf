@@ -332,7 +332,7 @@ It is possible to overwrite active_env property from the command line. In that c
 
 	mvn clean test -Dactive_env="bookByIsbn" -Dcucumber.options="--tags @bookByIsbn"
 
-In that particular case first default env configuration will be loaded and later on it will be overwritten by config available in file bookByIsbn.properties.
+In that particular case a default env configuration will be loaded and later on it will be overwritten by config available in a file bookByIsbn.properties.
 
 --------------------------------
 
