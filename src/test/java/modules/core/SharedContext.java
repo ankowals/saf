@@ -3,7 +3,6 @@ package modules.core;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
 
 public class SharedContext {
-    public TestData testData;
     public EventFiringWebDriver driver;
     public Context obj;
     public PropertyReader env;
