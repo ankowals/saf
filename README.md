@@ -648,5 +648,87 @@ Each step execution is marked in a log with a "* Step started" string to make it
 
 How to write step and share data between steps?
 
+Thanks to dependency injection there is a way to share objects between steps and modules. In SharedContext.class available under /src/test/java/modules/core few objects were defined like driver, env, step, macro, config and obj.
+
+To grant access to them please create a constructor for a class with steps like below
+
+	public class DemoOnlieSteps {
+
+	    private SharedContext ctx;
+
+	    // PicoContainer injects class SharedContext
+	    public DemoOnlieSteps (SharedContext ctx) {
+		this.ctx = ctx;
+	    }
+	    
+	 }
+	 
+Where DemoOnlineSteps is a class that contains project specific steps to handle web automation for particular page.
+In this way we can pass same instance of ctx between steps and modules. With this approach we can use methods defined for objects available in ctx variable.
+For example lets have a look at 2 steps below
+
+    @Given("^a book exists with an isbn$")
+    public void a_book_exists_with_isbn() {
+        Log.debug("* Step started a_book_exists_with_isbn");
+        HashMap<String, Object> testDataMap = ctx.obj.get("TestData",HashMap.class);
+        String isbn = (String) testDataMap.get("isbn");
+        RequestSpecification request = given().param("q", "isbn:" + isbn);
+        ctx.obj.put("request",RequestSpecification.class, request);
+    }
+
+    @When("^a user retrieves the book by isbn$")
+    public void a_user_retrieves_the_book_by_isbn(){
+        Log.debug("* Step started a_user_retrieves_the_book_by_isbn");
+        String url = ctx.env.readProperty("REST_url");
+        RequestSpecification request = ctx.obj.get("request",RequestSpecification.class);
+        Response response = request.when().log().all().get(url);
+        ctx.obj.put("response",Response.class, response);
+        ctx.step.attachMessageToReport("Json response", response.prettyPrint().toString());
+    }
+    
+To retrieve test data storage one can write HashMap<String, Object> testDataMap = ctx.obj.get("TestData",HashMap.class);
+From now one testDataMap and its values can be used in the step.
+Other way to retrieve a particular value from the storage is String isbn2 = ctx.step.get("TestData.isbn");
+We nested object can be provided using dots like for example TestData.isbn.some_nested_key etc.
+
+Ctx.obj is a bucket to which we can throw anything and later on we can retrieve it. This is usefull to share data between steps that are defined in differen class. For example
+
+	ctx.obj.put("request",RequestSpecification.class, request);
+
+This metohd puts an object of type RequestSpecification to ctx.obj bucket with name "request". Later on another step can retrieve it like below
+
+	RequestSpecification request = ctx.obj.get("request",RequestSpecification.class);
+
+Ctx.step contains a set of helper functions that can be used when writing step defs. For example there are functions that can be used to add something as an attachment to the test report.
+
+There is also one more method that can be used to check if step input is a variable from the configuration file. See an example below.
+
+    @Then("^the status code is (.*)$")
+    public void verify_status_code(String input){
+        Log.debug("* Step started verify_status_code");
+
+        String statusCode = ctx.step.checkIfInputIsVariableAndReturnString(input);
+        Integer code = Integer.parseInt(statusCode);
+
+        Response response = ctx.obj.get("response",Response.class);
+        ValidatableResponse json = response.then().statusCode(code);
+        ctx.obj.put("json",ValidatableResponse.class, json);
+    }
+
+In the feture file one can write
+
+	Then the status code is TestData.statusOK
+
+where
+
+	TestData:{
+	    "statusOK" : 200
+	    }
+	
+or
+
+	Then the status code is 200
+	
+In both cases step shall pass.
 
 
