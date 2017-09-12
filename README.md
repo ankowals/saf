@@ -306,7 +306,7 @@ To run a test from windows cmd please execute
 	go to http://localhost:8080
 
 
-One can also use InteliJ to run a feature file. In that case only log file will be created.
+One can also use IntelliJ to run a feature file. In that case only log file will be created.
 
 To generate a report from test please execute mvn site, run jetty and check the browser.
 
@@ -348,7 +348,7 @@ To pass multiple parameters to the test one can use tables. Of course step def n
 
 
 
-As can be seen test data/expecte data can be either hardcoded in the feature file or taken from configruation file. 
+As can be seen test data/expected data can be either hardcoded in the feature file or taken from configruation file. 
 
 It is up to the tester to decide which approach to choose.
 
@@ -372,7 +372,7 @@ Its content shall not be changed for test purposes.
 
 Before each scenario execution so called @Before and @After hooks are run.
 
-In @Before hook we create context, read framewowrk and SUT configurtion, create test data storage, evaluate macros.
+In @Before hook we create context, read framework and SUT configurtion, create test data storage, evaluate macros.
 
 It will also find local configuration files and load them for usage in steps.There is no need to do that in seperate steps or Background scenario.
 
@@ -444,10 +444,34 @@ In this way multiple systems under test can be configured.
 
 Now it is time to read test data configuration from *.config files.
 
-Global configuration is available under /src/resources/*.config
+Global configuration is available under /src/resources/config
 
 Files under this directory are checked and evaluated. New storage is created based on their content.
 
+An example of test data configuration is below (content of /src/resources/config/testdata.config file)
+
+	TestData={
+	    "search_sentence" : "this is the default entry!",
+	    drugi_kluczyk_z_pliku : 2;
+	    "trzeci kluczyk z pliku" = ["first element", "second elmenet"],
+	    "a to czwarty kluczyk" : {
+		test : "a to wartosc z zagniezdzonej mapy",
+		test2 : 5,
+		test3 : 4.5123,
+		test4 : {
+		    testx1 : tadam,
+		    testx2: tadam2
+		    }
+		},
+	    ostatni : [1,2],
+	    notAnInteger : 4.5123,
+	    "a to test na makro" : mcr.isbn,
+	    DoubleMapa : {
+		first: 1,
+		 second: 2,
+		 third :3
+		 }
+	    }
 
 
 An example of log is below
@@ -472,7 +496,7 @@ An example of log is below
 
 
 
-Same is true for macros. They are read from macro.config file and stored for future usage.
+Same is true for macros. They are read from *.config file and stored for future usage.
 
 Macro works as follows.
 
@@ -589,9 +613,15 @@ Macro can be used to return a unix timestamp or a date in specified format.
 
 They can be concatenated with a specific prefix or suffix. 
 
-Macro values are always returned as strings.
+Macro values are always returned as strings. 
 
+Please note that macros have to be evaluated by calling of .eval(String storage_name) method from Macro.class in each step were such evaluaton shall be done.
+To use previously defined macros one can put the the test data storage such macro as a walue of particular key, for example
 
+	TestData={
+	    "a to test na makro" : mcr.isbn,
+	    NOW_TimeStamp : mcr.testMacro3
+	    }
 
 Data types supported in test data configuration are
 
