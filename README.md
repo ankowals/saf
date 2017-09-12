@@ -351,35 +351,19 @@ To generate a report from test please execute mvn site, run jetty and check the 
 An example of a feature file
 
 
-
-@bookByIsbn
-
-Feature: Get book by ISBN
-
-  Scenario: User calls web service to get a book by its ISBN
-
-    Given a book exists with an isbn
-
-    When a user retrieves the book by isbn
-
-    Then the status code is TestData.statusOK
-
-      And response includes the following
-
-        | totalItems 	 		                    	| 1 	                |
-
-        | kind					            	| books#volumes	        |
-
-      And response includes the following in any order
-
-        | items.volumeInfo.title 				| Steve Jobs		|
-
-        | items.volumeInfo.publisher 				| Simon and Schuster	|
-
-        | items.volumeInfo.pageCount 				| 630			|
-
-
-
+	@bookByIsbn
+	Feature: Get book by ISBN
+	  Scenario: User calls web service to get a book by its ISBN
+	    Given a book exists with an isbn
+	    When a user retrieves the book by isbn
+	    Then the status code is TestData.statusOK
+	      And response includes the following
+		| totalItems 	 		                    	| 1 	                |
+		| kind					            	| books#volumes	        |
+	      And response includes the following in any order
+		| items.volumeInfo.title 				| Steve Jobs		|
+		| items.volumeInfo.publisher 				| Simon and Schuster	|
+		| items.volumeInfo.pageCount 				| 630			|
 
 
 Feature files can be tagged as well as scenarios. Use tags and cucumber options to execute a particular tests
