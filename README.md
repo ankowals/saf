@@ -731,4 +731,106 @@ or
 	
 In both cases step shall pass.
 
+If there is a need to read any environment property one can use in a step ctx.env object. An example below
 
+        if(ctx.env.readProperty("do_macro_eval_in_hooks").equalsIgnoreCase("true")){
+            Log.info("<- evaluating macros ->");
+            ctx.macro.eval("TestData");
+        }
+	
+Similar for macro evaluation. It is enough to just call ctx.macro.eval(input) method.
+
+
+--------------------------------
+
+
+How to write Page Object Model for web automation purposes?
+
+
+Let us have a look at an example of a MainPage that can be used for web automation purposes. It comes from /src/test/java/modules/pages/DemoOnlineStore.
+
+	public class MainPage extends BasePage {
+
+	    public MainPage(SharedContext ctx) {
+		super(ctx);
+		if(! isLoaded("ONLINE STORE | Toolsqa Dummy Test site")){
+		    load();
+		}
+	    }
+
+	    //selectors
+	    private static final By allProductsSelector = By.xpath("(//*[@id='main-nav']/ul/li)[last()]");
+
+	    public MainPage load(){
+		String url = ctx.env.readProperty("WEB_url");
+		ctx.driver.get(url);
+
+		return new MainPage(ctx);
+	    }
+
+	    public Boolean isLoaded(String pageTitle){
+		return titleContains(pageTitle);
+	    }
+
+	    public ProductPage goToAllProduct(){
+		Log.info("Click 'All Products' button");
+		WebElement allProductButton = ctx.driver.findElement(allProductsSelector);
+		allProductButton.click();
+
+		waitForPageLoadAndTitleContains("Product Category | ONLINE STORE");
+
+		return new ProductPage(ctx);
+	    }
+
+	}
+
+Each class that contains methods to be executed on a specific web page shall contain Page in its name for example MainPage.class, ProductPage.class etc
+
+It shall extend BasePage.class. In this way we have access to all the helper methods defined in the BasePage.class. Methods availabe there can be used to await for an element to be present/visible/removed from the page etc.
+
+In the constructor we shall check if the page is loaded and if not decide what to do with it (either load it or write an error and mark test as failed).
+
+Then we can define selectors are global variables in the class. We shall define methods load and isLoaded.
+
+When access to SUT configruation is needed use ctx.env.readProperty(input) method, for example
+
+	ctx.env.readProperty("WEB_url");
+	
+To access the driver just call ctx.driver.findElement... Use previously defined selectors to find elements on the page and execute actions on them.
+
+To use chaining in the step methods shall return their class constructor or other Page constructor, for example 
+
+	return new ProductPage(ctx);
+	
+With this approach steps class can be build like in an example below
+
+	public class DemoOnlieSteps {
+
+	    private SharedContext ctx;
+
+	    // PicoContainer injects class SharedContext
+	    public DemoOnlieSteps (SharedContext ctx) {
+		this.ctx = ctx;
+	    }
+
+	    //create global variables for this class
+	    MainPage main;
+	    ProductPage product;
+	    CheckoutPage checkout;
+
+	    @When("^open main page$")
+	    public void i_open_main_page() throws Throwable {
+		Log.debug("* Step started i_open_main_page");
+		//instantiate MainPage to open url in the browser
+		main = new MainPage(ctx);
+		main.load();
+	    }
+
+	    @And("^navigate to all products page$")
+	    public void navigate_to_all_products() throws Throwable{
+		Log.debug("* Step started add_product_to_cart");
+		product = main.goToAllProduct();
+	    }
+	}
+	
+Again we need to pass ctx object to the constructor and later on we can just call methods defined in each Page model.
