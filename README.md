@@ -108,14 +108,32 @@ Installation instructions
 
 15 Fix path to web drivers in /src/resources/config/env.config
 
-
-
 16 Change the port number if needed (default is 8080) for jetty to see allure report after test execution
 
 
 
 ----------------------------------
 
+
+How to imoprt project in IntelliJ?
+
+1 open the IDE and click “Import Project”
+
+2 point it to the location where your project is
+
+3 select “Import project from external model”, select “Maven” and hit Next
+
+4 go with default options and click Next
+
+5 the project is recognized as maven project and click Next
+
+6 in case intelliJ is not able to locate your JDK, click "plus" icon in Select Project SDK window and point to the JDK installed on your machine, click Next
+
+7  enter the name of project and click Finish
+
+
+
+----------------------------------
 
 
 Dir structure shall be like this
