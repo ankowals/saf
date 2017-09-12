@@ -14,15 +14,10 @@ a way to execute e2e test using Gherkin language (BDD)
 a way to execute tests related to  
 
 	- rest json/xml (soap)
-
 	- gui (web/native)
-
 	- sql
-
 	- mobile
-
 	- pdf validation
-
 	- others??
 
 a way to intergate any 3rd party app by execution of any command on local host and remote over ssh
@@ -99,23 +94,14 @@ Installation instructions
 
 
             <plugin>
-
                 <groupId>org.apache.maven.plugins</groupId>
-
                 <artifactId>maven-compiler-plugin</artifactId>
-
                 <configuration>
-
 					<source>1.${java.version}</source>
-
 					<target>1.${java.version}</target>
-
                     <fork>true</fork>
-
                     <executable>C:\Program Files\Java\jdk1.8.0_144\bin\javac</executable>
-
                 </configuration>
-
             </plugin>
 
 
@@ -136,39 +122,24 @@ Dir structure shall be like this
 
 
 
-Project
+	Project
 
-	- src
-
-		- test
-
-			-java
-
-				- modules
-
-					- core
-
-					- pages.DemoOnlieStore
-
-				- steps
-
-					- core
-
-					- DemoOnlieStore
-
-			- resources
-
-				- config
-
-				- features
-
-					- Rest
-
-					- Web
-
-						- DemoOnlieShop
-
-	- target
+		- src
+			- test
+				-java
+					- modules
+						- core
+						- pages.DemoOnlieStore
+					- steps
+						- core
+						- DemoOnlieStore
+				- resources
+					- config
+					- features
+						- Rest
+						- Web
+							- DemoOnlieShop
+		- target
 
 
 
@@ -219,11 +190,8 @@ Scenario names shall be unique per feature.
 Test execution shall look like this
 
 					System Under Test 
-
-						^
-					
+						^	
 	TestData & ExpectedData -----> | execution engine | -----> ResultsData 
-
 						^
 				    	user actions (steps)
 
@@ -370,7 +338,7 @@ Feature files can be tagged as well as scenarios. Use tags and cucumber options 
 
 
 
-mvn clean test -Dcucumber.options="--tags @bookByIsbn"
+	mvn clean test -Dcucumber.options="--tags @bookByIsbn"
 
 
 
@@ -427,15 +395,10 @@ Each new scenario start will be indicated in the log as follows
 
 
 	[INFO ] 2017-09-11 12:32:27.558 [main] Log - *** Feature id: get-book-by-isbn ***
-
 	[INFO ] 2017-09-11 12:32:27.563 [main] Log - ***
-
 	[INFO ] 2017-09-11 12:32:27.563 [main] Log - ***
-
 	[INFO ] 2017-09-11 12:32:27.563 [main] Log - *** Scenario with name: User calls web service to get a book by its ISBN started! ***
-
 	[INFO ] 2017-09-11 12:32:27.563 [main] Log - ***
-
 	[INFO ] 2017-09-11 12:32:27.564 [main] Log - ***
 
 
@@ -445,7 +408,6 @@ Each new scenario start will be indicated in the log as follows
 
 
 	[INFO ] 2017-09-11 12:32:27.564 [main] Log - Started resources initialisation
-
 	[INFO ] 2017-09-11 12:32:27.566 [main] Log - <- checking environment configuration ->
 
 
@@ -461,23 +423,12 @@ Property active_env points to project specific SUT configuration file. For examp
 
 
 	# Default Configuration
-
-
-
 	# ### pointer to active project configuration that can overwrite the defaults
-
 	active_env=bookByIsbn
-
-
-
 	# ### webDriver specific configuration
-
 	path_to_chrome_driver=C:\\SeleniumWebdrivers\\chromedriver.exe
-
 	browser=chrome
-
 	browser_timeout=10
-
 
 
 And in bookByIsbn.properties
@@ -485,7 +436,6 @@ And in bookByIsbn.properties
 
 
 	# reqResIn project Configuration
-
 	REST_url=https://www.googleapis.com/books/v1/volumes
 
 
@@ -504,35 +454,21 @@ An example of log is below
 
 
 
-[INFO ] 2017-09-11 12:32:27.574 [main] Log - <- creating test data storage ->
-
-[DEBUG] 2017-09-11 12:32:27.575 [main] Log - Project path is C:\Users\akowa\Documents\Projects\FK_Prototype
-
-[WARN ] 2017-09-11 12:32:27.601 [main] Log - Ctx obj with key TestData does not exists or null!
-
-[DEBUG] 2017-09-11 12:32:27.602 [main] Log - Ctx object TestData of type class java.util.HashMap created or modified
-
-[INFO ] 2017-09-11 12:32:27.602 [main] Log - Going to view the current state of test data
-
-[INFO ] 2017-09-11 12:32:27.602 [main] Log - --- start ---
-
-[INFO ] 2017-09-11 12:32:27.602 [main] Log - (Long)drugi_kluczyk_z_pliku = 2
-
-[INFO ] 2017-09-11 12:32:27.602 [main] Log - (String)search_sentence = this is the default entry!
-
-[INFO ] 2017-09-11 12:32:27.603 [main] Log - (Double)notAnInteger = 4.5123
-
-[INFO ] 2017-09-11 12:32:27.603 [main] Log - (String)a to test na makro = mcr.isbn
-
-[INFO ] 2017-09-11 12:32:27.603 [main] Log - (ArrayList)trzeci kluczyk z pliku = [first element, second elmenet]
-
-[INFO ] 2017-09-11 12:32:27.603 [main] Log - (HashMap)a to czwarty kluczyk = {test4={testx2=kupa, testx1=dupa}, test2=5, test3=4.5123, test=a to wartosc z zagniezdzonej mapy}
-
-[INFO ] 2017-09-11 12:32:27.603 [main] Log - (ArrayList)ostatni = [1, 2]
-
-[INFO ] 2017-09-11 12:32:27.603 [main] Log - (HashMap)DoubleMapa = {third=3, first=1, second=2}
-
-[INFO ] 2017-09-11 12:32:27.604 [main] Log - --- end ---
+	[INFO ] 2017-09-11 12:32:27.574 [main] Log - <- creating test data storage ->
+	[DEBUG] 2017-09-11 12:32:27.575 [main] Log - Project path is C:\Users\akowa\Documents\Projects\FK_Prototype
+	[WARN ] 2017-09-11 12:32:27.601 [main] Log - Ctx obj with key TestData does not exists or null!
+	[DEBUG] 2017-09-11 12:32:27.602 [main] Log - Ctx object TestData of type class java.util.HashMap created or modified
+	[INFO ] 2017-09-11 12:32:27.602 [main] Log - Going to view the current state of test data
+	[INFO ] 2017-09-11 12:32:27.602 [main] Log - --- start ---
+	[INFO ] 2017-09-11 12:32:27.602 [main] Log - (Long)drugi_kluczyk_z_pliku = 2
+	[INFO ] 2017-09-11 12:32:27.602 [main] Log - (String)search_sentence = this is the default entry!
+	[INFO ] 2017-09-11 12:32:27.603 [main] Log - (Double)notAnInteger = 4.5123
+	[INFO ] 2017-09-11 12:32:27.603 [main] Log - (String)a to test na makro = mcr.isbn
+	[INFO ] 2017-09-11 12:32:27.603 [main] Log - (ArrayList)trzeci kluczyk z pliku = [first element, second elmenet]
+	[INFO ] 2017-09-11 12:32:27.603 [main] Log - (HashMap)a to czwarty kluczyk = {test4={testx2=kupa, testx1=dupa}, test2=5, test3=4.5123, test=a to wartosc z zagniezdzonej mapy}
+	[INFO ] 2017-09-11 12:32:27.603 [main] Log - (ArrayList)ostatni = [1, 2]
+	[INFO ] 2017-09-11 12:32:27.603 [main] Log - (HashMap)DoubleMapa = {third=3, first=1, second=2}
+	[INFO ] 2017-09-11 12:32:27.604 [main] Log - --- end ---
 
 
 
@@ -544,43 +480,25 @@ Macro definitions are kept in a *.config file under Macro object. For example
 
 
 
-Macro:{
-
-        isbn : {
-
-            type: date,
-
-            format: "MM/dd/yyyy HH:mm:ss S",
-
-            addYears: 1,
-
-            addMonths: 2,
-
-            addWeeks : -3,
-
-            addDays: 4,
-
-            addHours: -1,
-
-            addMinutes: -2,
-
-            addSeconds: 0,
-
-            addNanos: 3
-
-        },
-
-        testMacro : {
-
-            type: date,
-
-            prefix: "Tadam->",
-
-            suffix: "<-madaT"
-
-        }
-
-    }
+	Macro:{
+		isbn : {
+		    type: date,
+		    format: "MM/dd/yyyy HH:mm:ss S",
+		    addYears: 1,
+		    addMonths: 2,
+		    addWeeks : -3,
+		    addDays: 4,
+		    addHours: -1,
+		    addMinutes: -2,
+		    addSeconds: 0,
+		    addNanos: 3
+		},
+		testMacro : {
+		    type: date,
+		    prefix: "Tadam->",
+		    suffix: "<-madaT"
+		}
+	    }
 
 
 
@@ -595,7 +513,6 @@ For example directory /src/resources/features/Rest/GetBookByISBN/config can cont
 
 
 	macro.config
-
 	testdata.config
 
 
@@ -604,113 +521,65 @@ Their content can be
 
 
 
-Macro:{
-
-        testMacro : {
-
-            type: date,
-
-            prefix: "Local->",
-
-            suffix: "<-Local"
-
-        },
-
-        testMacro2 : {
-
-            type: date,
-
-            prefix: "Local2->",
-
-            suffix: "<-2Local"
-
-        },
-
-        testMacro3 : {
-
-            type: timestamp,
-
-            suffix: "000"
-
-        }
-
-    }
+	Macro:{
+		testMacro : {
+		    type: date,
+		    prefix: "Local->",
+		    suffix: "<-Local"
+		},
+		testMacro2 : {
+		    type: date,
+		    prefix: "Local2->",
+		    suffix: "<-2Local"
+		},
+		testMacro3 : {
+		    type: timestamp,
+		    suffix: "000"
+		}
+	    }
 
 
 
-TestData:{
-
-    isbn : "9781451648546",
-
-    "statusOK" : 200
-
-    }
+	TestData:{
+	    isbn : "9781451648546",
+	    "statusOK" : 200
+	    }
 
 
 
 Macro defined as above (and overwritten by local config) after evaluation will be
 
-[INFO ] 2017-09-11 12:32:27.919 [main] Log - <- Started local config load ->
-
-[DEBUG] 2017-09-11 12:32:27.919 [main] Log - Project path is C:\Users\akowa\Documents\Projects\FK_Prototype
-
-[DEBUG] 2017-09-11 12:32:27.960 [main] Log - Found feature file path is C:\Users\akowa\Documents\Projects\FK_Prototype\src\test\resources\features\Rest\GetBookByISBN\GetBookByIsbn.feature
-
-[DEBUG] 2017-09-11 12:32:27.961 [main] Log - Feature dir is C:\Users\akowa\Documents\Projects\FK_Prototype\src\test\resources\features\Rest\GetBookByISBN
-
-[DEBUG] 2017-09-11 12:32:27.962 [main] Log - Following config files were found inside 
-
-[DEBUG] 2017-09-11 12:32:27.962 [main] Log - C:\Users\akowa\Documents\Projects\FK_Prototype\src\test\resources\features\Rest\GetBookByISBN\config\macro.config
-
-[DEBUG] 2017-09-11 12:32:27.962 [main] Log - C:\Users\akowa\Documents\Projects\FK_Prototype\src\test\resources\features\Rest\GetBookByISBN\config\testdata.config
-
-[DEBUG] 2017-09-11 12:32:27.963 [main] Log - Ctx object Macro of type class java.util.HashMap created or modified
-
-[DEBUG] 2017-09-11 12:32:27.963 [main] Log - Ctx object TestData of type class java.util.HashMap created or modified
-
-[DEBUG] 2017-09-11 12:32:27.963 [main] Log - Environment property do_macro_eval_in_hooks = true
-
-[INFO ] 2017-09-11 12:32:27.963 [main] Log - <- evaluating macros ->
-
-[DEBUG] 2017-09-11 12:32:27.978 [main] Log - Macro testMacro3 is 1505125947000
-
-[DEBUG] 2017-09-11 12:32:27.979 [main] Log - Macro testMacro2 is Local2->09/11/2017 12:32:27 9<-2Local
-
-[DEBUG] 2017-09-11 12:32:27.979 [main] Log - Macro isbn is 10/25/2018 11:30:27 9
-
-[DEBUG] 2017-09-11 12:32:27.979 [main] Log - Macro testMacro is Local->09/11/2017 12:32:27 9<-Local
-
-[DEBUG] 2017-09-11 12:32:27.979 [main] Log - Ctx object TestData of type class java.util.HashMap created or modified
-
-[INFO ] 2017-09-11 12:32:27.980 [main] Log - Test data storage after local config load is
-
-[INFO ] 2017-09-11 12:32:27.980 [main] Log - Going to view the current state of test data
-
-[INFO ] 2017-09-11 12:32:27.980 [main] Log - --- start ---
-
-[INFO ] 2017-09-11 12:32:27.980 [main] Log - (Long)drugi_kluczyk_z_pliku = 2
-
-[INFO ] 2017-09-11 12:32:27.980 [main] Log - (String)isbn = 9781451648546
-
-[INFO ] 2017-09-11 12:32:27.980 [main] Log - (Long)statusOK = 200
-
-[INFO ] 2017-09-11 12:32:27.980 [main] Log - (String)search_sentence = this is the default entry!
-
-[INFO ] 2017-09-11 12:32:27.980 [main] Log - (Double)notAnInteger = 4.5123
-
-[INFO ] 2017-09-11 12:32:27.980 [main] Log - (String)a to test na makro = 10/25/2018 11:30:27 9
-
-[INFO ] 2017-09-11 12:32:27.980 [main] Log - (ArrayList)trzeci kluczyk z pliku = [first element, second elmenet]
-
-[INFO ] 2017-09-11 12:32:27.981 [main] Log - (HashMap)a to czwarty kluczyk = {test4={testx2=kupa, testx1=dupa}, test2=5, test3=4.5123, test=a to wartosc z zagniezdzonej mapy}
-
-[INFO ] 2017-09-11 12:32:27.981 [main] Log - (ArrayList)ostatni = [1, 2]
-
-[INFO ] 2017-09-11 12:32:27.981 [main] Log - (HashMap)DoubleMapa = {third=3, first=1, second=2}
-
-[INFO ] 2017-09-11 12:32:27.981 [main] Log - --- end ---
-
-[INFO ] 2017-09-11 12:32:27.982 [main] Log - <- Finished local config load ->
+	[INFO ] 2017-09-11 12:32:27.919 [main] Log - <- Started local config load ->
+	[DEBUG] 2017-09-11 12:32:27.919 [main] Log - Project path is C:\Users\akowa\Documents\Projects\FK_Prototype
+	[DEBUG] 2017-09-11 12:32:27.960 [main] Log - Found feature file path is C:\Users\akowa\Documents\Projects\FK_Prototype\src\test\resources\features\Rest\GetBookByISBN\GetBookByIsbn.feature
+	[DEBUG] 2017-09-11 12:32:27.961 [main] Log - Feature dir is C:\Users\akowa\Documents\Projects\FK_Prototype\src\test\resources\features\Rest\GetBookByISBN
+	[DEBUG] 2017-09-11 12:32:27.962 [main] Log - Following config files were found inside 
+	[DEBUG] 2017-09-11 12:32:27.962 [main] Log - C:\Users\akowa\Documents\Projects\FK_Prototype\src\test\resources\features\Rest\GetBookByISBN\config\macro.config
+	[DEBUG] 2017-09-11 12:32:27.962 [main] Log - C:\Users\akowa\Documents\Projects\FK_Prototype\src\test\resources\features\Rest\GetBookByISBN\config\testdata.config
+	[DEBUG] 2017-09-11 12:32:27.963 [main] Log - Ctx object Macro of type class java.util.HashMap created or modified
+	[DEBUG] 2017-09-11 12:32:27.963 [main] Log - Ctx object TestData of type class java.util.HashMap created or modified
+	[DEBUG] 2017-09-11 12:32:27.963 [main] Log - Environment property do_macro_eval_in_hooks = true
+	[INFO ] 2017-09-11 12:32:27.963 [main] Log - <- evaluating macros ->
+	[DEBUG] 2017-09-11 12:32:27.978 [main] Log - Macro testMacro3 is 1505125947000
+	[DEBUG] 2017-09-11 12:32:27.979 [main] Log - Macro testMacro2 is Local2->09/11/2017 12:32:27 9<-2Local
+	[DEBUG] 2017-09-11 12:32:27.979 [main] Log - Macro isbn is 10/25/2018 11:30:27 9
+	[DEBUG] 2017-09-11 12:32:27.979 [main] Log - Macro testMacro is Local->09/11/2017 12:32:27 9<-Local
+	[DEBUG] 2017-09-11 12:32:27.979 [main] Log - Ctx object TestData of type class java.util.HashMap created or modified
+	[INFO ] 2017-09-11 12:32:27.980 [main] Log - Test data storage after local config load is
+	[INFO ] 2017-09-11 12:32:27.980 [main] Log - Going to view the current state of test data
+	[INFO ] 2017-09-11 12:32:27.980 [main] Log - --- start ---
+	[INFO ] 2017-09-11 12:32:27.980 [main] Log - (Long)drugi_kluczyk_z_pliku = 2
+	[INFO ] 2017-09-11 12:32:27.980 [main] Log - (String)isbn = 9781451648546
+	[INFO ] 2017-09-11 12:32:27.980 [main] Log - (Long)statusOK = 200
+	[INFO ] 2017-09-11 12:32:27.980 [main] Log - (String)search_sentence = this is the default entry!
+	[INFO ] 2017-09-11 12:32:27.980 [main] Log - (Double)notAnInteger = 4.5123
+	[INFO ] 2017-09-11 12:32:27.980 [main] Log - (String)a to test na makro = 10/25/2018 11:30:27 9
+	[INFO ] 2017-09-11 12:32:27.980 [main] Log - (ArrayList)trzeci kluczyk z pliku = [first element, second elmenet]
+	[INFO ] 2017-09-11 12:32:27.981 [main] Log - (HashMap)a to czwarty kluczyk = {test4={testx2=kupa, testx1=dupa}, test2=5, test3=4.5123, test=a to wartosc z zagniezdzonej mapy}
+	[INFO ] 2017-09-11 12:32:27.981 [main] Log - (ArrayList)ostatni = [1, 2]
+	[INFO ] 2017-09-11 12:32:27.981 [main] Log - (HashMap)DoubleMapa = {third=3, first=1, second=2}
+	[INFO ] 2017-09-11 12:32:27.981 [main] Log - --- end ---
+	[INFO ] 2017-09-11 12:32:27.982 [main] Log - <- Finished local config load ->
 
 
 
@@ -727,15 +596,10 @@ Macro values are always returned as strings.
 Data types supported in test data configuration are
 
 	String,
-
-	Long
-
-	Double
-
-	HashMap
-
-	ArraList
-
+	Long,
+	Double,
+	HashMap,
+	ArraList,
 	Boolean
 
 
@@ -744,7 +608,7 @@ Each step execution is marked in a log with a "* Step started" string to make it
 
 
 
-[DEBUG] 2017-09-11 12:32:28.208 [main] Log - * Step started a_user_retrieves_the_book_by_isbn
+	[DEBUG] 2017-09-11 12:32:28.208 [main] Log - * Step started a_user_retrieves_the_book_by_isbn
 
 
 
