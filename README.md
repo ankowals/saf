@@ -43,7 +43,7 @@ a way to report test status
 
 a way to attach logs/files/messages/screenshots to the report
 
-a way to start test from IDE and command line
+a way to start test from IDE and command line as well as an ability to overwrite some parameters when test suite started from cmd
 
 a way to automatically deploy the framework under windows (dependency management)
 
@@ -82,9 +82,9 @@ Installation instructions
 
 7 verify maven installation; in cmd issue mvn -version
 
-8 install intlliJ community edition
+8 install intlliJ community edition -> this is our IDE in which tests can be written
 
-9 download Chrome driver and put it for example in C:\SeleniumWebdrivers
+9 download Chrome driver and other drivers if needed and put it for example in C:\SeleniumWebdrivers
 
 10 in intelliJ go to Files->Settings->Plugins->Browse repositories and install Cucumber for Java plugin
 
