@@ -74,8 +74,6 @@ Installation instructions
 
 3 verify java installation; in cmd issue java -version
 
-
-
 4 download and extract maven binary
 
 5 set an environment variable, for example M2_HOME=C:\apache-maven-3.5.0
@@ -84,31 +82,17 @@ Installation instructions
 
 7 verify maven installation; in cmd issue mvn -version
 
-
-
 8 install intlliJ community edition
-
-
 
 9 download Chrome driver and put it for example in C:\SeleniumWebdrivers
 
-
-
 10 in intelliJ go to Files->Settings->Plugins->Browse repositories and install Cucumber for Java plugin
-
-
 
 11 restart or log out and log in so changes done to Path variable will be visible
 
-
-
 12 install git
 
-
-
 13 clone the repo for example to C:\Documents\Projects\SAF
-
-
 
 14 in case of issues with JDK not found fix its path in pom.xml file under <executable> tag
 
@@ -306,7 +290,7 @@ Thanks to this maven can be used to start our tests from command line.
 
 For logging purposes log4j2 library is used.
 
-For BDD cucumber-jvm library is used.
+For BDD cucumber-jvm and junit libraries are used.
 
 For reporting purposes allure library is used.
 
