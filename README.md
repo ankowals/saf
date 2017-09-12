@@ -331,25 +331,11 @@ Project and test structure is also enforced to keep things consistent.
 To run a test from windows cmd please execute
 
 
-
 	cd <install_dir>
-
-
-
 	mvn clean test -Dcucumber.options="--tags @bookByIsbn"
-
-
-
 	mvn site
-
-
-
 	mvn jetty:run
-
-
-
 	go to http://localhost:8080
-
 
 
 One can also use InteliJ to run a feature file. In that case only log file will be created.
