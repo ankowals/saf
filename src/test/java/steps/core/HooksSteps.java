@@ -9,9 +9,7 @@ import modules.core.*;
 import org.apache.commons.io.FilenameUtils;
 import org.openqa.selenium.logging.LogEntry;
 import ru.yandex.qatools.allure.annotations.Attachment;
-
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.util.ArrayList;
 
 public class HooksSteps {
@@ -56,12 +54,20 @@ public class HooksSteps {
         Log.info("<- creating shared context ->");
         ctx.obj = new Context();
 
-        Log.info("<- creating test data storage ->");
-        ctx.config.create(FeatureProvider.getGlobalConfigPath() + File.separator + "testdata.config");
+        Log.info("<- creating test data and macro storage ->");
+        String globalConfigDir = FeatureProvider.getGlobalConfigPath();
+        Log.debug("Global configuration directory is " + globalConfigDir);
+        ArrayList<String> globalConfigFiles = FeatureProvider.searchForFile(globalConfigDir,".config");
+        if(globalConfigFiles.size()!=0) {
+            Log.debug("Following config files were found inside ");
+            for (String globalConfigFile : globalConfigFiles) {
+                Log.debug(globalConfigFile);
+            }
+            for (String globalConfigFile : globalConfigFiles) {
+                ctx.config.create(globalConfigFile);
+            }
+        }
         ctx.step.printTestData();
-
-        Log.info("<- creating macro storage ->");
-        ctx.config.create(FeatureProvider.getGlobalConfigPath() + File.separator +  "macro.config");
 
         Log.info("<- configuring logger for rest operations ->");
         ToLoggerPrintStream loggerPrintStream = new ToLoggerPrintStream( Log.getLogger() );
@@ -102,7 +108,6 @@ public class HooksSteps {
                     ctx.config.create(localConfigFile);
                 }
             }
-
         }
 
         if(ctx.env.readProperty("do_macro_eval_in_hooks").equalsIgnoreCase("true")){
@@ -111,7 +116,6 @@ public class HooksSteps {
         }
 
         Log.info("Test data storage after local config load is");
-
         ctx.step.printTestData();
 
         Log.info("<- Finished local config load ->");
