@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.stream.Stream;
 
 public class FeatureProvider {
@@ -55,6 +56,7 @@ public class FeatureProvider {
             Log.error(e.getMessage());
         }
 
+        Collections.sort(result, String.CASE_INSENSITIVE_ORDER);
         return result;
     }
 
