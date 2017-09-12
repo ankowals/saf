@@ -16,7 +16,7 @@ public class DemoOnlieSteps {
 
     private SharedContext ctx;
 
-    // PicoContainer injects class BaseTest
+    // PicoContainer injects class SharedContext
     public DemoOnlieSteps (SharedContext ctx) {
         this.ctx = ctx;
     }

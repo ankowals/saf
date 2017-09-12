@@ -47,12 +47,13 @@ public class HooksSteps {
         ctx.config = new ConfigReader(ctx);
         ctx.macro = new Macro(ctx);
         ctx.step = new StepUtil(ctx);
-        Log.info("<- checking environment configuration ->");
-        ctx.env = new PropertyReader();
-        ctx.env.readSystemProperties();
 
         Log.info("<- creating shared context ->");
         ctx.obj = new Context();
+
+        Log.info("<- checking environment configuration ->");
+        ctx.env = new PropertyReader();
+        ctx.env.readSystemProperties();
 
         Log.info("<- creating test data and macro storage ->");
         String globalConfigDir = FeatureProvider.getGlobalConfigPath();

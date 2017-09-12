@@ -33,6 +33,9 @@ public class BookByIsbn {
         Log.debug("* Step started a_book_exists_with_isbn");
         HashMap<String, Object> testDataMap = ctx.obj.get("TestData",HashMap.class);
         String isbn = (String) testDataMap.get("isbn");
+
+        String isbn2 = ctx.step.get("TestData.isbn");
+
         RequestSpecification request = given().param("q", "isbn:" + isbn);
         ctx.obj.put("request",RequestSpecification.class, request);
     }
