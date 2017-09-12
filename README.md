@@ -328,7 +328,11 @@ One can also use IntelliJ to run a feature file. In that case only log file will
 
 To generate a report from test please execute mvn site, run jetty and check the browser.
 
+It is possible to overwrite active_env property from the command line. In that case project specific config as specified by the CMD argument will be used during test execution. To do so please execute a test for example like below
 
+	mvn clean test -Dactive_env="bookByIsbn" -Dcucumber.options="--tags @bookByIsbn"
+
+In that particular case first default env configuration will be loaded and later on it will be overwritten by config available in file bookByIsbn.properties.
 
 --------------------------------
 
