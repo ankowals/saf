@@ -26,6 +26,9 @@ public class DemoOnlieSteps {
     ProductPage product;
     CheckoutPage checkout;
 
+    /**
+     * Opens web page with url taken from environment configuration
+     */
     @When("^open main page$")
     public void i_open_main_page() throws Throwable {
         Log.debug("* Step started i_open_main_page");
@@ -34,30 +37,50 @@ public class DemoOnlieSteps {
         main.load();
     }
 
+    /**
+     * Navigates to all products page
+     */
     @And("^navigate to all products page$")
     public void navigate_to_all_products() throws Throwable{
         Log.debug("* Step started add_product_to_cart");
         product = main.goToAllProduct();
     }
 
+    /**
+     * Adds product {} to the cart.
+     *
+     * @param productName - String, name or value from storage
+     *
+     */
     @And("^add product (.*) to cart$")
     public void add_product_to_cart(String productName) throws Throwable{
         Log.debug("* Step started add_product_to_cart");
 
-        String input = ctx.step.checkIfInputIsVariableAndReturnString(productName);
-
+        String input = ctx.step.checkIfInputIsVariable(productName);
         product.addToCart(input);
     }
 
+    /**
+     * Adds product {} to the cart and navigates to checkout page.
+     *
+     * @param productName - String, name or value from storage
+     *
+     */
     @And("^add product (.*) to cart and go to checkout$")
     public void add_product_to_cart_and_checkout(String productName) throws Throwable{
         Log.debug("* Step started add_product_to_cart_and_checkout");
 
-        String input = ctx.step.checkIfInputIsVariableAndReturnString(productName);
-
+        String input = ctx.step.checkIfInputIsVariable(productName);
         checkout = product.addToCartAndCheckout(input);
     }
 
+
+    /**
+     * Verifies that SubTotal field equals sub of total price per product type
+     * on Checkout page.
+     *
+     * Attaches screenshot to the report
+     */
     @Then("^verify that SubTotal value equals sum of totals per product type$")
     public void verify_sum_of_totals_per_product_type_equals_subTotal() throws Throwable{
         Log.debug("* Step started verify_sum_of_totals_per_product_type_equals_subTotal");

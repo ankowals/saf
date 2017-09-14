@@ -1,5 +1,8 @@
 package modules.core;
 
+import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriverException;
@@ -9,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -67,45 +71,51 @@ public class StepUtil {
     }
 
     public <T> T get(String path) {
+        //do not check if storage exists if we are dealing with a number
+        if ( NumberUtils.isNumber(path) ) {
+            return null;
+        } else {
+            //if no dots in the path return just the storage ->
+            // for example "TestData" was entered but not "TestData.key1"
+            if (!path.contains(".")) {
+                Object value = ctx.obj.get(path, HashMap.class);
+                return (T) value;
+            }
 
-        //if no dots in the path return just the storage
-        if(!path.contains(".")){
-            Object value = ctx.obj.get(path,HashMap.class);
-            return (T) value;
-        }
+            //get hashmap with particular storage if it exists else return null
+            String[] tmp = path.split("\\.");
+            Object value = ctx.obj.get(tmp[0], HashMap.class);
+            if (value != null) {
+                String sTmp = "";
+                for (int i = 1; i < tmp.length; i++) {
+                    sTmp = sTmp + "." + tmp[i];
+                }
 
-        //get hashmap with particular storage
-        String [] tmp = path.split("\\.");
-        Object value = ctx.obj.get(tmp[0],HashMap.class);
-        String sTmp = "";
-        for(int i=1;i<tmp.length;i++){
-            sTmp = sTmp+"."+tmp[i];
-        }
+                //iterate over elements
+                String[] elements = sTmp.substring(1).split("\\.");
+                for (String element : elements) {
+                    String ename = element.split("\\[")[0];
 
-        //iterate over elements
-        String [] elements = sTmp.substring(1).split("\\.");
-        for(String element : elements) {
-            String ename = element.split("\\[")[0];
+                    if (AbstractMap.class.isAssignableFrom(value.getClass())) {
+                        value = ((AbstractMap<String, Object>) value).get(ename);
 
-            if(AbstractMap.class.isAssignableFrom(value.getClass())) {
-                value = ( (AbstractMap<String, Object>) value).get(ename);
-
-                if(element.contains("[")) {
-                    if(List.class.isAssignableFrom(value.getClass())) {
-                        Integer index = Integer.valueOf(element.substring(element.indexOf("[")+1, element.indexOf("]")) );
-                        value = ((List<Object>) value).get(index);
-                    }
-                    else {
+                        if (element.contains("[")) {
+                            if (List.class.isAssignableFrom(value.getClass())) {
+                                Integer index = Integer.valueOf(element.substring(element.indexOf("[") + 1, element.indexOf("]")));
+                                value = ((List<Object>) value).get(index);
+                            } else {
+                                return null;
+                            }
+                        }
+                    } else {
                         return null;
                     }
                 }
             }
-            else {
-                return null;
-            }
-        }
 
         return (T) value;
+
+        }
     }
 
 
@@ -119,25 +129,57 @@ public class StepUtil {
         }
     }
 
+
     public <T> T checkIfInputIsVariable(String input) {
         T result = (T) input;
-        if(input.contains(".")) {
-            result = get(input);
-            Log.debug(input + " = " + result);
+        T tmp = get(input);
+
+        //check if String contains boolean
+        if ( BooleanUtils.toBooleanObject(input) != null ) {
+            Boolean b = BooleanUtils.toBoolean(input);
+            result = (T) b;
+            Log.debug("Converted String " + input + " to Boolean");
+        }
+
+        //check if String contains number
+        if(NumberUtils.isNumber(input)){
+            Number num = null;
+            try {
+                num = NumberFormat.getInstance(Locale.getDefault()).parse(input);
+            } catch (Exception e) {
+                Log.debug("Checking if String contains a numeric value " + input);
+                Log.error("Not able to parse String to Number for " + input);
+                Log.error(e.getMessage());
+            }
+            Class<T> typeKey = (Class<T>) getType(num);
+            result = typeKey.cast(num);
+            Log.debug("Converted String " + input + " to number");
+        }
+
+        if ( tmp != null ){
+            result = tmp;
+            Log.debug("Converted element from storage: input " + " to " + result);
         }
 
         return result;
     }
 
+
+
+
+    /*
     public <T> T checkIfInputIsVariableAndReturnString(String input) {
         T result = (T) input;
-        if(input.contains(".")) {
-            result = get(input);
+        T tmp = get(input);
+
+        if (tmp!= null){
+            result = tmp;
             Log.debug(input + " = " + result);
         }
 
         return (T) result.toString();
     }
+    */
 
     @Attachment(value="{0}", type="{1}")
     public byte[] attachFileToReport(String name, String type, String path) {

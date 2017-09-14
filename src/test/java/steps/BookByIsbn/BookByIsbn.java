@@ -11,8 +11,6 @@ import io.restassured.specification.RequestSpecification;
 import modules.core.Log;
 import modules.core.SharedContext;
 import org.apache.commons.lang.StringUtils;
-
-import java.util.HashMap;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
@@ -28,18 +26,31 @@ public class BookByIsbn {
         this.ctx = ctx;
     }
 
+    /**
+     * Creates Request Specification and stores it as request ctx.obj
+     *
+     * Uses following objects:
+     *  TestData.isbn
+     *
+     */
     @Given("^a book exists with an isbn$")
     public void a_book_exists_with_isbn() {
         Log.debug("* Step started a_book_exists_with_isbn");
-        HashMap<String, Object> testDataMap = ctx.obj.get("TestData",HashMap.class);
-        String isbn = (String) testDataMap.get("isbn");
-
-        String isbn2 = ctx.step.get("TestData.isbn");
-
+        //HashMap<String, Object> testDataMap = ctx.obj.get("TestData",HashMap.class);
+        //String isbn = (String) testDataMap.get("isbn");
+        String isbn = ctx.step.get("TestData.isbn");
         RequestSpecification request = given().param("q", "isbn:" + isbn);
         ctx.obj.put("request",RequestSpecification.class, request);
     }
 
+    /**
+     * Triggers http GET request as specified in RequestSpecification
+     * Response is stored as response ctx.obj and attached to the report
+     *
+     * Uses following objects:
+     *  ctx.obj.request
+     *
+     */
     @When("^a user retrieves the book by isbn$")
     public void a_user_retrieves_the_book_by_isbn(){
         Log.debug("* Step started a_user_retrieves_the_book_by_isbn");
@@ -50,36 +61,86 @@ public class BookByIsbn {
         ctx.step.attachMessageToReport("Json response", response.prettyPrint().toString());
     }
 
+
+    /**
+     * Verifies that response status code is {}
+     * Creates new object ValidatableResponse and stores it as json ctx.obj
+     *
+     * Uses following objects:
+     *  ctx.obj.response
+     *
+     * @param input - String, status code or value from storage
+     *
+     */
     @Then("^the status code is (.*)$")
     public void verify_status_code(String input){
         Log.debug("* Step started verify_status_code");
 
-        String statusCode = ctx.step.checkIfInputIsVariableAndReturnString(input);
-        Integer code = Integer.parseInt(statusCode);
+        Long statusCode = ctx.step.checkIfInputIsVariable(input);
+        Integer code = statusCode.intValue();
 
         Response response = ctx.obj.get("response",Response.class);
         ValidatableResponse json = response.then().statusCode(code);
         ctx.obj.put("json",ValidatableResponse.class, json);
     }
 
+    /**
+     * Verifies that response includes some fields {} and their value contains {}
+     * Input requires a table
+     *
+     * Uses following objects:
+     *  ctx.obj.json
+     *
+     * @param responseFields - Map<String, String>, table that contains key and expected value pairs to verify
+     *
+     */
     @And("^response includes the following in any order$")
     public void response_contains_in_any_order(Map<String,String> responseFields){
         Log.debug("* Step started response_contains_in_any_order");
         ValidatableResponse json = ctx.obj.get("json",ValidatableResponse.class);
         for (Map.Entry<String, String> field : responseFields.entrySet()) {
-            if(StringUtils.isNumeric(field.getValue())){
-                json.body(field.getKey(), containsInAnyOrder(Integer.parseInt(field.getValue())));
+            Object expectedValue = ctx.step.checkIfInputIsVariable(field.getValue());
+            String type = expectedValue.getClass().getName();
+            if(type.contains("Long")){
+                Long lExpVal = (Long) expectedValue;
+                Log.debug("lExpVal is " + lExpVal.intValue());
+                json.body(field.getKey(), containsInAnyOrder(lExpVal.intValue()));
             }
-            else{
-                json.body(field.getKey(), containsInAnyOrder(field.getValue()));
+            else {
+                String sExpVal = (String) expectedValue;
+                json.body(field.getKey(), containsInAnyOrder(sExpVal));
             }
         }
     }
 
+    /**
+     * Verifies that response includes some fields {} nad their value equals to {}
+     * Input requires a table
+     *
+     * Uses following objects:
+     *  ctx.obj.json
+     *
+     * @param responseFields - Map<String, String>, table that contains key and expected value pairs to verify
+     *
+     */
     @And("^response includes the following$")
     public void response_equals(Map<String,String> responseFields){
         Log.debug("* Step started response_equals");
         ValidatableResponse json = ctx.obj.get("json",ValidatableResponse.class);
+        for (Map.Entry<String, String> field : responseFields.entrySet()) {
+            Object expectedValue = ctx.step.checkIfInputIsVariable(field.getValue());
+            String type = expectedValue.getClass().getName();
+            if(type.contains("Long")){
+                Long lExpVal = (Long) expectedValue;
+                Log.debug("lExpVal is " + lExpVal.intValue());
+                json.body(field.getKey(), equalTo(lExpVal.intValue()));
+            }
+            else {
+                String sExpVal = (String) expectedValue;
+                json.body(field.getKey(), equalTo(sExpVal));
+            }
+        }
+       /*
         for (Map.Entry<String, String> field : responseFields.entrySet()) {
             if(StringUtils.isNumeric(field.getValue())){
                 json.body(field.getKey(), equalTo(Integer.parseInt(field.getValue())));
@@ -88,6 +149,7 @@ public class BookByIsbn {
                 json.body(field.getKey(), equalTo(field.getValue()));
             }
         }
+        */
     }
 
 }

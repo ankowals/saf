@@ -1,12 +1,8 @@
 package steps.ReqResIn;
 
 import cucumber.api.java.en.Given;
-import io.restassured.response.ValidatableResponse;
-import io.restassured.specification.RequestSpecification;
 import modules.core.Log;
 import modules.core.SharedContext;
-
-import java.util.HashMap;
 
 import static io.restassured.RestAssured.given;
 
@@ -19,16 +15,23 @@ public class ReqResInSteps {
         this.ctx = ctx;
     }
 
+    /**
+     * Verifies service is available
+     * This is just a sanity check.
+     * It triggers GET request towards defined url
+     *
+     * Uses following objects:
+     *  Expected.statusOK
+     *  env.REST_url
+     *
+     */
     @Given("service is available")
     public void service_is_available() {
         Log.debug("* Step started service_is_available");
         String url = ctx.env.readProperty("REST_url");
-        //get test data storage from ctx obj
-        HashMap<String, Object> testDataMap = ctx.obj.get("TestData",HashMap.class);
-        String sExpectedCode = (String) testDataMap.get("statusOK");
 
-        //parse string to int
-        Integer expectedCode = Integer.parseInt(sExpectedCode);
+        Long statusCode = ctx.step.get("Expected.statusOK");
+        Integer expectedCode = statusCode.intValue();
         given().when().log().all().get(url).then().statusCode(expectedCode);
     }
 
