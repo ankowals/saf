@@ -915,7 +915,7 @@ With this approach steps class can be build like in an example below
 
 	    @And("^navigate to all products page$")
 	    public void navigate_to_all_products() throws Throwable{
-		Log.info("* Step started add_product_to_cart");
+		Log.info("* Step started navigate_to_all_products");
 		product = main.goToAllProduct();
 	    }
 	}
