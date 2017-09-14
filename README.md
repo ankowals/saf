@@ -907,7 +907,7 @@ With this approach steps class can be build like in an example below
 
 	    @When("^open main page$")
 	    public void i_open_main_page() throws Throwable {
-		Log.debug("* Step started i_open_main_page");
+		Log.info("* Step started i_open_main_page");
 		//instantiate MainPage to open url in the browser
 		main = new MainPage(ctx);
 		main.load();
@@ -915,7 +915,7 @@ With this approach steps class can be build like in an example below
 
 	    @And("^navigate to all products page$")
 	    public void navigate_to_all_products() throws Throwable{
-		Log.debug("* Step started add_product_to_cart");
+		Log.info("* Step started add_product_to_cart");
 		product = main.goToAllProduct();
 	    }
 	}
