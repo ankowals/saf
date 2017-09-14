@@ -752,7 +752,7 @@ or
 	Then the status code is 200
 	
 In both cases step shall pass.
-Please note that step def input parameter is of type String. method checkIfInputIsVariable can return an object of different type (Long, Double, String, Boolean). 
+Please note that step def input parameter is of type String. method checkIfInputIsVariable can return an object of different type (for example Long, Double, String, Boolean). Please do not hardcode Maps or Lists directly in the feature files, rather define them in a config file and use such config pointer in the feature. For example instead of writing "Then expected result is {key1:1, key2:2}" write "Then expected result is Expected.resultMap" 
 
 It is assumed that user knowns what type is expected otherwise we can get type missmatch exception.
 
