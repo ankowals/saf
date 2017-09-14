@@ -691,7 +691,7 @@ For example lets have a look at 2 steps below
 
     @Given("^a book exists with an isbn$")
     public void a_book_exists_with_isbn() {
-        Log.debug("* Step started a_book_exists_with_isbn");
+        Log.info("* Step started a_book_exists_with_isbn");
         HashMap<String, Object> testDataMap = ctx.obj.get("TestData",HashMap.class);
         String isbn = (String) testDataMap.get("isbn");
         RequestSpecification request = given().param("q", "isbn:" + isbn);
@@ -700,7 +700,7 @@ For example lets have a look at 2 steps below
 
     @When("^a user retrieves the book by isbn$")
     public void a_user_retrieves_the_book_by_isbn(){
-        Log.debug("* Step started a_user_retrieves_the_book_by_isbn");
+        Log.info("* Step started a_user_retrieves_the_book_by_isbn");
         String url = ctx.env.readProperty("REST_url");
         RequestSpecification request = ctx.obj.get("request",RequestSpecification.class);
         Response response = request.when().log().all().get(url);
@@ -711,9 +711,9 @@ For example lets have a look at 2 steps below
 To retrieve test data storage one can write HashMap<String, Object> testDataMap = ctx.obj.get("TestData",HashMap.class);
 From now one testDataMap and its values can be used in the step.
 Other way to retrieve a particular value from the storage is String isbn2 = ctx.step.get("TestData.isbn");
-We nested object can be provided using dots like for example TestData.isbn.some_nested_key etc.
+Nested objects can be provided using dots like for example ctx.step.get("TestData.isbn.some_nested_key[0]") etc.
 
-Ctx.obj is a bucket to which we can throw anything and later on we can retrieve it. This is usefull to share data between steps that are defined in differen class. For example
+Ctx.obj is a bucket to which we can throw anything and later on we can retrieve it. This is useful to share data between steps that are defined in different class. For example
 
 	ctx.obj.put("request",RequestSpecification.class, request);
 
@@ -727,10 +727,10 @@ There is also one more method that can be used to check if step input is a varia
 
     @Then("^the status code is (.*)$")
     public void verify_status_code(String input){
-        Log.debug("* Step started verify_status_code");
+        Log.info("* Step started verify_status_code");
 
-        String statusCode = ctx.step.checkIfInputIsVariableAndReturnString(input);
-        Integer code = Integer.parseInt(statusCode);
+        Long statusCode = ctx.step.checkIfInputIsVariable(input);
+        Integer code = statusCode.intValue();
 
         Response response = ctx.obj.get("response",Response.class);
         ValidatableResponse json = response.then().statusCode(code);
@@ -752,6 +752,9 @@ or
 	Then the status code is 200
 	
 In both cases step shall pass.
+Please note that step def input parameter is of type String. method checkIfInputIsVariable can return an object of different type (Long, Double, String, Boolean). 
+
+It is assumed that user knowns what type is expected otherwise we can get type missmatch exception.
 
 If there is a need to read any environment property one can use in a step ctx.env object. An example below
 
@@ -760,7 +763,69 @@ If there is a need to read any environment property one can use in a step ctx.en
             ctx.macro.eval("TestData");
         }
 	
-Similar for macro evaluation. It is enough to just call ctx.macro.eval(input) method.
+Similar for macro evaluation. It is enough to just call ctx.macro.eval(input) method. Where input is the name of storage (of type HashMap).
+
+In case a step shall handle multiple input parameters please use tables in a feature file. In the step input will be provided as a Map.
+
+Later on each input parameter and its value can be retrieved in a loop. See an example below.
+
+    /**
+     * Verifies that response includes some fields {} and their value contains {}
+     * Input requires a table
+     *
+     * Uses following objects:
+     *  ctx.obj.json
+     *
+     * @param responseFields - Map<String, String>, table that contains key and expected value pairs to verify
+     *
+     */
+    @And("^response includes the following in any order$")
+    public void response_contains_in_any_order(Map<String,String> responseFields){
+        Log.info("* Step started response_contains_in_any_order");
+        ValidatableResponse json = ctx.obj.get("json",ValidatableResponse.class);
+        for (Map.Entry<String, String> field : responseFields.entrySet()) {
+            Object expectedValue = ctx.step.checkIfInputIsVariable(field.getValue());
+            String type = expectedValue.getClass().getName();
+            if(type.contains("Long")){
+                Long lExpVal = (Long) expectedValue;
+                json.body(field.getKey(), containsInAnyOrder(lExpVal.intValue()));
+            }
+            else {
+                String sExpVal = (String) expectedValue;
+                json.body(field.getKey(), containsInAnyOrder(sExpVal));
+            }
+        }
+    }
+
+To indicate which method runs in a log file please always add Log.info("* Step started step_method_name");
+
+In this way later on it is easy to find each executed step in the log file. It is enough just to look for "* Step started" keyword
+
+Please use javadoc to document each step in the library. An example below
+
+    /**
+     * Verifies that response status code is {}
+     * Creates new object ValidatableResponse and stores it as json ctx.obj
+     *
+     * Uses following objects:
+     *  ctx.obj.response
+     *
+     * @param input - String, status code or value from storage
+     *
+     */
+    @Then("^the status code is (.*)$")
+    public void verify_status_code(String input){
+        Log.info("* Step started verify_status_code");
+
+        Long statusCode = ctx.step.checkIfInputIsVariable(input);
+        Integer code = statusCode.intValue();
+
+        Response response = ctx.obj.get("response",Response.class);
+        ValidatableResponse json = response.then().statusCode(code);
+        ctx.obj.put("json",ValidatableResponse.class, json);
+    }
+    
+
 
 
 --------------------------------
