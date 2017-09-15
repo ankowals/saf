@@ -9,52 +9,34 @@ What do we want from a test automation framework?
 
 
 
-a way to execute e2e test using Gherkin language (BDD)
+	a way to execute e2e test using Gherkin language (BDD)
+	a way to execute tests related to  
 
-a way to execute tests related to  
+		- rest json/xml (soap)
+		- gui (web/native)
+		- sql
+		- mobile
+		- pdf validation
+		- others??
 
-	- rest json/xml (soap)
-	- gui (web/native)
-	- sql
-	- mobile
-	- pdf validation
-	- others??
-
-a way to intergate any 3rd party app by execution of any command on local host and remote over ssh
-
-a way to manage and configure test environment
-
-a way to manage and configure test data
-
-a way to calculate randome test data on runtime (macros)
-
-a way to manage and code a set of common modules/step/functions to be used for testing purposes
-
-a way to downlaod any 3rd party symptoms from SUT like logs, trace files
-
-a way to log any activity dony by the framework
-
-a way to report test status
-
-a way to attach logs/files/messages/screenshots to the report
-
-a way to start test from IDE and command line as well as an ability to overwrite some parameters when test suite started from cmd
-
-a way to automatically deploy the framework under windows (dependency management)
-
-a way to share the code/tests between testers to increae re-usability (version control system)
-
-a way to monitor and indicate quality of commited tests (see Sonar for example )
-
-a way to support PageObject model for web automation purposes
-
-a way to share common data between steps (dependency injection)
-
-a way to schedule test execution (see Jenkins/TeamCity)
-
-a way to generate test documentation automatically
-
-a way to manage multiple projects (version control system)
+	a way to intergate any 3rd party app by execution of any command on local host and remote over ssh
+	a way to manage and configure test environment
+	a way to manage and configure test data
+	a way to calculate random test data on runtime (macros)
+	a way to manage and code a set of common modules/step/functions to be used for testing purposes
+	a way to downlaod any 3rd party symptoms from SUT like logs, trace files
+	a way to log any activity dony by the framework
+	a way to report test status
+	a way to attach logs/files/messages/screenshots to the report
+	a way to start test from IDE and command line as well as an ability to overwrite some parameters when test suite started from cmd
+	a way to automatically deploy the framework under windows (dependency management)
+	a way to share the code/tests between testers to increae re-usability (version control system)
+	a way to monitor and indicate quality of commited tests (see Sonar for example )
+	a way to support PageObject model for web automation purposes
+	a way to share common data between steps (dependency injection)
+	a way to schedule test execution (see Jenkins/TeamCity)
+	a way to generate test documentation automatically
+	a way to manage multiple projects (version control system)
 
 
 
