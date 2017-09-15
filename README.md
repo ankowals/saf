@@ -44,7 +44,7 @@ What do we want from a test automation framework?
 
 ----------------------------------
 
-Where we are now?
+Where are we now?
 	
 	(in progress) a way to execute tests related to  
 		(done) - rest json/xml (soap) => RestAssured integrated 
