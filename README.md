@@ -5,7 +5,7 @@ simple automation framework for learning purposes
 ----------------------------------
 
 
-What do we need from a test automation framework?
+What do we want from a test automation framework?
 
 
 
