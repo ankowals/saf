@@ -3,7 +3,7 @@ Feature: test2
   Second search for a specific sentence using google
 
   Background:
-    Given test data from "Web\test2\test2.config" is loaded
+    Given configuration data from "Web\test2\test2.config" is loaded
       And macro evaluation is done
 
   Scenario: Test search 2
