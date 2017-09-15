@@ -59,6 +59,12 @@ How can we use test automation framework?
 	to use automated equipment for any not strictly test related activities like for example automate mobile phones to detect changes in the offer from a telco operator:)
 	
 	load genration/performance checks are out of scope
+	parallel test execution is out of scope for now
+	
+	For parallel test execution one can use capabilities of framework or use multiple VMs to deploy multiple SUTs, framework instances, scheduler instances etc... 
+	in that case it has to be ensured that tests are seperated from each other 
+		- subsequent test does not depend on the result of previous test 
+		- tests are using separate test data/do not operate on the same config data at the same time (to avoid concurent modifciation)
 
 ----------------------------------
 
