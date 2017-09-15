@@ -11,24 +11,22 @@ What do we want from a test automation framework?
 
 	a way to execute e2e test using Gherkin language (BDD)
 	a way to execute tests related to  
-
 		- rest json/xml (soap)
 		- gui (web/native)
 		- sql
 		- mobile
 		- pdf validation
 		- others??
-
 	a way to intergate any 3rd party app by execution of any command on local host and remote over ssh
 	a way to manage and configure test environment
 	a way to manage and configure test data
-	a way to calculate random test data on runtime (macros)
+	a way to prepare/calculate test data at runtime (macros)
 	a way to manage and code a set of common modules/step/functions to be used for testing purposes
 	a way to downlaod any 3rd party symptoms from SUT like logs, trace files
 	a way to log any activity dony by the framework
 	a way to report test status
 	a way to attach logs/files/messages/screenshots to the report
-	a way to start test from IDE and command line as well as an ability to overwrite some parameters when test suite started from cmd
+	a way to start test from IDE and command line as well as an ability to overwrite parameters when test suite started from cmd
 	a way to automatically deploy the framework under windows (dependency management)
 	a way to share the code/tests between testers to increae re-usability (version control system)
 	a way to monitor and indicate quality of commited tests (see Sonar for example )
@@ -37,43 +35,50 @@ What do we want from a test automation framework?
 	a way to schedule test execution (see Jenkins/TeamCity)
 	a way to generate test documentation automatically
 	a way to manage multiple projects (version control system)
+	a way to pause test execution and allow for manual intervention
+	a way to integrate with test/requirement management tool (like for example jira, so we can have links to tests/epic/stories in the test report)
+	a way to intgrate with incident management tool (like for example jira, so we can have at least links to defects that affect particular test in the report and maybe their status etc.)
+	
+	a way to re-run failed test can be a nice addon
+	a way to execute test remotely can be a nice addon
 
+----------------------------------
 
+How can we use test automation framework?
+
+	to automate functional tests
+	to automate acceptance tests (after any deployment)
+	to automate integration tests
+	to execute sanity chcecks and make sure that SUT configuration is correct (like all urls are reachable, ports open, interfaces are up & apps are running, login is possible for each user etc.)
+	to gether symptoms like traces/logs/tickets/events from multiple systems under test
+	to execute system bringup and feel it with configruation data before test starts
+	to restore the system to the state before test started
+	to move configuration data between test systems
+	to use tests implementation as test documentation
+	to describe system behavior via tests implementation (using Gherkin) - living documentation
+	to use automated equipment for any not strictly test related activities like for example automate mobile phones to detect changes in the offer from a telco operator:)
+	
+	load genration/performance checks are out of scope
 
 ----------------------------------
 
 Installation instructions
 
 
-1 install java jdk
-
-2 set an environment variable, for example JDK_HOME=C:\Program Files\Java\jdk1.8.0_144
-
-3 verify java installation; in cmd issue java -version
-
-4 download and extract maven binary
-
-5 set an environment variable, for example M2_HOME=C:\apache-maven-3.5.0
-
-6 append %M2_HOME%\bin to PATH variable
-
-7 verify maven installation; in cmd issue mvn -version
-
-8 install intlliJ community edition -> this is our IDE in which tests can be written
-
-9 download Chrome driver and other drivers if needed and put it for example in C:\SeleniumWebdrivers
-
-10 in intelliJ go to Files->Settings->Plugins->Browse repositories and install Cucumber for Java plugin
-
-11 restart or log out and log in so changes done to Path variable will be visible
-
-12 install git
-
-13 clone the repo for example to C:\Documents\Projects\SAF
-
-14 in case of issues with JDK not found fix its path in pom.xml file under <executable> tag
-
-
+	1 install java jdk
+	2 set an environment variable, for example JDK_HOME=C:\Program Files\Java\jdk1.8.0_144
+	3 verify java installation; in cmd issue java -version
+	4 download and extract maven binary
+	5 set an environment variable, for example M2_HOME=C:\apache-maven-3.5.0
+	6 append %M2_HOME%\bin to PATH variable
+	7 verify maven installation; in cmd issue mvn -version
+	8 install intlliJ community edition -> this is our IDE in which tests can be written
+	9 download Chrome driver and other drivers if needed and put it for example in C:\SeleniumWebdrivers
+	10 in intelliJ go to Files->Settings->Plugins->Browse repositories and install Cucumber for Java plugin
+	11 restart or log out and log in so changes done to Path variable will be visible
+	12 install git
+	13 clone the repo for example to C:\Documents\Projects\SAF
+	14 in case of issues with JDK not found fix its path in pom.xml file under <executable> tag
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -86,11 +91,8 @@ Installation instructions
                 </configuration>
             </plugin>
 
-
-
-15 Fix path to web drivers in /src/resources/config/env.config
-
-16 Change the port number if needed (default is 8080) for jetty to see allure report after test execution
+	15 Fix path to web drivers in /src/resources/config/env.config
+	16 Change the port number if needed (default is 8080) for jetty to see allure report after test execution
 
 
 
@@ -99,27 +101,19 @@ Installation instructions
 
 How to imoprt project in IntelliJ?
 
-1 open the IDE and click “Import Project”
-
-2 point it to the location where your project is
-
-3 select “Import project from external model”, select “Maven” and hit Next
-
-4 go with default options and click Next
-
-5 the project is recognized as maven project and click Next
-
-6 in case intelliJ is not able to locate your JDK, click "plus" icon in Select Project SDK window and point to the JDK installed on your machine, click Next
-
-7  enter the name of project and click Finish
-
+	1 open the IDE and click “Import Project”
+	2 point it to the location where your project is
+	3 select “Import project from external model”, select “Maven” and hit Next
+	4 go with default options and click Next
+	5 the project is recognized as maven project and click Next
+	6 in case intelliJ is not able to locate your JDK, click "plus" icon in Select Project SDK window and point to the JDK installed on your machine, click Next
+	7  enter the name of project and click Finish
 
 
 ----------------------------------
 
 
 Dir structure shall be like this
-
 
 
 	Project
@@ -189,7 +183,7 @@ Scenario names shall be unique per feature.
 
 Test execution shall look like this
 
-					System Under Test 
+	     ConfigurationData ------->	System Under Test 
 						^	
 	TestData & ExpectedData -----> | execution engine | -----> ResultsData 
 						^
