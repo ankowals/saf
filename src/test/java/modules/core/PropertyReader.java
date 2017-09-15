@@ -19,6 +19,7 @@ public class PropertyReader {
         if ( act_env != null && !act_env.equals(default_env) && !act_env.equals("") ) {
             loadProperties(configDir + "//" + act_env + ".properties");
         }
+        readProperties();
     }
 
     private void loadProperties(String path) {
@@ -32,7 +33,6 @@ public class PropertyReader {
                 String str = (String)em.nextElement();
                 properties.setProperty(str,tmp.getProperty(str));
             }
-            readProperties();
         } catch (IOException e) {
             Log.error("Configuration file " + path + " not found!");
             Log.error(e.getMessage());

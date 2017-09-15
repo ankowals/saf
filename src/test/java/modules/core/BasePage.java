@@ -20,10 +20,21 @@ public class BasePage {
         checkStatus();
     }
 
+    /**
+     * Checks if page is loaded using java script
+     */
     public void checkStatus(){
         jsWaitForPageToLoad();
     }
 
+
+    /**
+     * Checks if page title contains specified string
+     *
+     * @param pageTitle title of the page
+     * @return boolean
+     *
+     */
     public Boolean titleContains(String pageTitle){
         if(ctx.driver.getTitle().contains(pageTitle)){
             return true;
@@ -32,6 +43,13 @@ public class BasePage {
         }
     }
 
+
+    /**
+     * Waits for page to load anc checks if page title contains
+     *
+     * @param pageTitle title of the page
+     *
+     */
     public void waitForPageLoadAndTitleContains(String pageTitle) {
         Log.debug("Going to wait for page load and check title");
         Integer timeout = Integer.parseInt(ctx.env.readProperty("browser_timeout"));
@@ -39,6 +57,10 @@ public class BasePage {
         wait.until(ExpectedConditions.titleContains(pageTitle));
     }
 
+    /**
+     * Executes js to check if page is loaded.
+     * Does this in a loop and check document.readState every 1 second.
+     */
     public void jsWaitForPageToLoad() {
         Log.debug("Going to wait for page load");
         Integer timeOutInSeconds = Integer.parseInt(ctx.env.readProperty("browser_timeout"));
@@ -62,6 +84,12 @@ public class BasePage {
         }
     }
 
+    /**
+     * Waits for the element to be present in the DOM.
+     *
+     * @param locator web element locator, usually css selector or xpath
+     *
+     */
     public void waitForElementToBePresent(By locator) {
         Log.debug("Going to wait an element " + locator.toString() + " to be present");
         Integer seconds = Integer.parseInt(ctx.env.readProperty("browser_timeout"));
@@ -69,6 +97,12 @@ public class BasePage {
         wait.until(ExpectedConditions.presenceOfElementLocated(locator));
     }
 
+    /**
+     * Waits for the element to be visible in the viewport and web driver can interact with it.
+     *
+     * @param locator web element locator, usually css selector or xpath
+     *
+     */
     public void waitForElementToBeVisible(By locator) {
         Log.debug("Going to wait for an element " + locator.toString() + " to be visible");
         Integer seconds = Integer.parseInt(ctx.env.readProperty("browser_timeout"));
@@ -77,15 +111,29 @@ public class BasePage {
     }
 
 
-
+    /**
+     * Waits for an element to not be visible or present. Waits for max 1 second.
+     * Implicit wait timer is ignored.
+     *
+     * @param locator web element locator, usually css selector or xpath
+     *
+     */
     public void waitForElementToBeRemoved(By locator) {
         Log.debug("Going to wait for an element " + locator.toString() + " to be removed");
         turnOffImplicitWaits();
-        WebDriverWait wait = new WebDriverWait(ctx.driver, 10);
+        WebDriverWait wait = new WebDriverWait(ctx.driver, 1);
         wait.until(ExpectedConditions.invisibilityOfElementLocated(locator));
         turnOnImplicitWaits();
     }
 
+    /**
+     * Checks if element is removed and returns true or false.
+     * Implicit wait timer is ignored.
+     *
+     * @param locator web element locator, usually css selector or xpath
+     * @return boolean
+     *
+     */
     protected boolean checkIfElemnetIsRemoved(By locator) {
         turnOffImplicitWaits();
         boolean result = false;
@@ -98,10 +146,18 @@ public class BasePage {
         return result;
     }
 
+    /**
+     * Turns off implicit wait timer for web driver
+     * helper function
+     */
     private void turnOffImplicitWaits() {
         ctx.driver.manage().timeouts().implicitlyWait(500, TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * Turns on implicit wait timer for web driver
+     * helper function
+     */
     private void turnOnImplicitWaits() {
         Integer seconds = Integer.parseInt(ctx.env.readProperty("browser_timeout"));
         ctx.driver.manage().timeouts().implicitlyWait(seconds, TimeUnit.SECONDS);

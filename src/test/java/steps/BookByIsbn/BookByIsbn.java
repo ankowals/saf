@@ -10,7 +10,6 @@ import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import modules.core.Log;
 import modules.core.SharedContext;
-import org.apache.commons.lang.StringUtils;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
@@ -35,9 +34,8 @@ public class BookByIsbn {
      */
     @Given("^a book exists with an isbn$")
     public void a_book_exists_with_isbn() {
-        Log.debug("* Step started a_book_exists_with_isbn");
-        //HashMap<String, Object> testDataMap = ctx.obj.get("TestData",HashMap.class);
-        //String isbn = (String) testDataMap.get("isbn");
+        Log.info("* Step started a_book_exists_with_isbn");
+
         String isbn = ctx.step.get("TestData.isbn");
         RequestSpecification request = given().param("q", "isbn:" + isbn);
         ctx.obj.put("request",RequestSpecification.class, request);
@@ -53,7 +51,8 @@ public class BookByIsbn {
      */
     @When("^a user retrieves the book by isbn$")
     public void a_user_retrieves_the_book_by_isbn(){
-        Log.debug("* Step started a_user_retrieves_the_book_by_isbn");
+        Log.info("* Step started a_user_retrieves_the_book_by_isbn");
+
         String url = ctx.env.readProperty("REST_url");
         RequestSpecification request = ctx.obj.get("request",RequestSpecification.class);
         Response response = request.when().log().all().get(url);
@@ -69,12 +68,12 @@ public class BookByIsbn {
      * Uses following objects:
      *  ctx.obj.response
      *
-     * @param input - String, status code or value from storage
+     * @param input  status code or value from storage
      *
      */
     @Then("^the status code is (.*)$")
     public void verify_status_code(String input){
-        Log.debug("* Step started verify_status_code");
+        Log.info("* Step started verify_status_code");
 
         Long statusCode = ctx.step.checkIfInputIsVariable(input);
         Integer code = statusCode.intValue();
@@ -91,12 +90,13 @@ public class BookByIsbn {
      * Uses following objects:
      *  ctx.obj.json
      *
-     * @param responseFields - Map<String, String>, table that contains key and expected value pairs to verify
+     * @param responseFields content of a table that contains key and expected value pairs to verify
      *
      */
     @And("^response includes the following in any order$")
     public void response_contains_in_any_order(Map<String,String> responseFields){
-        Log.debug("* Step started response_contains_in_any_order");
+        Log.info("* Step started response_contains_in_any_order");
+
         ValidatableResponse json = ctx.obj.get("json",ValidatableResponse.class);
         for (Map.Entry<String, String> field : responseFields.entrySet()) {
             Object expectedValue = ctx.step.checkIfInputIsVariable(field.getValue());
@@ -120,12 +120,13 @@ public class BookByIsbn {
      * Uses following objects:
      *  ctx.obj.json
      *
-     * @param responseFields - Map<String, String>, table that contains key and expected value pairs to verify
+     * @param responseFields content of a table that contains key and expected value pairs to verify
      *
      */
     @And("^response includes the following$")
     public void response_equals(Map<String,String> responseFields){
-        Log.debug("* Step started response_equals");
+        Log.info("* Step started response_equals");
+
         ValidatableResponse json = ctx.obj.get("json",ValidatableResponse.class);
         for (Map.Entry<String, String> field : responseFields.entrySet()) {
             Object expectedValue = ctx.step.checkIfInputIsVariable(field.getValue());
@@ -140,16 +141,6 @@ public class BookByIsbn {
                 json.body(field.getKey(), equalTo(sExpVal));
             }
         }
-       /*
-        for (Map.Entry<String, String> field : responseFields.entrySet()) {
-            if(StringUtils.isNumeric(field.getValue())){
-                json.body(field.getKey(), equalTo(Integer.parseInt(field.getValue())));
-            }
-            else{
-                json.body(field.getKey(), equalTo(field.getValue()));
-            }
-        }
-        */
     }
 
 }

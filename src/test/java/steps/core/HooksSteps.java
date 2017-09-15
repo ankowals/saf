@@ -68,7 +68,6 @@ public class HooksSteps {
                 ctx.config.create(globalConfigFile);
             }
         }
-        ctx.step.printTestData();
 
         Log.info("<- configuring logger for rest operations ->");
         ToLoggerPrintStream loggerPrintStream = new ToLoggerPrintStream( Log.getLogger() );
@@ -108,16 +107,19 @@ public class HooksSteps {
                 for (String localConfigFile : localConfigFiles) {
                     ctx.config.create(localConfigFile);
                 }
+            }else{
+                Log.warn("No local config files found!");
             }
         }
 
         if(ctx.env.readProperty("do_macro_eval_in_hooks").equalsIgnoreCase("true")){
             Log.info("<- evaluating macros ->");
             ctx.macro.eval("TestData");
+            ctx.macro.eval("Expected");
         }
 
-        Log.info("Test data storage after local config load is");
-        ctx.step.printTestData();
+        Log.info("Test data storage is");
+        ctx.step.printStorageData("TestData");
 
         Log.info("<- Finished local config load ->");
     }

@@ -17,46 +17,43 @@ public class CoreSteps {
         this.ctx = ctx;
     }
 
+    /**
+     * Opens browser of particular type as defined in the environment configuration
+     */
     @Given("^open browser$")
     public void open_browser() throws Throwable {
-        Log.debug("* Step started open_browser");
+        Log.info("* Step started open_browser");
+
         ctx.driver = new DriverManger(ctx).getDriver();
-        Log.info("Web driver created");
-        //String url = ctx.env.readProperty("WEB_url");
-        //Log.info("Going to open " + url);
-        //ctx.driver.get(url);
+        Log.debug("Web driver created");
     }
 
-    @And("^test data from \"(.*?)\" is loaded$")
+    /**
+     * Loads configuration from a particular file {}
+     * File path shall be relative to features directory and shall start without separator
+     */
+    @And("^configuration data from \"(.*?)\" is loaded$")
     public void load_local_test_data(String arg1) throws Throwable {
-        Log.debug("* Step started load_local_test_data");
-        //String featuresPath = ctx.env.readProperty("features_dir");
-        //String path = System.getProperty("user.dir") + featuresPath + "//" + arg1;
+        Log.info("* Step started load_local_test_data");
+
         String path = FeatureProvider.getFeaturesPath() + File.separator + arg1;
         ctx.config.create(path);
 
-        HashMap<String, Object> testDataMap = ctx.obj.get("TestData",HashMap.class);
-
-        for (Map.Entry<String, Object> entry : testDataMap.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            Log.debug(key + " = " + value);
-        }
+        Log.debug("Configuration from " + path + " loaded");
     }
 
+    /**
+     * Triggers macro evaluation for TestData storage and Expected data storage
+     */
     @And("^macro evaluation is done$")
     public void eval_macro() throws Throwable {
-        Log.debug("* Step started eval_macro");
+        Log.info("* Step started eval_macro");
+
         Log.info("<- evaluating macros ->");
         ctx.macro.eval("TestData");
+        ctx.macro.eval("Expected");
 
-        Log.info("Test data storage after macro evaluation is");
-        HashMap<String, Object> testDataMap = ctx.obj.get("TestData",HashMap.class);
-
-        for (Map.Entry<String, Object> entry : testDataMap.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            Log.debug(key + " = " + value);
-        }
+        Log.debug("Test data storage after macro evaluation is");
+        ctx.step.printStorageData("TestData");
     }
 }

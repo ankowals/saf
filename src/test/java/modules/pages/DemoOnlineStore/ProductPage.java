@@ -31,7 +31,13 @@ public class ProductPage extends BasePage {
     private static final By goToCheckoutButtonSelector = By.xpath("//*[@id='fancy_notification_content']/a[1]");
     private static final By popUpOverlayElementSelector = By.xpath("//div[@class='popup']");
 
-    //functions
+    /**
+     * helper function
+     * Search for a particular product on the page and adds it to the cart
+     *
+     * @param       name name of the product that shall be added to the cart
+     *
+     */
     private void handleProduct(String name){
         Log.debug("Looking for products on page");
         List<WebElement> displayedProdcuts = ctx.driver.findElements(productElementSelector);
@@ -59,6 +65,12 @@ public class ProductPage extends BasePage {
         waitForElementToBeVisible(fancyPopUpSelector);
     }
 
+    /**
+     * Adds product to the cart and clicks "ContinueShopping button"
+     *
+     * @param       name name of the product that shall be added to the cart
+     *
+     */
     public void addToCart(String name){
 
         handleProduct(name);
@@ -69,6 +81,13 @@ public class ProductPage extends BasePage {
         waitForElementToBeRemoved(popUpOverlayElementSelector);
     }
 
+    /**
+     * Adds product to the cart and goes to Checkout Page
+     *
+     * @param       name name of the product that shall be added to the cart
+     *
+     * @return      CheckoutPage
+     */
     public CheckoutPage addToCartAndCheckout(String name){
 
         handleProduct(name);

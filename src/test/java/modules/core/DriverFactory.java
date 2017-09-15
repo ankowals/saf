@@ -17,10 +17,22 @@ public class DriverFactory {
         this.ctx = ctx;
     }
 
+    /**
+     * Creates web driver based on the browser name defined in configuration
+     * Sets implicit web driver timer
+     *
+     * Uses following objects:
+     *  env.browser
+     *  env.path_to_browser_driver
+     *  env.browser_timeout
+     *
+     * @return web driver instance
+     *
+     */
     public  EventFiringWebDriver create(){
         Log.debug("Going to create new driver");
         String browser = ctx.env.readProperty("browser");
-        if (browser.equals("chrome")) {
+        if (browser.equalsIgnoreCase("chrome")) {
             String path = ctx.env.readProperty("path_to_chrome_driver");
             System.setProperty("webdriver.chrome.driver", path);
             dr = new ChromeDriver();

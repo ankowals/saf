@@ -29,8 +29,14 @@ public class MainPage extends BasePage {
         return titleContains(pageTitle);
     }
 
+    /**
+     * Navigates to all products page
+     *
+     * @return      ProductPage
+     *
+     */
     public ProductPage goToAllProduct(){
-        Log.info("Click 'All Products' button");
+        Log.debug("Click 'All Products' button");
         WebElement allProductButton = ctx.driver.findElement(allProductsSelector);
         allProductButton.click();
 

@@ -24,6 +24,15 @@ public class StepUtil {
         this.ctx = ctx;
     }
 
+
+    /**
+     * sets value of particular key in TestData storage
+     * if key does not exists it will be created
+     *
+     * @param textKey object name
+     * @param value object value
+     *
+     */
     public <T> void set(String textKey, T value) {
         //get test data
         HashMap<String, Object> testDataMap = ctx.obj.get("TestData",HashMap.class);
@@ -35,6 +44,14 @@ public class StepUtil {
         Log.info("New object of type " + typeKey.toString() + " set with name " + textKey);
     }
 
+    /**
+     * returns type of value
+     * helper function
+     *
+     * @param value object value
+     *
+     * @return type of value
+     */
     private <T> Class<?> getType(T value){
         if(value.getClass().getName().contains("String")){
             return String.class;
@@ -58,18 +75,34 @@ public class StepUtil {
         return null;
     }
 
-    public void printTestData() {
-        Log.info("Going to view the current state of test data");
-        HashMap<String, Object> testDataMap = ctx.obj.get("TestData",HashMap.class);
-        Log.info("--- start ---");
-        for(Map.Entry<String, Object>entry : testDataMap.entrySet()) {
-            String[] tmp = entry.getValue().getClass().getName().split(Pattern.quote(".")); // Split on period.
-            String type = tmp[2];
-            Log.info("(" + type + ")" + entry.getKey() + " = " + entry.getValue().toString());
+    /**
+     * Prints current content of a storage with name {} to the log file
+     *
+     * @param name of the storage
+     */
+    public void printStorageData(String name) {
+        Log.debug("Going to view the current state of " + name + " storage");
+        HashMap<String, Object> dataMap = ctx.obj.get(name,HashMap.class);
+        if ( dataMap != null ) {
+            Log.info("--- start ---");
+            for (Map.Entry<String, Object> entry : dataMap.entrySet()) {
+                String[] tmp = entry.getValue().getClass().getName().split(Pattern.quote(".")); // Split on period.
+                String type = tmp[2];
+                Log.info("(" + type + ")" + entry.getKey() + " = " + entry.getValue().toString());
+            }
+            Log.info("--- end ---");
         }
-        Log.info("--- end ---");
     }
 
+
+    /**
+     * Retrieves particular key value from the storage.
+     * Usage is get("StorageName.key1.nestedKey2[2]")
+     *
+     * @param path path to the value in the storage
+     *
+     * @return value from storage
+     */
     public <T> T get(String path) {
         //do not check if storage exists if we are dealing with a number
         if ( NumberUtils.isNumber(path) ) {
@@ -118,7 +151,11 @@ public class StepUtil {
         }
     }
 
-
+    /**
+     * Waits defined amount of time in seconds
+     *
+     * @param seconds number of seconds to wait
+     */
     public void sleep (Integer seconds) {
         try {
             Log.debug("Waiting for " + seconds + " seconds");
@@ -129,7 +166,16 @@ public class StepUtil {
         }
     }
 
-
+    /**
+     * Checks if string provided as an input to the step def is actually a key in the storage
+     * Returns input value or value extracted from storage.
+     * Please note that in this case type of input is String but returned value can be one of
+     * String, Double, Long, Boolean
+     *
+     * @param input key in the storage or value
+     *
+     * @return value from storage or input
+     */
     public <T> T checkIfInputIsVariable(String input) {
         T result = (T) input;
         T tmp = get(input);
@@ -158,29 +204,19 @@ public class StepUtil {
 
         if ( tmp != null ){
             result = tmp;
-            Log.debug("Converted element from storage: input " + " to " + result);
+            Log.debug("Converted element from storage: " + input + " to " + result);
         }
 
         return result;
     }
 
-
-
-
-    /*
-    public <T> T checkIfInputIsVariableAndReturnString(String input) {
-        T result = (T) input;
-        T tmp = get(input);
-
-        if (tmp!= null){
-            result = tmp;
-            Log.debug(input + " = " + result);
-        }
-
-        return (T) result.toString();
-    }
-    */
-
+    /**
+     * Attaches file to the report
+     *
+     * @param name name of the file to be displayed in the report
+     * @param type type of file like text/plain or application/pdf etc.
+     * @param path path to the file
+     */
     @Attachment(value="{0}", type="{1}")
     public byte[] attachFileToReport(String name, String type, String path) {
         byte[] bytes = null;
@@ -196,19 +232,30 @@ public class StepUtil {
         return bytes;
     }
 
+    /**
+     * Attaches screenshot to the report
+     *
+     * @param name name of the screenshot
+     */
     @Attachment(value="{0}", type="image/png")
     public byte[] attachScreenshotToReport(String name){
         byte[] screenshot = null;
         try {
             screenshot = ((TakesScreenshot) ctx.driver).getScreenshotAs(OutputType.BYTES);
         } catch (WebDriverException e) {
-            Log.error("Screenshot can't be taken");
+            Log.error("Screenshot can't be taken. Make sure that driver was started!");
             Log.error(e.getMessage());
         }
 
         return screenshot;
     }
 
+    /**
+     * Attaches text to the report
+     *
+     * @param name of the text to be displayed in the report
+     * @param message content of the text to be displayed in the report
+     */
     @Attachment(value="{0}", type="text/plain")
     public String attachMessageToReport(String name, String message){
         return message;

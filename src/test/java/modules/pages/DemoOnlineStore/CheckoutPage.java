@@ -24,10 +24,15 @@ public class CheckoutPage extends BasePage {
 
     //selectors
     private static final By TotalPriceElementSelector = By.xpath("//*[@class='yourtotal']/descendant::span[@class='pricedisplay']");
-    private static final By ProductToalPriceElementSelector = By.xpath("//*[contains(@class, 'wpsc_product_price')]/span[@class='pricedisplay']");
+    private static final By ProductTotalPriceElementSelector = By.xpath("//*[contains(@class, 'wpsc_product_price')]/span[@class='pricedisplay']");
     private static final By ProductNameElementSelector = By.xpath("//*[contains(@class, 'wpsc_product_name')]/a");
 
-
+    /**
+     * Retrieves total price of all products in the cart without currency sign
+     *
+     * @return      String, price
+     *
+     */
     public String getTotalPrice() {
         Log.debug("Extracting total price of all products in the cart");
         WebElement totalPrice = ctx.driver.findElement(TotalPriceElementSelector);
@@ -35,10 +40,16 @@ public class CheckoutPage extends BasePage {
         return totalPrice.getText().replace("$","");
     }
 
+    /**
+     * Retrieves total price of products of each type in the cart
+     *
+     * @return     price per product type as an ArrayList
+     *
+     */
     public ArrayList<String> getTotalPricePerProduct() {
         Log.debug("Extracting total price per product in the cart");
         ArrayList result = new ArrayList();
-        List<WebElement> priceOfProducts = ctx.driver.findElements(ProductToalPriceElementSelector);
+        List<WebElement> priceOfProducts = ctx.driver.findElements(ProductTotalPriceElementSelector);
         List<WebElement> nameOfProducts = ctx.driver.findElements(ProductNameElementSelector);
 
         Log.debug("Found " + priceOfProducts.size() + " types of products in the cart");

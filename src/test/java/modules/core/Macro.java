@@ -145,23 +145,23 @@ public class Macro {
 
     public void eval(String input) {
         HashMap<String, Object> mapToEval = ctx.obj.get(input,HashMap.class);
-        HashMap<String, Object> macros = ctx.obj.get("Macro", HashMap.class);
+        if ( mapToEval != null ) {
+            HashMap<String, Object> macros = ctx.obj.get("Macro", HashMap.class);
 
-        HashMap<String, String> macrosAfterEvaluation = mcr(macros);
+            HashMap<String, String> macrosAfterEvaluation = mcr(macros);
 
-        //evaluate macros
-        for (HashMap.Entry<String, Object> entryToEval : mapToEval.entrySet()) {
-            if( entryToEval.getValue().getClass().getName().contains("String")) {
-                for(HashMap.Entry<String, String> macroEntry : macrosAfterEvaluation.entrySet()) {
-                    if ( entryToEval.getValue().equals( "mcr." + macroEntry.getKey() ) ) {
-                        mapToEval.put(entryToEval.getKey(), macroEntry.getValue());
+            //evaluate macros
+            for (HashMap.Entry<String, Object> entryToEval : mapToEval.entrySet()) {
+                if (entryToEval.getValue().getClass().getName().contains("String")) {
+                    for (HashMap.Entry<String, String> macroEntry : macrosAfterEvaluation.entrySet()) {
+                        if (entryToEval.getValue().equals("mcr." + macroEntry.getKey())) {
+                            mapToEval.put(entryToEval.getKey(), macroEntry.getValue());
+                        }
                     }
                 }
             }
-        }
-
-        ctx.obj.put(input, HashMap.class, mapToEval);
-
+            ctx.obj.put(input, HashMap.class, mapToEval);
+       }
     }
 
 }

@@ -28,10 +28,14 @@ public class DemoOnlieSteps {
 
     /**
      * Opens web page with url taken from environment configuration
+     *
+     * Uses following objects:
+     * env.WEB_url
+     *
      */
     @When("^open main page$")
     public void i_open_main_page() throws Throwable {
-        Log.debug("* Step started i_open_main_page");
+        Log.info("* Step started i_open_main_page");
         //instantiate MainPage to open url in the browser
         main = new MainPage(ctx);
         main.load();
@@ -42,19 +46,19 @@ public class DemoOnlieSteps {
      */
     @And("^navigate to all products page$")
     public void navigate_to_all_products() throws Throwable{
-        Log.debug("* Step started add_product_to_cart");
+        Log.info("* Step started navigate_to_all_products");
         product = main.goToAllProduct();
     }
 
     /**
      * Adds product {} to the cart.
      *
-     * @param productName - String, name or value from storage
+     * @param productName  name or value from storage
      *
      */
     @And("^add product (.*) to cart$")
     public void add_product_to_cart(String productName) throws Throwable{
-        Log.debug("* Step started add_product_to_cart");
+        Log.info("* Step started add_product_to_cart");
 
         String input = ctx.step.checkIfInputIsVariable(productName);
         product.addToCart(input);
@@ -63,12 +67,12 @@ public class DemoOnlieSteps {
     /**
      * Adds product {} to the cart and navigates to checkout page.
      *
-     * @param productName - String, name or value from storage
+     * @param productName  name or value from storage
      *
      */
     @And("^add product (.*) to cart and go to checkout$")
     public void add_product_to_cart_and_checkout(String productName) throws Throwable{
-        Log.debug("* Step started add_product_to_cart_and_checkout");
+        Log.info("* Step started add_product_to_cart_and_checkout");
 
         String input = ctx.step.checkIfInputIsVariable(productName);
         checkout = product.addToCartAndCheckout(input);
@@ -83,7 +87,7 @@ public class DemoOnlieSteps {
      */
     @Then("^verify that SubTotal value equals sum of totals per product type$")
     public void verify_sum_of_totals_per_product_type_equals_subTotal() throws Throwable{
-        Log.debug("* Step started verify_sum_of_totals_per_product_type_equals_subTotal");
+        Log.info("* Step started verify_sum_of_totals_per_product_type_equals_subTotal");
 
         String totalPrice = checkout.getTotalPrice();
         ArrayList<String> totalPerProductType = checkout.getTotalPricePerProduct();
