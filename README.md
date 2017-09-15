@@ -29,7 +29,7 @@ What do we want from a test automation framework?
 	a way to start test from IDE and command line as well as an ability to overwrite parameters when test suite started from cmd
 	a way to automatically deploy the framework under windows (dependency management)
 	a way to share the code/tests between testers to increae re-usability (version control system)
-	a way to monitor and indicate quality of commited tests (see Sonar for example )
+	a way to monitor and indicate quality of commited tests (see SonarQube for example )
 	a way to support PageObject model for web automation purposes
 	a way to share common data between steps (dependency injection)
 	a way to schedule test execution (see Jenkins/TeamCity)
