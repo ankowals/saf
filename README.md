@@ -185,13 +185,13 @@ Test execution shall look like this
 
 	     ConfigurationData ------->	System Under Test 
 						^	
-	TestData & ExpectedData -----> | execution engine | -----> ResultsData 
+	TestData & ExpectedData -----> | execution engine | -----> ResultData 	=> test result (OK/NOK)
 						^
 				    	user actions (steps)
 
 
 
-Test result equals result of comparison beteen ResultsData & ExpectedData
+Test result is the result of comparison between ResultData & ExpectedData
 
 
 Framework will execute each scenario in a feture file.
