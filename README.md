@@ -49,6 +49,7 @@ How can we use test automation framework?
 	to automate functional tests
 	to automate acceptance tests (after any deployment)
 	to automate integration tests
+	to automate regression tests
 	to execute sanity chcecks and make sure that SUT configuration is correct (like all urls are reachable, ports open, interfaces are up & apps are running, login is possible for each user etc.)
 	to gether symptoms like traces/logs/tickets/events from multiple systems under test
 	to execute system bringup and feel it with configruation data before test starts
