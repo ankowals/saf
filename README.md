@@ -44,6 +44,48 @@ What do we want from a test automation framework?
 
 ----------------------------------
 
+Where we are now?
+	
+	(in progress) a way to execute tests related to  
+		(done) - rest json/xml (soap) => RestAssured integrated 
+		(done) - gui (web/native) => Selenium WebDriver integrated
+		(in progress) - sql => integration of JDBC and csv for data load purpose pending
+		(to do) - mobile => Appium integration
+		(to do) - pdf validation 
+		- others??
+		
+	----------------------------------	
+		
+	(to do) a way to intergate any 3rd party app by execution of any command on local host and remote over ssh	
+	(to do) a way to downlaod any 3rd party symptoms from SUT like logs, trace files
+	(to do) a way to monitor and indicate quality of commited tests (see SonarQube for example )
+	(to do) a way to schedule test execution (see Jenkins/TeamCity)
+	(to do) a way to generate test documentation automatically => add new login categories, use scenrio outline with path to feature and log file after test execution	
+	(to do) a way to pause test execution and allow for manual intervention => via autoIt script executed from a step def?
+	(to do) a way to integrate with test/requirement management tool (like for example jira, so we can have links to tests/epic/stories in the test report) => via allure integration
+	(to do) a way to intgrate with incident management tool (like for example jira, so we can have at least links to defects that affect particular test in the report and maybe their status etc.) => via allure integration	
+	(to do) add more tests examples
+	
+	----------------------------------	
+	
+	(done) a way to execute e2e test using Gherkin language (BDD) => cucumber-jvm integrated
+	(done) a way to manage and configure test environment => via global and local property files
+	(done) a way to manage and configure test data	=> via json configuration files
+	(done) a way to prepare/calculate test data at runtime (macros) => macros implemented
+	(done) a way to manage and code a set of common modules/step/functions to be used for testing purposes => via core modules and steps
+	(done) a way to log any activity dony by the framework => log4j2 integrated
+	(done) a way to report test status => allure integrated
+	(done) a way to attach logs/files/messages/screenshots to the report => via allure integration
+	(done) a way to start test from IDE and command line as well as an ability to overwrite parameters when test suite started from cmd => via InteliiJ cucumber plugin and mvn surefire plugin
+	(done) a way to automatically deploy the framework under windows (dependency management) => via maven
+	(done) a way to share the code/tests between testers to increae re-usability (version control system) => via this git repo, 
+	(done) a way to support PageObject model for web automation purposes => via BasePage implementation
+	(done) a way to share common data between steps (dependency injection) => pico container integration
+	(done) a way to manage multiple projects (version control system) => separate repo per project maybe git submodules can be used?
+	
+	
+----------------------------------
+
 How can we use test automation framework?
 
 	to automate functional tests
