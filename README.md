@@ -48,6 +48,7 @@ What do we want from a test automation framework?
 
 Where are we now?
 	
+	(in progress) documentation update
 	(in progress) a way to execute tests related to  
 		(done) - rest json/xml (soap) => RestAssured integrated 
 		(done) - gui (web/native) => Selenium WebDriver integrated for chrome
