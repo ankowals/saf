@@ -1,4 +1,4 @@
-@Web
+@WebAndDb
 Feature: test3
   Use selenium java with cucumber-jvm and navigate to website
 
@@ -6,3 +6,5 @@ Feature: test3
    Given open browser
     When I open seleniumframework website
     Then I validate title and URL
+    And open db
+    And simple select is executed

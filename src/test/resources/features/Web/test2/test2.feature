@@ -6,6 +6,7 @@ Feature: test2
     Given configuration data from "Web\test2\test2.config" is loaded
       And macro evaluation is done
 
+  @storageTest
   Scenario: Test search 2
     Given open browser
     When I open google page
