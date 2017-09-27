@@ -39,6 +39,7 @@ What do we want from a test automation framework?
 	a way to integrate with test/requirement management tool (like for example jira, so we can have links to tests/epic/stories in the test report)
 	a way to intgrate with incident management tool (like for example jira, so we can have at least links to defects that affect particular test in the report and maybe their status etc.)
 	a way to write simmple step defs (for example usage of try-catch blocks is ugly)
+	a way to manage templates
 	
 	a way to re-run failed test can be a nice addon
 	a way to execute test remotely can be a nice addon
@@ -90,6 +91,7 @@ Where are we now?
 	(done) a way to share common data between steps (dependency injection) => pico container integration
 	(done) a way to manage multiple projects (version control system) => separate repo per project maybe git submodules can be used?
 	(done) a way to write simmple step defs (for example usage of try-catch blocks is ugly) => via PageCore, FileCore, StepCore, SqlCore, Macro, Storage, Environment and others models
+	(done) a way to manage templates => via CoreStep model
 	
 	
 ----------------------------------
