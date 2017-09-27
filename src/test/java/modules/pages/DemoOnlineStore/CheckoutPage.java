@@ -14,12 +14,12 @@ public class CheckoutPage extends BasePage {
     public CheckoutPage(SharedContext ctx) {
         super(ctx);
         if(! isLoaded("Checkout | ONLINE STORE")){
-            Log.fatal("Checkout Page not loaded!");
+            Log.error("Checkout Page not loaded!");
         }
     }
 
     public Boolean isLoaded(String pageTitle){
-        return titleContains(pageTitle);
+        return PageCore.titleContains(pageTitle);
     }
 
     //selectors
@@ -35,7 +35,7 @@ public class CheckoutPage extends BasePage {
      */
     public String getTotalPrice() {
         Log.debug("Extracting total price of all products in the cart");
-        WebElement totalPrice = ctx.driver.findElement(TotalPriceElementSelector);
+        WebElement totalPrice = PageCore.findElement(TotalPriceElementSelector);
 
         return totalPrice.getText().replace("$","");
     }
@@ -49,8 +49,8 @@ public class CheckoutPage extends BasePage {
     public ArrayList<String> getTotalPricePerProduct() {
         Log.debug("Extracting total price per product in the cart");
         ArrayList result = new ArrayList();
-        List<WebElement> priceOfProducts = ctx.driver.findElements(ProductTotalPriceElementSelector);
-        List<WebElement> nameOfProducts = ctx.driver.findElements(ProductNameElementSelector);
+        List<WebElement> priceOfProducts = PageCore.findElements(ProductTotalPriceElementSelector);
+        List<WebElement> nameOfProducts = PageCore.findElements(ProductNameElementSelector);
 
         Log.debug("Found " + priceOfProducts.size() + " types of products in the cart");
         for (int i = 0; i < priceOfProducts.size(); i++) {

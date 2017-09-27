@@ -8,18 +8,27 @@ import java.util.Properties;
 
 public class PropertyReader {
 
-    private Properties properties = new Properties();
-    InputStream inputStream = null;
-    String configDir = FeatureProvider.getGlobalConfigPath();
-    String default_env = "env";
+    private SharedContext ctx;
+    private FileCore FileCore;
 
-    public PropertyReader() {
+    private Properties properties = new Properties();
+    private InputStream inputStream = null;
+    private String configDir;
+    private String default_env = "env";
+
+    // PicoContainer injects class SharedContext
+    public PropertyReader (SharedContext ctx) {
+        this.ctx = ctx;
+        this.FileCore = ctx.Object.get("FileCore",FileCore.class);
+        this.configDir = FileCore.getGlobalConfigPath();
+
         loadProperties(configDir + "//" + default_env + ".properties");
         String act_env = checkActiveEnv();
         if ( act_env != null && !act_env.equals(default_env) && !act_env.equals("") ) {
             loadProperties(configDir + "//" + act_env + ".properties");
         }
         readProperties();
+
     }
 
     private void loadProperties(String path) {
@@ -34,41 +43,40 @@ public class PropertyReader {
                 properties.setProperty(str,tmp.getProperty(str));
             }
         } catch (IOException e) {
-            Log.error("Configuration file " + path + " not found!");
-            Log.error(e.getMessage());
+            Log.error( "Configuration file " + path + " not found!", e );
         }
     }
 
     public String readProperty(String key) {
         if (properties.getProperty(key) == null || properties.getProperty(key).isEmpty()) {
-            Log.fatal("Property " + key + " not set!");
+            Log.error("Property " + key + " not set!");
         }
         String value = properties.getProperty(key);
-        Log.debug("Environment property " + key + " = " + value);
+        Log.info("Environment property " + key + " = " + value);
         return value;
     }
 
     public void readSystemProperties(){
         Properties p = System.getProperties();
         //Enumeration keys = p.keys();
-        Log.debug("--- System properties are as follows ---");
-        Log.debug("os.arch:" + p.get("os.arch"));
-        Log.debug("os.name:" + p.get("os.name"));
-        Log.debug("user.name:" + p.get("user.name"));
-        Log.debug("user.home:" + p.get("user.home"));
-        Log.debug("user.dir:" + p.get("user.dir"));
-        Log.debug("user.timezone:" + p.get("user.timezone"));
-        Log.debug("java.runtime.name:" + p.get("java.runtime.name"));
-        Log.debug("java.version:" + p.get("java.version"));
-        Log.debug("java.vm.version:" + p.get("java.vm.version"));
-        Log.debug("java.io.tmpdir:" + p.get("java.io.tmpdir"));
-        Log.debug("java.home:" + p.get("java.home"));
+        Log.info("--- System properties are as follows ---");
+        Log.info("os.arch:" + p.get("os.arch"));
+        Log.info("os.name:" + p.get("os.name"));
+        Log.info("user.name:" + p.get("user.name"));
+        Log.info("user.home:" + p.get("user.home"));
+        Log.info("user.dir:" + p.get("user.dir"));
+        Log.info("user.timezone:" + p.get("user.timezone"));
+        Log.info("java.runtime.name:" + p.get("java.runtime.name"));
+        Log.info("java.version:" + p.get("java.version"));
+        Log.info("java.vm.version:" + p.get("java.vm.version"));
+        Log.info("java.io.tmpdir:" + p.get("java.io.tmpdir"));
+        Log.info("java.home:" + p.get("java.home"));
         //while (keys.hasMoreElements()) {
         //    String key = (String)keys.nextElement();
         //    String value = (String)p.get(key);
         //    Log.debug(key + ": " + value);
         //}
-        Log.debug("--- end ---");
+        Log.info("--- end ---");
     }
 
     public void readProperties() {

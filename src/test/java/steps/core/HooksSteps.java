@@ -1,20 +1,25 @@
 package steps.core;
 
+import modules.core.*;
 import cucumber.api.Scenario;
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import io.restassured.RestAssured;
 import io.restassured.config.LogConfig;
-import modules.core.*;
-import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.logging.LogEntry;
+import org.openqa.selenium.support.events.EventFiringWebDriver;
 import ru.yandex.qatools.allure.annotations.Attachment;
 import java.io.ByteArrayOutputStream;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class HooksSteps {
 
     private SharedContext ctx;
+    private StepCore StepCore;
+    private PageCore PageCore;
     private ByteArrayOutputStream out = new ByteArrayOutputStream();
 
     // PicoContainer injects class SharedContext
@@ -44,28 +49,48 @@ public class HooksSteps {
 
         /* Global resources load */
         Log.info("Started resources initialisation");
-        ctx.config = new ConfigReader(ctx);
-        ctx.macro = new Macro(ctx);
-        ctx.step = new StepUtil(ctx);
-
         Log.info("<- creating shared context ->");
-        ctx.obj = new Context();
+        ctx.Object = new Context();
+        ctx.Object.put("FeatureId",String.class, tId[0]);
+        Storage storage = new Storage(ctx);
+        ctx.Object.put("Storage", Storage.class, storage);
+
+        Macro macro = new Macro(ctx);
+        ctx.Object.put("Macro", Macro.class, macro);
+
+        FileCore fileCore = new FileCore(ctx);
+        ctx.Object.put("FileCore", FileCore.class, fileCore);
+
+        FileCore FileCore = ctx.Object.get("FileCore", FileCore.class);
+
+        StepCore step = new StepCore(ctx);
+        ctx.Object.put("StepCore", StepCore.class, step);
+
+        Macro Macro = ctx.Object.get("Macro", Macro.class);
+        StepCore = ctx.Object.get("StepCore", StepCore.class);
+
 
         Log.info("<- checking environment configuration ->");
-        ctx.env = new PropertyReader();
-        ctx.env.readSystemProperties();
+        PropertyReader env = new PropertyReader(ctx);
+        ctx.Object.put("Environment", PropertyReader.class, env);
+
+        PropertyReader Environment = ctx.Object.get("Environment", PropertyReader.class);
+        Environment.readSystemProperties();
 
         Log.info("<- creating test data and macro storage ->");
-        String globalConfigDir = FeatureProvider.getGlobalConfigPath();
+        ConfigReader Config = new ConfigReader(ctx);
+
+        String globalConfigDir = FileCore.getGlobalConfigPath();
         Log.debug("Global configuration directory is " + globalConfigDir);
-        ArrayList<String> globalConfigFiles = FeatureProvider.searchForFile(globalConfigDir,".config");
+
+        ArrayList<String> globalConfigFiles = FileCore.searchForFile(globalConfigDir,".config");
         if(globalConfigFiles.size()!=0) {
             Log.debug("Following config files were found inside ");
             for (String globalConfigFile : globalConfigFiles) {
                 Log.debug(globalConfigFile);
             }
             for (String globalConfigFile : globalConfigFiles) {
-                ctx.config.create(globalConfigFile);
+                Config.create(globalConfigFile);
             }
         }
 
@@ -77,49 +102,34 @@ public class HooksSteps {
 
         /* Local resources load */
         Log.info("<- Started local config load ->");
-        String path = FeatureProvider.getFeaturesPath();
-        ArrayList<String> featurePaths = FeatureProvider.getSpecificFeature(path,tId[0], ".feature");
+        String featureDir = FileCore.getCurrentFeatureDirPath();
+        Log.debug("Feature dir is " + featureDir);
+        if( featureDir != null ){
+            ctx.Object.put("FeatureFileDir",String.class,featureDir);
 
-        if(featurePaths.size()==0){
-            Log.warn("Currently used feature file path not found. Please make sure that Feature file and Feature name are same");
-            Log.warn("Local config files are not going to be loaded automatically");
-        }
-
-        if (featurePaths.size()>1){
-            Log.warn("Found more than 1 feature that meats criteria: name. Please fix feature files or feature names convention");
-            for (String filePath : featurePaths) {
-                Log.warn(filePath);
-            }
-            Log.warn("Local config files are not going to be loaded automatically");
-        }
-
-        if(featurePaths.size()==1){
-            Log.debug("Found feature file path is " + featurePaths.get(0));
-            String featureDir = FilenameUtils.getFullPathNoEndSeparator(featurePaths.get(0));
-            Log.debug("Feature dir is " + featureDir);
-
-            ArrayList<String> localConfigFiles = FeatureProvider.searchForFile(featureDir,".config");
+            ArrayList<String> localConfigFiles = FileCore.searchForFile(featureDir,".config");
             if(localConfigFiles.size()!=0) {
                 Log.debug("Following config files were found inside ");
                 for (String localConfigFile : localConfigFiles) {
                     Log.debug(localConfigFile);
                 }
                 for (String localConfigFile : localConfigFiles) {
-                    ctx.config.create(localConfigFile);
+                    Config.create(localConfigFile);
                 }
             }else{
                 Log.warn("No local config files found!");
             }
         }
 
-        if(ctx.env.readProperty("do_macro_eval_in_hooks").equalsIgnoreCase("true")){
+        if(Environment.readProperty("do_macro_eval_in_hooks").equalsIgnoreCase("true")){
             Log.info("<- evaluating macros ->");
-            ctx.macro.eval("TestData");
-            ctx.macro.eval("Expected");
+            Macro.eval("TestData");
+            Macro.eval("Expected");
         }
 
         Log.info("Test data storage is");
-        ctx.step.printStorageData("TestData");
+        Storage Storage = ctx.Object.get("Storage", Storage.class);
+        Storage.print("TestData");
 
         Log.info("<- Finished local config load ->");
     }
@@ -127,35 +137,58 @@ public class HooksSteps {
     @After
     /**
      * Embed a screenshot in test report if test is marked as failed
-     * Get browser/driver logs is any
+     * Get browser/driver logs if any
      * Attach scenario log to the report
+     * Close web driver and jdbc connection
      **/
     public void tearDown(Scenario scenario) {
 
         Log.info("*** Scenario with name: " + scenario.getName() + " ended! ***");
 
-        if (ctx.driver != null) {
+        EventFiringWebDriver Page = ctx.Object.get("Page", EventFiringWebDriver.class);
+        if (Page != null) {
             Log.debug("Browser console logs are available below");
-            for (LogEntry logEntry : ctx.driver.manage().logs().get("browser").getAll()) {
+            for (LogEntry logEntry : Page.manage().logs().get("browser").getAll()) {
                 Log.debug("" + logEntry);
             }
             Log.debug("Driver logs are available below");
-            for (LogEntry logEntry : ctx.driver.manage().logs().get("driver").getAll()) {
+            for (LogEntry logEntry : Page.manage().logs().get("driver").getAll()) {
                 Log.debug("" + logEntry);
             }
         }
 
         Log.info("Started resources clean up");
-        if (ctx.driver != null) {
+
+        // Close web driver connection
+        if (Page != null) {
 
             if(scenario.isFailed()) {
                 Log.debug("Try to take a screenshot");
-                ctx.step.attachScreenshotToReport(scenario.getName());
+                PageCore = ctx.Object.get("PageCore", PageCore.class);
+                byte[] screenshot = PageCore.takeScreenshot();
+                String name = StringUtils.remove(scenario.getName(),"-");
+                if ( name.length() > 256 ) {
+                    name = name.substring(0, 255);
+                }
+                StepCore.attachScreenshotToReport(name,screenshot);
             }
 
             Log.debug("Driver cleanup started");
-            ctx.driver.quit();
+            Page.close();
+            Page.quit();
             Log.debug("Driver cleanup done");
+        }
+
+        Connection Sql = ctx.Object.get("Sql", Connection.class);
+        // Close DB connection
+        if ( Sql != null ) {
+            try {
+                Log.debug("Db connection cleanup started");
+                Sql.close();
+                Log.debug("Db connection cleanup done");
+            } catch (SQLException e) {
+                Log.error("", e);
+            }
         }
 
         Log.info("Finished resources clean up");

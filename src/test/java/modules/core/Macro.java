@@ -53,7 +53,7 @@ public class Macro {
                 if(tMacro.containsKey("type")){
                     type = tMacro.get("type").toString();
                     }else{
-                    Log.fatal("Macro type has to be provided for " + entry.getKey());
+                    Log.error("Macro type has to be provided for " + entry.getKey());
                 }
                 if(tMacro.containsKey("format")){
                     format = tMacro.get("format").toString();
@@ -99,20 +99,20 @@ public class Macro {
             availableTypes.add("timestamp");
 
             if(!availableTypes.contains(type)){
-                Log.debug("Available macro types are as follows:");
+                Log.warn("Available macro types are as follows:");
                 for(String item : availableTypes){
-                    Log.debug(item);
+                    Log.info(item);
                 }
-                Log.fatal("Wrong type defined for macro " + entry.getKey());
+                Log.error("Wrong type defined for macro " + entry.getKey());
             }
 
             Set<String> availiableZones = ZoneId.getAvailableZoneIds();
             if(!availiableZones.contains(sZoneId)) {
-                Log.debug("Available macro zoneIds are as follows:");
+                Log.warn("Available macro zoneIds are as follows:");
                 for (String s : availiableZones) {
-                    Log.debug(s);
+                    Log.info(s);
                 }
-                Log.fatal("Wrong zoneId defined for macro " + entry.getKey());
+                Log.error("Wrong zoneId defined for macro " + entry.getKey());
             }
 
             //calculate new macro value
@@ -144,9 +144,9 @@ public class Macro {
     }
 
     public void eval(String input) {
-        HashMap<String, Object> mapToEval = ctx.obj.get(input,HashMap.class);
+        HashMap<String, Object> mapToEval = ctx.Object.get(input,HashMap.class);
         if ( mapToEval != null ) {
-            HashMap<String, Object> macros = ctx.obj.get("Macro", HashMap.class);
+            HashMap<String, Object> macros = ctx.Object.get("Macro", HashMap.class);
 
             HashMap<String, String> macrosAfterEvaluation = mcr(macros);
 
@@ -160,7 +160,7 @@ public class Macro {
                     }
                 }
             }
-            ctx.obj.put(input, HashMap.class, mapToEval);
+            ctx.Object.put(input, HashMap.class, mapToEval);
        }
     }
 

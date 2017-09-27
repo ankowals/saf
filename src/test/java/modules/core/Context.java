@@ -66,11 +66,16 @@ public class Context {
      * @return HashMap
      */
     private Object getUntyped(String textKey, Class<?> typeKey) {
-        if (internalMap.containsKey(textKey))
+        if (internalMap.containsKey(textKey)) {
             return internalMap.get(textKey).get(typeKey);
-        else
+        } else {
             Log.warn("Ctx obj with key " + textKey + " does not exists or null!");
             return null;
+        }
     }
+
+    //public void clear () {
+    //    internalMap.clear();
+    //}
 
 }

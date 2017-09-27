@@ -6,6 +6,7 @@ import modules.core.SharedContext;
 import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+
 import java.util.List;
 
 public class ProductPage extends BasePage {
@@ -13,12 +14,12 @@ public class ProductPage extends BasePage {
     public ProductPage(SharedContext ctx) {
         super(ctx);
         if(! isLoaded("Product Category | ONLINE STORE")){
-            Log.fatal("Product Page not loaded!");
+            Log.error("Product Page not loaded!");
         }
     }
 
     public Boolean isLoaded(String pageTitle){
-        return titleContains(pageTitle);
+        return PageCore.titleContains(pageTitle);
     }
 
     //selectors
@@ -40,11 +41,11 @@ public class ProductPage extends BasePage {
      */
     private void handleProduct(String name){
         Log.debug("Looking for products on page");
-        List<WebElement> displayedProdcuts = ctx.driver.findElements(productElementSelector);
+        List<WebElement> displayedProdcuts = PageCore.findElements(productElementSelector);
 
         Log.debug("Found " + displayedProdcuts.size() + " products on page");
-        List<WebElement> productTitles = ctx.driver.findElements(productTitleSelector);
-        List<WebElement> currentPrices = ctx.driver.findElements(currentPriceSelector);
+        List<WebElement> productTitles = PageCore.findElements(productTitleSelector);
+        List<WebElement> currentPrices = PageCore.findElements(currentPriceSelector);
         Integer index = null;
         for (int i = 0; i < displayedProdcuts.size(); i++) {
             String displayedName = productTitles.get(i).getText().trim();
@@ -54,15 +55,15 @@ public class ProductPage extends BasePage {
             }
         }
 
-        if(index==null){
-            Log.fatal("Product with such name " + name + " is not available");
+        if( index == null ){
+            Log.error("Product with such name " + name + " is not available");
         }
 
         Log.debug("Add product " + productTitles.get(index).getText() + " to the cart");
-        List<WebElement> addInputs = ctx.driver.findElements(addInputSelector);
+        List<WebElement> addInputs = PageCore.findElements(addInputSelector);
         addInputs.get(index).click();
 
-        waitForElementToBeVisible(fancyPopUpSelector);
+        PageCore.waitForElementToBeVisible(fancyPopUpSelector);
     }
 
     /**
@@ -76,9 +77,9 @@ public class ProductPage extends BasePage {
         handleProduct(name);
 
         //click continue
-        WebElement continueShoppingButton = ctx.driver.findElement(continueShoppingButtonSelector);
+        WebElement continueShoppingButton = PageCore.findElement(continueShoppingButtonSelector);
         continueShoppingButton.click();
-        waitForElementToBeRemoved(popUpOverlayElementSelector);
+        PageCore.waitForElementToBeRemoved(popUpOverlayElementSelector);
     }
 
     /**
@@ -93,9 +94,9 @@ public class ProductPage extends BasePage {
         handleProduct(name);
 
         //click checkout
-        WebElement goToCheckoutButton = ctx.driver.findElement(goToCheckoutButtonSelector);
+        WebElement goToCheckoutButton = PageCore.findElement(goToCheckoutButtonSelector);
         goToCheckoutButton.click();
-        jsWaitForPageToLoad();
+        PageCore.waitForPageToLoad();
 
         return new CheckoutPage(ctx);
     }

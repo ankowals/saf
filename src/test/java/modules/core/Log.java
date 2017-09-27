@@ -9,7 +9,11 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.OutputStreamAppender;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.layout.PatternLayout;
+import org.junit.Assert;
+
 import java.io.OutputStream;
+
+import static org.junit.Assert.fail;
 
 public class Log {
 
@@ -30,15 +34,16 @@ public class Log {
 
 	public static void error(String message) {
 		Log.error(message);
+		fail(message);
+	}
+
+	public static void error(String message, Throwable e) {
+		Log.error(message, e);
+		fail(e.getMessage());
 	}
 
 	public static void debug(String message) {
 		Log.debug(message);
-	}
-
-	public static void fatal(String message) {
-    	Log.fatal(message);
-		throw new RuntimeException("Fail!");
 	}
 
     public static void addAppender(final OutputStream outputStream, final String outputStreamName) {

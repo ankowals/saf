@@ -3,6 +3,7 @@ package steps.DemoOnlineStore;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
+import modules.core.BaseSteps;
 import modules.core.Log;
 import modules.core.SharedContext;
 import modules.pages.DemoOnlineStore.CheckoutPage;
@@ -12,13 +13,11 @@ import org.junit.Assert;
 
 import java.util.ArrayList;
 
-public class DemoOnlieSteps {
-
-    private SharedContext ctx;
+public class DemoOnlieSteps extends BaseSteps {
 
     // PicoContainer injects class SharedContext
     public DemoOnlieSteps (SharedContext ctx) {
-        this.ctx = ctx;
+        super(ctx);
     }
 
     //create global variables for this class
@@ -35,7 +34,7 @@ public class DemoOnlieSteps {
      */
     @When("^open main page$")
     public void i_open_main_page() throws Throwable {
-        Log.info("* Step started i_open_main_page");
+        Log.info("* StepCore started i_open_main_page");
         //instantiate MainPage to open url in the browser
         main = new MainPage(ctx);
         main.load();
@@ -46,7 +45,7 @@ public class DemoOnlieSteps {
      */
     @And("^navigate to all products page$")
     public void navigate_to_all_products() throws Throwable{
-        Log.info("* Step started navigate_to_all_products");
+        Log.info("* StepCore started navigate_to_all_products");
         product = main.goToAllProduct();
     }
 
@@ -58,9 +57,9 @@ public class DemoOnlieSteps {
      */
     @And("^add product (.*) to cart$")
     public void add_product_to_cart(String productName) throws Throwable{
-        Log.info("* Step started add_product_to_cart");
+        Log.info("* StepCore started add_product_to_cart");
 
-        String input = ctx.step.checkIfInputIsVariable(productName);
+        String input = StepCore.checkIfInputIsVariable(productName);
         product.addToCart(input);
     }
 
@@ -72,9 +71,9 @@ public class DemoOnlieSteps {
      */
     @And("^add product (.*) to cart and go to checkout$")
     public void add_product_to_cart_and_checkout(String productName) throws Throwable{
-        Log.info("* Step started add_product_to_cart_and_checkout");
+        Log.info("* StepCore started add_product_to_cart_and_checkout");
 
-        String input = ctx.step.checkIfInputIsVariable(productName);
+        String input = StepCore.checkIfInputIsVariable(productName);
         checkout = product.addToCartAndCheckout(input);
     }
 
@@ -87,7 +86,7 @@ public class DemoOnlieSteps {
      */
     @Then("^verify that SubTotal value equals sum of totals per product type$")
     public void verify_sum_of_totals_per_product_type_equals_subTotal() throws Throwable{
-        Log.info("* Step started verify_sum_of_totals_per_product_type_equals_subTotal");
+        Log.info("* StepCore started verify_sum_of_totals_per_product_type_equals_subTotal");
 
         String totalPrice = checkout.getTotalPrice();
         ArrayList<String> totalPerProductType = checkout.getTotalPricePerProduct();
@@ -97,11 +96,13 @@ public class DemoOnlieSteps {
             sum = sum + Double.valueOf(price);
         }
 
-        ctx.step.attachScreenshotToReport("Checkout_Products_Price_View");
+        byte[] screenshot = PageCore.takeScreenshot();
+        StepCore.attachScreenshotToReport("Checkout_Products_Price_View", screenshot);
 
         Log.debug("Sum per product type is " + sum);
         Log.debug("Sub-Total is " + totalPrice);
-        Assert.assertEquals("Sub-Total value is different than sum of price per product type",
-                Double.valueOf(totalPrice),sum);
+        if ( ! Double.valueOf(totalPrice).equals(sum) ) {
+            Log.error("Sub-Total value is different than sum of price per product type");
+        }
     }
 }

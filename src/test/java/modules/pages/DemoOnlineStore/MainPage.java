@@ -19,14 +19,14 @@ public class MainPage extends BasePage {
     private static final By allProductsSelector = By.xpath("(//*[@id='main-nav']/ul/li)[last()]");
 
     public MainPage load(){
-        String url = ctx.env.readProperty("WEB_url");
-        ctx.driver.get(url);
+        String url = Environment.readProperty("WEB_url");
+        PageCore.open(url);
 
         return new MainPage(ctx);
     }
 
     public Boolean isLoaded(String pageTitle){
-        return titleContains(pageTitle);
+        return PageCore.titleContains(pageTitle);
     }
 
     /**
@@ -37,10 +37,10 @@ public class MainPage extends BasePage {
      */
     public ProductPage goToAllProduct(){
         Log.debug("Click 'All Products' button");
-        WebElement allProductButton = ctx.driver.findElement(allProductsSelector);
+        WebElement allProductButton = PageCore.findElement(allProductsSelector);
         allProductButton.click();
 
-        waitForPageLoadAndTitleContains("Product Category | ONLINE STORE");
+        PageCore.waitUntilTitleContains("Product Category | ONLINE STORE");
 
         return new ProductPage(ctx);
     }

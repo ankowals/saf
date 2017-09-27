@@ -1,18 +1,17 @@
 package steps.ReqResIn;
 
 import cucumber.api.java.en.Given;
+import modules.core.BaseSteps;
 import modules.core.Log;
 import modules.core.SharedContext;
 
 import static io.restassured.RestAssured.given;
 
-public class ReqResInSteps {
+public class ReqResInSteps extends BaseSteps {
 
-    private SharedContext ctx;
-
-    // PicoContainer injects class BaseTest
+    // PicoContainer injects class SharedContext
     public ReqResInSteps (SharedContext ctx) {
-        this.ctx = ctx;
+        super(ctx);
     }
 
     /**
@@ -27,10 +26,10 @@ public class ReqResInSteps {
      */
     @Given("service is available")
     public void service_is_available() {
-        Log.info("* Step started service_is_available");
+        Log.info("* StepCore started service_is_available");
 
-        String url = ctx.env.readProperty("REST_url");
-        Long statusCode = ctx.step.get("Expected.statusOK");
+        String url = Environment.readProperty("REST_url");
+        Long statusCode = Storage.get("Expected.statusOK");
         Integer expectedCode = statusCode.intValue();
         given().when().log().all().get(url).then().statusCode(expectedCode);
     }

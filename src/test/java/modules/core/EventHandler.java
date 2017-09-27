@@ -7,8 +7,6 @@ import org.openqa.selenium.support.events.WebDriverEventListener;
 
 public class EventHandler implements WebDriverEventListener{
 
-    private static ExecutionTimer t_FindBy;
-
     @Override
     public void beforeAlertAccept(WebDriver webDriver) {
 
@@ -71,14 +69,10 @@ public class EventHandler implements WebDriverEventListener{
 
     @Override
     public void beforeFindBy(By by, WebElement webElement, WebDriver webDriver) {
-        Log.debug("Looking for an element identified " + by.toString());
-        t_FindBy = new ExecutionTimer();
     }
 
     @Override
     public void afterFindBy(By by, WebElement webElement, WebDriver webDriver) {
-        t_FindBy.end();
-        Log.debug("Element found after " + t_FindBy.duration()  + " ms");
     }
 
     @Override

@@ -1,5 +1,6 @@
 package steps.examples;
 
+import modules.core.BaseSteps;
 import modules.core.Log;
 
 import modules.core.SharedContext;
@@ -8,22 +9,16 @@ import org.openqa.selenium.WebElement;
 
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
-import ru.yandex.qatools.allure.Allure;
-
-import java.io.ByteArrayInputStream;
-import java.util.HashMap;
 
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-public class ExampleWebSteps {
+public class ExampleWebSteps extends BaseSteps {
 
-    private SharedContext ctx;
-
-    // PicoContainer injects class BaseTest
+    // PicoContainer injects class SharedContext
     public ExampleWebSteps (SharedContext ctx) {
-        this.ctx = ctx;
+        super(ctx);
     }
 
     /**
@@ -35,11 +30,11 @@ public class ExampleWebSteps {
      */
     @When("^I open seleniumframework website$")
     public void i_open_seleniumframework_website() throws Throwable {
-        Log.info("* Step started i_open_seleniumframework_website");
+        Log.info("* StepCore started i_open_seleniumframework_website");
 
-        String url = ctx.env.readProperty("WEB_url");
+        String url = Environment.readProperty("WEB_url");
         Log.debug("Going to open " + url);
-        ctx.driver.get(url);
+        PageCore.open(url);
     }
 
     /**
@@ -50,13 +45,19 @@ public class ExampleWebSteps {
      */
     @Then("^I validate title and URL$")
     public void i_print_title_and_URL() throws Throwable {
-        Log.info("* Step started i_print_title_and_URL");
+        Log.info("* StepCore started i_print_title_and_URL");
 
         Log.debug("Going to validate an Url");
-        Log.debug("Page title is " + ctx.driver.getTitle());
-        Log.debug("Current url is " + ctx.driver.getCurrentUrl());
-        assertEquals("Google",ctx.driver.getTitle());
-        assertThat(ctx.driver.getCurrentUrl(),containsString("www.google.pl"));
+        Log.debug("Page title is " + PageCore.getTitle());
+        Log.debug("Current url is " + PageCore.getCurrentUrl());
+        if ( ! PageCore.getTitle().equals("Google") ) {
+            Log.error("Wrong title provided. Expected Google" +
+                " but was " + PageCore.getTitle() );
+        }
+        if ( ! PageCore.getCurrentUrl().contains("www.google.pl") ) {
+            Log.error("Wrong url. It shall contain www.google.pl but was " +
+                    PageCore.getCurrentUrl() );
+        }
     }
 
     /**
@@ -68,11 +69,11 @@ public class ExampleWebSteps {
      */
     @When("^I open google page$")
     public void i_open_google_website() throws Throwable {
-        Log.info("* Step started i_open_google_website");
+        Log.info("* StepCore started i_open_google_website");
 
-        String url = ctx.env.readProperty("WEB_url");
+        String url = Environment.readProperty("WEB_url");
         Log.debug("Going to open " + url);
-        ctx.driver.get(url);
+        PageCore.open(url);
     }
 
     /**
@@ -83,10 +84,10 @@ public class ExampleWebSteps {
      */
     @Then("^I check for input element$")
     public void i_check_for_input_element() throws Throwable {
-        Log.info("* Step started i_check_for_input_element");
+        Log.info("* StepCore started i_check_for_input_element");
 
         Log.debug("Going to locate input element");
-        WebElement element = ctx.driver.findElement(By.id("lst-ib"));
+        WebElement element = PageCore.findElement(By.id("lst-ib"));
     }
 
     /**
@@ -98,12 +99,12 @@ public class ExampleWebSteps {
      */
     @Then("^I search for text$")
     public void i_search_for() throws Throwable {
-        Log.info("* Step started i_search_for");
+        Log.info("* StepCore started i_search_for");
 
         Log.debug("Going to search for");
-        WebElement element = ctx.driver.findElement(By.id("lst-ib"));
+        WebElement element = PageCore.findElement(By.id("lst-ib"));
 
-        String sVal = ctx.step.get("TestData.search_sentence");
+        String sVal = Storage.get("TestData.search_sentence");
 
         Log.debug("Entering text " + sVal);
         element.sendKeys(sVal);
@@ -115,12 +116,12 @@ public class ExampleWebSteps {
      */
     @Then("^I search for text (.*)$")
     public void i_search_for2(String input) throws Throwable {
-        Log.info("* Step started i_search_for2");
+        Log.info("* StepCore started i_search_for2");
 
         Log.debug("Going to search for");
-        WebElement element = ctx.driver.findElement(By.id("lst-ib"));
+        WebElement element = PageCore.findElement(By.id("lst-ib"));
 
-        Long lVal = ctx.step.checkIfInputIsVariable(input);
+        Long lVal = StepCore.checkIfInputIsVariable(input);
 
         String sVal = lVal.toString();
 
@@ -136,12 +137,12 @@ public class ExampleWebSteps {
      */
     @Then("^attach sample file to report$")
     public void attache_file_to_report() throws Throwable {
-        Log.info("* Step attache_file_to_report");
+        Log.info("* StepCore attache_file_to_report");
 
         Log.debug("Going to attach file");
-        ctx.step.attachFileToReport("SimpleTextAttachment", "text/plain", "C:\\Users\\akowa\\Documents\\przykladowy_plik_tekstowt.txt");
-        ctx.step.attachFileToReport("PdfAttachment", "application/pdf", "C:\\Users\\akowa\\Documents\\API_design.pdf");
-        ctx.step.attachMessageToReport("Some name", "Some random message");
+        StepCore.attachFileToReport("SimpleTextAttachment", "text/plain", "C:\\Users\\akowa\\Documents\\przykladowy_plik_tekstowt.txt");
+        StepCore.attachFileToReport("PdfAttachment", "application/pdf", "C:\\Users\\akowa\\Documents\\API_design.pdf");
+        StepCore.attachMessageToReport("Some name", "Some random message");
     }
 
 

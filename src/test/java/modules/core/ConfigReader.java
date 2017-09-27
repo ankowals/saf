@@ -1,23 +1,20 @@
 package modules.core;
 
 import com.google.gson.*;
-import org.apache.commons.io.IOUtils;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.SimpleFileVisitor;
+import java.io.File;
 import java.text.NumberFormat;
 import java.util.*;
 
 public class ConfigReader {
 
     private SharedContext ctx;
+    private FileCore FileCore;
 
     // PicoContainer injects class SharedContext
     public ConfigReader(SharedContext ctx) {
         this.ctx = ctx;
+        this.FileCore = ctx.Object.get("FileCore",FileCore.class);
     }
 
 
@@ -33,52 +30,20 @@ public class ConfigReader {
 
         JsonElement root = null;
         JsonObject object = null;
-        //FileReader file = null;
         String sFile = null;
         HashMap<String, Object> result = null;
+        File file = new File(path);
 
-        //check that file exists
-        //try {
-        //    file = new FileReader(path);
-        //} catch (FileNotFoundException e) {
-        //    Log.error("Configuration file " + path + " not found!");
-        //    Log.error(e.getMessage());
-        //}
-
-        FileInputStream inputStream = null;
-        try {
-            inputStream = new FileInputStream(path);
-        } catch (FileNotFoundException e) {
-            Log.error("Configuration file " + path + " not found!");
-            Log.error(e.getMessage());
-        }
-
-        try {
-            try {
-                sFile = IOUtils.toString(inputStream);
-                if(!sFile.startsWith("{")) {
-                    sFile = "{" + sFile + "}";
-                }
-            } catch (IOException e) {
-                Log.error("Configuration file " + path + " not found!");
-                Log.error(e.getMessage());
-            }
-        } finally {
-            try {
-                inputStream.close();
-            } catch (IOException e) {
-                Log.error("Configuration file " + path + " not found!");
-                Log.error(e.getMessage());
-            }
+        sFile = FileCore.readToString(file);
+        if ( !sFile.startsWith("{") ) {
+            sFile = "{" + sFile + "}";
         }
 
         //read the JSON file and make sure that format is correct
         try {
-            //root = new JsonParser().parse(file);
             root = new JsonParser().parse(sFile);
-        } catch (JsonSyntaxException e1) {
-                Log.error("Typo in file " + path);
-                Log.error(e1.getMessage());
+        } catch (JsonSyntaxException e) {
+                Log.error("Typo in file " + file.getAbsolutePath(), e);
         }
 
         //read each entry and create new shared object for it
@@ -87,20 +52,19 @@ public class ConfigReader {
             for (Map.Entry<String, JsonElement> entry: entries) {
                 try {
                     object = root.getAsJsonObject().get(entry.getKey()).getAsJsonObject();
-                } catch (NullPointerException e1) {
-                    Log.error("Configuration file " + path + " not found!");
-                    Log.error(e1.getMessage());
+                } catch (NullPointerException e) {
+                    Log.error("No objects defined in configuration file!", e);
                 }
 
                 result = parseObject(object);
 
                 //if ctx object already exists overwrite/update its content else create new one
-                HashMap<String, Object> tmpMap = ctx.obj.get(entry.getKey(),HashMap.class);
+                HashMap<String, Object> tmpMap = ctx.Object.get(entry.getKey(),HashMap.class);
                 if (tmpMap == null ) {
-                    ctx.obj.put(entry.getKey(), HashMap.class, result);
+                    ctx.Object.put(entry.getKey(), HashMap.class, result);
                 } else {
                     tmpMap.putAll(result);
-                    ctx.obj.put(entry.getKey(), HashMap.class, tmpMap);
+                    ctx.Object.put(entry.getKey(), HashMap.class, tmpMap);
                 }
             }
 
@@ -117,6 +81,7 @@ public class ConfigReader {
      * @return HashMap
      *
      */
+    //missing support for array of arrays!!!!
     private HashMap<String, Object> parseObject(JsonObject object) {
         Set<Map.Entry<String, JsonElement>> set = object.entrySet();
         Iterator<Map.Entry<String, JsonElement>> iterator = set.iterator();
@@ -130,8 +95,8 @@ public class ConfigReader {
                     try {
                         num = NumberFormat.getInstance(Locale.getDefault()).parse(entry.getValue().getAsString());
                     } catch (Exception e) {
-                        Log.error("Not able to parse String to Number for " + key + " : " + entry.getValue().getAsString());
-                        Log.error(e.getMessage());
+                        Log.error("Not able to parse String to Number for " + key + " : " +
+                                entry.getValue().getAsString(), e);
                     }
                     if (num != null){
                         map.put(key, num);
@@ -145,7 +110,7 @@ public class ConfigReader {
                     map.put(key, null);
                 }
             } else if (entry.getValue().isJsonArray()){
-                ArrayList<Object> tmpArray = new ArrayList(); //missing support for array of arrays and array of maps
+                ArrayList<Object> tmpArray = new ArrayList();
                 for (int i = 0; i < entry.getValue().getAsJsonArray().size(); i++) {
                     if(entry.getValue().getAsJsonArray().get(i).isJsonPrimitive()){
                         if(entry.getValue().getAsJsonArray().get(i).getAsJsonPrimitive().isBoolean()){
@@ -157,8 +122,9 @@ public class ConfigReader {
                             try {
                                 num = NumberFormat.getInstance(Locale.getDefault()).parse(entry.getValue().getAsJsonArray().get(i).getAsString());
                             } catch (Exception e) {
-                                Log.error("Not able to parse String to Number for " + key + " : " + entry.getValue().getAsJsonArray().get(i).getAsString());
-                                Log.error(e.getMessage());
+                                Log.error("Not able to parse String to Number for " +
+                                        key + " : " +
+                                        entry.getValue().getAsJsonArray().get(i).getAsString(), e);
                             }
                             if (num != null){
                                 tmpArray.add(num);
@@ -167,6 +133,9 @@ public class ConfigReader {
                             Log.warn("Didn't recognized type of data in an array. Going to put null value!");
                             tmpArray.add(null);
                         }
+                    } else if (entry.getValue().getAsJsonArray().get(i).isJsonObject()) {
+                        HashMap<String, Object> tMap = parseObject(entry.getValue().getAsJsonArray().get(i).getAsJsonObject());
+                        tmpArray.add(tMap);
                     }
                 }
                 map.put(key, tmpArray);
