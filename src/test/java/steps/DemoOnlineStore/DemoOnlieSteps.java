@@ -13,6 +13,8 @@ import org.junit.Assert;
 
 import java.util.ArrayList;
 
+import static org.junit.Assert.assertEquals;
+
 public class DemoOnlieSteps extends BaseSteps {
 
     // PicoContainer injects class SharedContext
@@ -101,6 +103,15 @@ public class DemoOnlieSteps extends BaseSteps {
 
         Log.debug("Sum per product type is " + sum);
         Log.debug("Sub-Total is " + totalPrice);
+
+        try {
+            assertEquals("Sub-Total value is different than sum of price per product type",
+                    Double.valueOf(totalPrice),
+                    sum);
+        } catch ( AssertionError e ) {
+            Log.error("", e);
+        }
+
         if ( ! Double.valueOf(totalPrice).equals(sum) ) {
             Log.error("Sub-Total value is different than sum of price per product type");
         }

@@ -1,6 +1,7 @@
 package modules.core;
 
 import com.google.gson.*;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.text.NumberFormat;
@@ -35,6 +36,27 @@ public class ConfigReader {
         File file = new File(path);
 
         sFile = FileCore.readToString(file);
+
+        if ( sFile.contains("#include ") ) {
+            List<String> lines = FileCore.readLines(file);
+            String sFileWithoutIncludes = "";
+            for (String line : lines){
+                String tLine = line.trim();
+                tLine = StringUtils.remove(tLine,'"');
+                tLine = StringUtils.remove(tLine,"'");
+                if ( tLine.startsWith("#include") && tLine.endsWith(".config")) {
+                    String pathToIncludedConfigFile = tLine.substring(9);
+                    pathToIncludedConfigFile = FileCore.getProjectPath() + "/src/test/resources/" + pathToIncludedConfigFile.trim();
+                    Log.debug("Found included configuration file");
+                    create(pathToIncludedConfigFile);
+                } else {
+                    sFileWithoutIncludes = sFileWithoutIncludes + line;
+                }
+            }
+            sFileWithoutIncludes = sFileWithoutIncludes.trim();
+            sFile = sFileWithoutIncludes;
+        }
+
         if ( !sFile.startsWith("{") ) {
             sFile = "{" + sFile + "}";
         }
@@ -45,6 +67,8 @@ public class ConfigReader {
         } catch (JsonSyntaxException e) {
                 Log.error("Typo in file " + file.getAbsolutePath(), e);
         }
+
+        Log.debug("Reading configuration file " + path);
 
         //read each entry and create new shared object for it
         if(root.isJsonObject()){

@@ -102,12 +102,33 @@ public class BookByIsbnSteps extends BaseSteps {
             String type = expectedValue.getClass().getName();
             if(type.contains("Long")){
                 Long lExpVal = (Long) expectedValue;
-                Log.debug("lExpVal is " + lExpVal.intValue());
-                json.body(field.getKey(), containsInAnyOrder(lExpVal.intValue()));
+                Log.debug("Expected is " + field.getKey() + "=" + lExpVal.intValue());
+                Log.debug("Current is " + json.extract().path(field.getKey()));
+
+                try {
+                    json.body(field.getKey(), containsInAnyOrder(lExpVal.intValue()));
+                } catch (AssertionError e) {
+                    Log.error("", e);
+                }
+
+                //if ( (Integer) json.extract().path(field.getKey()) != lExpVal.intValue() ) {
+                //    Log.error("Expected " + lExpVal.intValue() + " but was " + json.extract().path(field.getKey()));
+                //}
             }
             else {
                 String sExpVal = (String) expectedValue;
-                json.body(field.getKey(), containsInAnyOrder(sExpVal));
+                Log.debug("Expected is " + field.getKey() + "=" + sExpVal);
+                Log.debug("Current is " + json.extract().path (field.getKey()));
+
+                try {
+                    json.body(field.getKey(), containsInAnyOrder(sExpVal));
+                } catch (AssertionError e) {
+                    Log.error("", e);
+                }
+
+                //if ( ! json.extract().path(field.getKey()).equals(sExpVal) ) {
+                //    Log.error("Expected " + sExpVal + " but was " + json.extract().path(field.getKey()));
+                //}
             }
         }
     }
@@ -123,8 +144,8 @@ public class BookByIsbnSteps extends BaseSteps {
      *
      */
     @And("^response includes the following$")
-    public void response_equals(Map<String,String> responseFields){
-        Log.info("* StepCore started response_equals");
+    public void response_includes_the_following(Map<String,String> responseFields){
+        Log.info("* StepCore started response_includes_the_following");
 
         ValidatableResponse json = ctx.Object.get("json",ValidatableResponse.class);
         for (Map.Entry<String, String> field : responseFields.entrySet()) {
@@ -132,12 +153,34 @@ public class BookByIsbnSteps extends BaseSteps {
             String type = expectedValue.getClass().getName();
             if(type.contains("Long")){
                 Long lExpVal = (Long) expectedValue;
-                Log.debug("lExpVal is " + lExpVal.intValue());
-                json.body(field.getKey(), equalTo(lExpVal.intValue()));
+                Log.debug("Expected is " + field.getKey() + "=" + lExpVal.intValue());
+                Log.debug("Current is " + json.extract().path(field.getKey()));
+
+                try {
+                    json.body(field.getKey(), equalTo(lExpVal.intValue()));
+                } catch (AssertionError e) {
+                    Log.error("", e);
+                }
+
+                //if ( (Integer) json.extract().path(field.getKey()) != lExpVal.intValue() ) {
+                //    Log.error("Expected " + lExpVal.intValue() + " but was " + json.extract().path(field.getKey()));
+                //}
             }
             else {
                 String sExpVal = (String) expectedValue;
-                json.body(field.getKey(), equalTo(sExpVal));
+                Log.debug("Expected is " + field.getKey() + "=" + sExpVal);
+                Log.debug("Current is " + json.extract().path (field.getKey()));
+
+                try {
+                    json.body(field.getKey(), equalTo(sExpVal));
+                } catch (AssertionError e) {
+                    Log.error("", e);
+                }
+
+                //if ( ! json.extract().path(field.getKey()).equals(sExpVal) ) {
+                //    Log.error("Expected " + sExpVal + " but was " + json.extract().path(field.getKey()));
+                //}
+
             }
         }
     }

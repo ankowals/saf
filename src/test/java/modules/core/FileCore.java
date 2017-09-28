@@ -302,7 +302,7 @@ public class FileCore {
         List<String> result = null;
 
         try {
-            FileUtils.readLines(file);
+            result = FileUtils.readLines(file);
         } catch (IOException e) {
             String n = System.lineSeparator();
             Log.error( "", e );

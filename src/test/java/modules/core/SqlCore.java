@@ -9,12 +9,12 @@ import org.apache.commons.lang.StringUtils;
 
 import java.io.*;
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SqlCore {
 
@@ -234,7 +234,6 @@ public class SqlCore {
 
             final int batchSize = 1000;
             int count = 0;
-            Date date = null;
             try {
                 Log.debug("Reading csv file");
                 while ((nextLine = csvReader.readNext()) != null) {
@@ -290,14 +289,25 @@ public class SqlCore {
                                 Log.error("Wrong type provided. " + "" +
                                         "BINARY, VARBINARY and LONGVARBINARY are not supported");
                             } else if ( Storage.get(typeMapping+"["+idx+"]").equals("DATE") ) {
-                                    //date = DateUtil.convertToDate(string);
-                                    //if (null != date) {
-                                    //  ps.setDate(index++, new java.sql.Date(date.getTime()));
-                                Log.error("Wrong type provided. DATE not yet supported");
+                                    Date date = DateParser.convertToDate(string);
+                                    ps.setDate(index++, new java.sql.Date(date.getTime()));
                             } else if ( Storage.get(typeMapping+"["+idx+"]").equals("TIME") ) {
-                                Log.error("Wrong type provided. TIME not yet supported");
+                                Pattern p = Pattern.compile("\\d\\d:\\d\\d:\\d\\d"); // not perfect but good enough;)
+                                Matcher m = p.matcher(string);
+                                if (m.matches()) {
+                                    Time time = Time.valueOf(string);
+                                    ps.setTime(index++, time);
+                                } else {
+                                    Log.error("Wrong time format provided. Expected is hh:mm:ss" +
+                                    " but was " + string);
+                                }
                             } else if ( Storage.get(typeMapping+"["+idx+"]").equals("TIMESTAMP") ) {
-                                Log.error("Wrong type provided. TIMESTAMP not yet supported");
+                                try {
+                                    Timestamp timestamp = Timestamp.valueOf(string);
+                                    ps.setTimestamp(index++, timestamp);
+                                } catch ( IllegalArgumentException e) {
+                                    Log.error("Wrong timestamp format provided", e);
+                                }
                             } else {
                                 Log.error("Wrong type provided. Type in typeMapping[" + idx + "] not known");
                             }
@@ -313,12 +323,12 @@ public class SqlCore {
             }
             ps.executeBatch(); // insert remaining records
             Sql.commit();
-            Log.debug("Sql query executed");
+            Log.debug("Sql batch query executed");
         } catch (SQLException e) {
             try {
                 Sql.rollback();
             } catch (SQLException e1) {
-                Log.error( "SQL query rollback execution failed", e1 );
+                Log.error( "SQL batch query rollback execution failed", e1 );
             }
             Log.error( "", e );
         } finally {
