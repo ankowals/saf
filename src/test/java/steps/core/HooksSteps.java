@@ -63,12 +63,14 @@ public class HooksSteps {
 
         FileCore FileCore = ctx.Object.get("FileCore", FileCore.class);
 
+        ExecutorCore executorCore = new ExecutorCore(ctx);
+        ctx.Object.put("ExecutorCore", ExecutorCore.class, executorCore);
+
         StepCore step = new StepCore(ctx);
         ctx.Object.put("StepCore", StepCore.class, step);
 
         Macro Macro = ctx.Object.get("Macro", Macro.class);
         StepCore = ctx.Object.get("StepCore", StepCore.class);
-
 
         Log.info("<- checking environment configuration ->");
         PropertyReader env = new PropertyReader(ctx);

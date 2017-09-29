@@ -10,6 +10,7 @@ public class BaseSteps {
     protected SqlCore SqlCore;
     protected Storage Storage;
     protected FileCore FileCore;
+    protected ExecutorCore ExecutorCore;
 
     // PicoContainer injects class SharedContext
     public BaseSteps (SharedContext ctx) {
@@ -21,6 +22,7 @@ public class BaseSteps {
         this.SqlCore = ctx.Object.get("SqlCore",SqlCore.class);
         this.Storage = ctx.Object.get("Storage", Storage.class);
         this.FileCore = ctx.Object.get("FileCore",FileCore.class);
+        this.ExecutorCore = ctx.Object.get("ExecutorCore", ExecutorCore.class);
     }
 
 }

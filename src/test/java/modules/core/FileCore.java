@@ -207,7 +207,6 @@ public class FileCore {
                         .forEach(x -> result.add(x));
             }
         } catch (IOException e) {
-            String n = System.lineSeparator();
             Log.error( "Can't access " + sDir, e );
         }
 
@@ -255,7 +254,6 @@ public class FileCore {
         try {
             result = readFileToString(file, encoding);
         } catch (IOException e) {
-            String n = System.lineSeparator();
             Log.error( "", e );
         }
 
@@ -268,7 +266,6 @@ public class FileCore {
         try {
             FileUtils.writeStringToFile(file, content, encoding, false);
         } catch (IOException e) {
-            String n = System.lineSeparator();
             Log.error( "", e );
         }
     }
@@ -279,7 +276,6 @@ public class FileCore {
         try {
             FileUtils.writeStringToFile(file, content, encoding, true);
         } catch (IOException e) {
-            String n = System.lineSeparator();
             Log.error( "", e );
         }
     }
@@ -290,11 +286,25 @@ public class FileCore {
         try {
             result = File.createTempFile(name, "." + extension);
         } catch (IOException e) {
-            String n = System.lineSeparator();
             Log.error( "", e );
         }
 
         return result;
+    }
+
+    public String createTempDir () {
+        Path result = null;
+        String systemTmpDirPath = FileUtils.getTempDirectoryPath();
+        Path path = Paths.get(systemTmpDirPath);
+
+        try {
+            result = Files.createTempDirectory(path, "SAF_dir_");
+        } catch (IOException | UnsupportedOperationException | IllegalArgumentException | SecurityException e ) {
+            Log.error( "", e );
+        }
+
+        String sResult = result.toAbsolutePath().toString();
+        return sResult;
     }
 
     public List<String> readLines (File file) {
@@ -304,7 +314,6 @@ public class FileCore {
         try {
             result = FileUtils.readLines(file);
         } catch (IOException e) {
-            String n = System.lineSeparator();
             Log.error( "", e );
         }
 
