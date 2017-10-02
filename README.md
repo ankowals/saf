@@ -41,6 +41,7 @@ What do we want from a test automation framework?
 	a way to write simmple step defs (for example usage of try-catch blocks is ugly)
 	a way to manage templates
 	
+	a way to integrate with configuration management tool can be a nice addon (like Puppet, Ansible or Chef)
 	a way to re-run failed test can be a nice addon
 	a way to execute test remotely can be a nice addon
 
@@ -105,7 +106,8 @@ How can we use test automation framework?
 	to automate regression tests
 	to execute sanity chcecks and make sure that SUT configuration is correct (like all urls are reachable, ports open, interfaces are up & apps are running, login is possible for each user etc.)
 	to gether symptoms like traces/logs/tickets/events from multiple systems under test
-	to execute system bringup and feel it with configruation data before test starts
+	to execute test system bringup and feed it with configruation data before test starts
+	to setup test environment using configuration management sytsem before test suite execution
 	to restore the system to the state before test started
 	to move configuration data between test systems
 	to use tests implementation as test documentation
