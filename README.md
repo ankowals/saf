@@ -17,7 +17,8 @@ What do we want from a test automation framework?
 		- mobile
 		- pdf validation
 		- others??
-	a way to intergate any 3rd party app by execution of any command on local host and remote over ssh
+	a way to intergate any 3rd party app by execution of any command on local host 
+	a way to execute any command on remote host over ssh
 	a way to manage and configure test environment
 	a way to manage and configure test data
 	a way to prepare/calculate test data at runtime (macros)
@@ -66,14 +67,12 @@ Where are we now?
 			
 	----------------------------------	
 		
-	(to do) a way to intergate any 3rd party app by execution of any command on local host and remote over ssh	
+	(to do) a way to execute any command on remote host over ssh	
 	(to do) a way to downlaod any 3rd party symptoms from SUT like logs, trace files
 	(to do) a way to monitor and indicate quality of commited tests (see SonarQube for example )
 	(to do) a way to schedule test execution (see Jenkins/TeamCity)
 	(to do) a way to generate test documentation automatically => add new login categories, use scenrio outline with path to feature and log file after test execution	
-	(to do) a way to pause test execution and allow for manual intervention => via autoIt script executed from a step def?
-	(to do) a way to integrate with test/requirement management tool (like for example jira, so we can have links to tests/epic/stories in the test report) => via allure integration
-	(to do) a way to intgrate with incident management tool (like for example jira, so we can have at least links to defects that affect particular test in the report and maybe their status etc.) => via allure integration	
+	(to do) a way to pause test execution and allow for manual intervention => via autoIt script executed from a step def?	
 	(to do) add more tests examples
 	
 	----------------------------------	
@@ -94,7 +93,9 @@ Where are we now?
 	(done) a way to manage multiple projects (version control system) => separate repo per project maybe git submodules can be used?
 	(done) a way to write simmple step defs (for example usage of try-catch blocks is ugly) => via PageCore, FileCore, StepCore, SqlCore, Macro, Storage, Environment and others models
 	(done) a way to manage templates => via CoreStep model
-	
+	(done) a way to intergate any 3rd party app by execution of any command on local host => via ExecutorCore
+	(done) a way to integrate with test/requirement management tool (like for example jira, so we can have links to tests/epic/stories in the test report) => via allure integration
+	(done) a way to intgrate with incident management tool (like for example jira, so we can have at least links to defects that affect particular test in the report and maybe their status etc.) => via allure integration	
 	
 ----------------------------------
 
@@ -156,7 +157,7 @@ Installation instructions
 	15 Fix path to web drivers in /src/resources/config/env.config
 	16 Change the port number if needed (default is 8080) for jetty to see allure report after test execution
 
-
+	In addition if dB manipulations are desired jdbc integration is needed. To do so one needs to manually add dependency in pom.xml file. See https://stackoverflow.com/questions/1074869/find-oracle-jdbc-driver-in-maven-repository or http://www.mkyong.com/maven/how-to-add-oracle-jdbc-driver-in-your-maven-local-repository/ for more information.
 
 ----------------------------------
 
@@ -207,7 +208,7 @@ Dir src/test/java/steps contains all step defs needed to run the test.
 
 Subdirectory core cotnains saf freamework steps and methods. It is mandatory to have it in each project.
 
-Other subdriectories contains project specific stuff like page obejct models etc.
+Other subdriectories contains project specific stuff like page obejct models etc. They are optional and can be added as git submodules for example.
 
 
 
@@ -229,11 +230,11 @@ General concepts
 
 
 
-We follow BDD apporach.
+We follow BDD apporach. Reason is very simple. It is usually much easier for testers to write automated tests (following Gherking principles). In large projects (with large and separate teams of testers, analysts, devs) BDD main adventage so called common language to describe sytsem behaviours can be rarely seen but it is still giving testers the benefit of simpler tests implementation.
 
 Tests are called Scenarios. They are grouped in Features.
 
-Features act as containers from Scenarios.
+Features act as containers for Scenarios.
 
 We try to keep 1 Feature per 1 file.
 
@@ -278,7 +279,7 @@ TestData can be passed to steps directly in a feature file or can be taken from 
 
 Global configuration is available but it can be overwritten/updated by local config.
 
-Config files will be loaded automatically as long as feature file name is same as feature name defined inside the file.
+Config files will be loaded automatically as long as feature file name is same as feature name defined inside the file!!!
 
 
 
@@ -308,7 +309,7 @@ It will automatically download all needed libraries so there is no need to hunt 
 
 Maven configuration is available in so called pom.xml file. It contains not just dependencies but also plugins.
 
-Thanks to this maven can be used to start our tests from command line.
+Thanks to this maven can be used to start our tests from command line. For this purpose so called surefire plugin is used.
 
 
 
@@ -328,7 +329,7 @@ For json parsing gson library is used.
 
 
 
-When steps are executed we need to pass the same instance of a class to them, for example webdriver instance, test data storage etc.
+When steps are executed we need to pass the same instance of a class to them, for example webdriver instance, test data storage, output of step def execution etc.
 
 To make it possible we are using so called dependency injection. Without it for eaxample each step will open a new browser window.
 
@@ -340,6 +341,9 @@ For web automation Selenium WebDriver library is used.
 
 For api automation RestAssured library is used.
 
+To read Csv files openCSV library is used.
+
+To better handle command execution and sql execution commons-dBUtils and Commons-exec libraries from Appache are used. Same for better handling of files and string manipulations (Commons-io and Commons-lang).
 
 
 On top of that macro support, test data management, configuration files support, Page Object Model support and more was added.
@@ -370,7 +374,7 @@ It is possible to overwrite active_env property from the command line. In that c
 
 	mvn clean test -Dactive_env="bookByIsbn" -Dcucumber.options="--tags @bookByIsbn"
 
-In that particular case a default env configuration will be loaded and later on it will be overwritten by config available in a file bookByIsbn.properties.
+In this particular case a default env configuration will be loaded and later on it will be overwritten by config available in a file bookByIsbn.properties.
 
 --------------------------------
 
@@ -474,11 +478,11 @@ Its content shall not be changed for test purposes.
 
 Before each scenario execution so called @Before and @After hooks are run.
 
-In @Before hook we create context, read framework and SUT configurtion, create test data storage, evaluate macros.
+In @Before hook we create context, read framework and SUT configurtion, create test data storage, evaluate macros and initialize helper modules (Core modules).
 
 It will also find local configuration files and load them for usage in steps.There is no need to do that in seperate steps or Background scenario.
 
-In an @After hook we try to close the resources like for example web driver or take a screenshot if test failed.
+In an @After hook we try to close the resources like for example web driver, Sql connection or take a screenshot if test failed.
 
 As a last step we are attaching log from the scenario to the test report.
 
@@ -596,9 +600,22 @@ An example of log is below
 	[INFO ] 2017-09-11 12:32:27.603 [main] Log - (HashMap)DoubleMapa = {third=3, first=1, second=2}
 	[INFO ] 2017-09-11 12:32:27.604 [main] Log - --- end ---
 
+Configuration files can include conent for other configuration files. To do so please use #include directive and provide reltive path to the other config file. Path shall be relative to project resources directory. An example is visible below.
+
+Content of file resources/features/Web/test1/test1.config is
+
+	#include "features/Web/test4/test45.config"
+	
+	TestData:{
+	    "search_sentence" : "cucumber",
+	    notAnInteger : 3.5123,
+	    nowy_wpis : test
+	       }
+
+In that case first file from #include directive will be read and processed. Order of the includes is important. They are always processed first before other content of a config file.
 
 
-Same is true for macros. They are read from *.config file and stored for future usage.
+Simialr for macros. They are read from *.config file and stored for future usage.
 
 Macro works as follows.
 
@@ -718,7 +735,7 @@ They can be concatenated with a specific prefix or suffix.
 Macro values are always returned as strings. 
 
 Please note that macros have to be evaluated by calling of .eval(String storage_name) method from Macro.class in each step were such evaluaton shall be done.
-To use previously defined macros one can put the the test data storage such macro as a walue of particular key, for example
+To use previously defined macros one can put into the test data storage such macro as a value of particular key, for example
 
 	TestData={
 	    "a to test na makro" : mcr.isbn,
@@ -750,11 +767,11 @@ Each step execution is marked in a log with a "* Step started" string to make it
 
 How to write step and share data between steps?
 
-Thanks to dependency injection there is a way to share objects between steps and modules. In SharedContext.class available under /src/test/java/modules/core few objects were defined like driver, env, step, macro, config and obj.
+Thanks to dependency injection there is a way to share objects between steps and modules. In SharedContext.class available under /src/test/java/modules/core so called Context Object was defined.
 
-To grant access to them please create a constructor for a class with steps like below
+To grant access to it please make sure that your Steps calss extends BaseStep calss and create a constructor like below
 
-	public class DemoOnlieSteps {
+	public class DemoOnlieSteps extends BaseSteps {
 
 	    private SharedContext ctx;
 
@@ -767,41 +784,46 @@ To grant access to them please create a constructor for a class with steps like 
 	 
 Where DemoOnlineSteps is a class that contains project specific steps to handle web automation for particular page.
 In this way we can pass same instance of ctx between steps and modules. With this approach we can use methods defined for objects available in ctx variable.
+BaseSteps calss define a set of helpers modules to make writing new step defs much easier. They are called as below
+Environment, Macro, StepCore, PageCore, SqlCore, Storage, FileCore, ExecutorCore. They contain a set of methods that can be used to do common things in steps like creating files, evaluating macros, reading environment configuration, evaluating templates, attaching files to the report etc.
+
 For example lets have a look at 2 steps below
 
     @Given("^a book exists with an isbn$")
     public void a_book_exists_with_isbn() {
         Log.info("* Step started a_book_exists_with_isbn");
-        HashMap<String, Object> testDataMap = ctx.obj.get("TestData",HashMap.class);
-        String isbn = (String) testDataMap.get("isbn");
+	
+        String isbn = Storage.get("TestData.isbn");
         RequestSpecification request = given().param("q", "isbn:" + isbn);
-        ctx.obj.put("request",RequestSpecification.class, request);
+        ctx.Object.put("request",RequestSpecification.class, request);
     }
 
     @When("^a user retrieves the book by isbn$")
     public void a_user_retrieves_the_book_by_isbn(){
         Log.info("* Step started a_user_retrieves_the_book_by_isbn");
-        String url = ctx.env.readProperty("REST_url");
-        RequestSpecification request = ctx.obj.get("request",RequestSpecification.class);
+	
+        String url = Environment.readProperty("REST_url");
+        RequestSpecification request = ctx.Object.get("request",RequestSpecification.class);
         Response response = request.when().log().all().get(url);
-        ctx.obj.put("response",Response.class, response);
-        ctx.step.attachMessageToReport("Json response", response.prettyPrint().toString());
+        ctx.Object.put("response",Response.class, response);
+        StepCore.attachMessageToReport("Json response", response.prettyPrint().toString());
+
     }
     
-To retrieve test data storage one can write HashMap<String, Object> testDataMap = ctx.obj.get("TestData",HashMap.class);
+To retrieve test data storage one can write HashMap<String, Object> testDataMap = ctx.Object.get("TestData",HashMap.class);
 From now one testDataMap and its values can be used in the step.
-Other way to retrieve a particular value from the storage is String isbn2 = ctx.step.get("TestData.isbn");
-Nested objects can be provided using dots like for example ctx.step.get("TestData.isbn.some_nested_key[0]") etc.
+Other and uch simpler way to retrieve a particular value from the storage is String isbn = Storage.get("TestData.isbn");
+Nested objects can be provided using dots like for example Storage.get("TestData.isbn.some_nested_key[0]") etc.
 
-Ctx.obj is a bucket to which we can throw anything and later on we can retrieve it. This is useful to share data between steps that are defined in different class. For example
+ctx.Object is a bucket to which we can throw anything and later on we can retrieve it. This is useful to share data between steps that are defined in different class. For example
 
-	ctx.obj.put("request",RequestSpecification.class, request);
+	ctx.Object.put("request",RequestSpecification.class, request);
 
-This metohd puts an object of type RequestSpecification to ctx.obj bucket with name "request". Later on another step can retrieve it like below
+This metohd puts an object of type RequestSpecification to ctx.Object bucket with name "request". Later on another step can retrieve it like below
 
-	RequestSpecification request = ctx.obj.get("request",RequestSpecification.class);
+	RequestSpecification request = ctx.Object.get("request",RequestSpecification.class);
 
-Ctx.step contains a set of helper functions that can be used when writing step defs. For example there are functions that can be used to add something as an attachment to the test report.
+StepCore contains a set of helper functions that can be used when writing step defs. For example there are functions that can be used to add something as an attachment to the test report.
 
 There is also one more method that can be used to check if step input is a variable from the configuration file. See an example below.
 
@@ -809,12 +831,12 @@ There is also one more method that can be used to check if step input is a varia
     public void verify_status_code(String input){
         Log.info("* Step started verify_status_code");
 
-        Long statusCode = ctx.step.checkIfInputIsVariable(input);
+        Long statusCode = StepCore.checkIfInputIsVariable(input);
         Integer code = statusCode.intValue();
 
-        Response response = ctx.obj.get("response",Response.class);
+        Response response = ctx.Object.get("response",Response.class);
         ValidatableResponse json = response.then().statusCode(code);
-        ctx.obj.put("json",ValidatableResponse.class, json);
+        ctx.Object.put("json",ValidatableResponse.class, json);
     }
 
 In the feture file one can write
@@ -836,14 +858,14 @@ Please note that step def input parameter is of type String. method checkIfInput
 
 It is assumed that user knowns what type is expected otherwise we can get type missmatch exception.
 
-If there is a need to read any environment property one can use in a step ctx.env object. An example below
+If there is a need to read any environment property one can use in a step Environment module. An example below
 
-        if(ctx.env.readProperty("do_macro_eval_in_hooks").equalsIgnoreCase("true")){
+        if(Environment.readProperty("do_macro_eval_in_hooks").equalsIgnoreCase("true")){
             Log.info("<- evaluating macros ->");
-            ctx.macro.eval("TestData");
+            Macro.eval("TestData");
         }
 	
-Similar for macro evaluation. It is enough to just call ctx.macro.eval(input) method. Where input is the name of storage (of type HashMap).
+Similar for macro evaluation. It is enough to just call Macro.eval(input) method. Where input is the name of storage (of type HashMap).
 
 In case a step shall handle multiple input parameters please use tables in a feature file. In the step input will be provided as a Map.
 
@@ -854,28 +876,43 @@ Later on each input parameter and its value can be retrieved in a loop. See an e
      * Input requires a table
      *
      * Uses following objects:
-     *  ctx.obj.json
+     *  ctx.Object.json
      *
      * @param responseFields - Map<String, String>, table that contains key and expected value pairs to verify
      *
      */
-    @And("^response includes the following in any order$")
-    public void response_contains_in_any_order(Map<String,String> responseFields){
-        Log.info("* Step started response_contains_in_any_order");
-        ValidatableResponse json = ctx.obj.get("json",ValidatableResponse.class);
-        for (Map.Entry<String, String> field : responseFields.entrySet()) {
-            Object expectedValue = ctx.step.checkIfInputIsVariable(field.getValue());
-            String type = expectedValue.getClass().getName();
-            if(type.contains("Long")){
-                Long lExpVal = (Long) expectedValue;
-                json.body(field.getKey(), containsInAnyOrder(lExpVal.intValue()));
-            }
-            else {
-                String sExpVal = (String) expectedValue;
-                json.body(field.getKey(), containsInAnyOrder(sExpVal));
-            }
-        }
-    }
+	@And("^response includes the following in any order$")
+	    public void response_contains_in_any_order(Map<String,String> responseFields){
+		Log.info("* StepCore started response_contains_in_any_order");
+
+		ValidatableResponse json = ctx.Object.get("json",ValidatableResponse.class);
+		for (Map.Entry<String, String> field : responseFields.entrySet()) {
+		    Object expectedValue = StepCore.checkIfInputIsVariable(field.getValue());
+		    String type = expectedValue.getClass().getName();
+		    if(type.contains("Long")){
+			Long lExpVal = (Long) expectedValue;
+			Log.debug("Expected is " + field.getKey() + "=" + lExpVal.intValue());
+			Log.debug("Current is " + json.extract().path(field.getKey()));
+
+			try {
+			    json.body(field.getKey(), containsInAnyOrder(lExpVal.intValue()));
+			} catch (AssertionError e) {
+			    Log.error("", e);
+			}
+		    }
+		    else {
+			String sExpVal = (String) expectedValue;
+			Log.debug("Expected is " + field.getKey() + "=" + sExpVal);
+			Log.debug("Current is " + json.extract().path (field.getKey()));
+
+			try {
+			    json.body(field.getKey(), containsInAnyOrder(sExpVal));
+			} catch (AssertionError e) {
+			    Log.error("", e);
+			}
+		    }
+		}
+	    }
 
 To indicate which method runs in a log file please always add Log.info("* Step started step_method_name");
 
@@ -888,7 +925,7 @@ Please use javadoc to document each step in the library. An example below
      * Creates new object ValidatableResponse and stores it as json ctx.obj
      *
      * Uses following objects:
-     *  ctx.obj.response
+     *  ctx.Object.response
      *
      * @param input - String, status code or value from storage
      *
@@ -897,15 +934,22 @@ Please use javadoc to document each step in the library. An example below
     public void verify_status_code(String input){
         Log.info("* Step started verify_status_code");
 
-        Long statusCode = ctx.step.checkIfInputIsVariable(input);
+        Long statusCode = StepCore.checkIfInputIsVariable(input);
         Integer code = statusCode.intValue();
 
-        Response response = ctx.obj.get("response",Response.class);
+        Response response = ctx.Object.get("response",Response.class);
         ValidatableResponse json = response.then().statusCode(code);
-        ctx.obj.put("json",ValidatableResponse.class, json);
+        ctx.Object.put("json",ValidatableResponse.class, json);
     }
     
-
+Please use FileCore module for any operation that shall be done on files.
+Please use ExecutorCore module for any commands that shall be executed on the local host.
+Please use SqlCore for any command that shall be executed in the dB under test.
+Please use PageCore for any action that shall be done on the web page.
+Please use Macro for macro evaluations.
+Please use Storage to read/write new values to the storage.
+Please use Environment to read any SUT configuration value.
+Please use ctx.Object to pass objects between step defs.
 
 
 --------------------------------
@@ -929,22 +973,24 @@ Let us have a look at an example of a MainPage that can be used for web automati
 	    private static final By allProductsSelector = By.xpath("(//*[@id='main-nav']/ul/li)[last()]");
 
 	    public MainPage load(){
-		String url = ctx.env.readProperty("WEB_url");
-		ctx.driver.get(url);
+		String url = Environment.readProperty("WEB_url");
+		PageCore.open(url);
 
 		return new MainPage(ctx);
 	    }
 
-	    public Boolean isLoaded(String pageTitle){
-		return titleContains(pageTitle);
-	    }
-
+	    /**
+	     * Navigates to all products page
+	     *
+	     * @return      ProductPage
+	     *
+	     */
 	    public ProductPage goToAllProduct(){
-		Log.info("Click 'All Products' button");
-		WebElement allProductButton = ctx.driver.findElement(allProductsSelector);
+		Log.debug("Click 'All Products' button");
+		WebElement allProductButton = PageCore.findElement(allProductsSelector);
 		allProductButton.click();
 
-		waitForPageLoadAndTitleContains("Product Category | ONLINE STORE");
+		PageCore.waitUntilTitleContains("Product Category | ONLINE STORE");
 
 		return new ProductPage(ctx);
 	    }
@@ -953,31 +999,29 @@ Let us have a look at an example of a MainPage that can be used for web automati
 
 Each class that contains methods to be executed on a specific web page shall contain Page in its name for example MainPage.class, ProductPage.class etc
 
-It shall extend BasePage.class. In this way we have access to all the helper methods defined in the BasePage.class. Methods availabe there can be used to await for an element to be present/visible/removed from the page etc.
+It shall extend BasePage.class. In this way we have access to all the helper methods defined in the BasePage.class. Methods availabe there can be used to await for page load etc.
 
 In the constructor we shall check if the page is loaded and if not decide what to do with it (either load it or write an error and mark test as failed).
 
-Then we can define selectors are global variables in the class. We shall define methods load and isLoaded.
+Then we can define selectors as global variables in the class. We shall define methods load and isLoaded (if the one from BasePage is not enough -> we can overwrite it).
 
-When access to SUT configruation is needed use ctx.env.readProperty(input) method, for example
+When access to SUT configruation is needed use Environment.readProperty(input) method, for example
 
-	ctx.env.readProperty("WEB_url");
+	Environment.readProperty("WEB_url");
 	
-To access the driver just call ctx.driver.findElement... Use previously defined selectors to find elements on the page and execute actions on them.
+To access the driver just call PageCore.findElement... Use previously defined selectors to find elements on the page and execute actions on them.
 
-To use chaining in the step methods shall return their class constructor or other Page constructor, for example 
+To use chaining in the step methods we shall return their class constructor or other Page constructor, for example 
 
 	return new ProductPage(ctx);
 	
 With this approach steps class can be build like in an example below
 
-	public class DemoOnlieSteps {
-
-	    private SharedContext ctx;
+	public class DemoOnlieSteps extends BaseSteps {
 
 	    // PicoContainer injects class SharedContext
 	    public DemoOnlieSteps (SharedContext ctx) {
-		this.ctx = ctx;
+		super(ctx);
 	    }
 
 	    //create global variables for this class
@@ -985,18 +1029,95 @@ With this approach steps class can be build like in an example below
 	    ProductPage product;
 	    CheckoutPage checkout;
 
+	    /**
+	     * Opens web page with url taken from environment configuration
+	     *
+	     * Uses following objects:
+	     * env.WEB_url
+	     *
+	     */
 	    @When("^open main page$")
 	    public void i_open_main_page() throws Throwable {
-		Log.info("* Step started i_open_main_page");
+		Log.info("* StepCore started i_open_main_page");
 		//instantiate MainPage to open url in the browser
 		main = new MainPage(ctx);
 		main.load();
 	    }
 
+	    /**
+	     * Navigates to all products page
+	     */
 	    @And("^navigate to all products page$")
 	    public void navigate_to_all_products() throws Throwable{
-		Log.info("* Step started navigate_to_all_products");
+		Log.info("* StepCore started navigate_to_all_products");
 		product = main.goToAllProduct();
+	    }
+
+	    /**
+	     * Adds product {} to the cart.
+	     *
+	     * @param productName  name or value from storage
+	     *
+	     */
+	    @And("^add product (.*) to cart$")
+	    public void add_product_to_cart(String productName) throws Throwable{
+		Log.info("* StepCore started add_product_to_cart");
+
+		String input = StepCore.checkIfInputIsVariable(productName);
+		product.addToCart(input);
+	    }
+
+	    /**
+	     * Adds product {} to the cart and navigates to checkout page.
+	     *
+	     * @param productName  name or value from storage
+	     *
+	     */
+	    @And("^add product (.*) to cart and go to checkout$")
+	    public void add_product_to_cart_and_checkout(String productName) throws Throwable{
+		Log.info("* StepCore started add_product_to_cart_and_checkout");
+
+		String input = StepCore.checkIfInputIsVariable(productName);
+		checkout = product.addToCartAndCheckout(input);
+	    }
+
+
+	    /**
+	     * Verifies that SubTotal field equals sub of total price per product type
+	     * on Checkout page.
+	     *
+	     * Attaches screenshot to the report
+	     */
+	    @Then("^verify that SubTotal value equals sum of totals per product type$")
+	    public void verify_sum_of_totals_per_product_type_equals_subTotal() throws Throwable{
+		Log.info("* StepCore started verify_sum_of_totals_per_product_type_equals_subTotal");
+
+		String totalPrice = checkout.getTotalPrice();
+		ArrayList<String> totalPerProductType = checkout.getTotalPricePerProduct();
+
+		Double sum = 0d;
+		for(String price : totalPerProductType){
+		    sum = sum + Double.valueOf(price);
+		}
+
+		byte[] screenshot = PageCore.takeScreenshot();
+		StepCore.attachScreenshotToReport("Checkout_Products_Price_View", screenshot);
+
+		Log.debug("Sum per product type is " + sum);
+		Log.debug("Sub-Total is " + totalPrice);
+
+		try {
+		    assertEquals("Sub-Total value is different than sum of price per product type",
+			    Double.valueOf(totalPrice),
+			    sum);
+		} catch ( AssertionError e ) {
+		    Log.error("", e);
+		}
+
+		// or instead of assertEquals we can write simple code below
+		//if ( ! Double.valueOf(totalPrice).equals(sum) ) {
+		//    Log.error("Sub-Total value is different than sum of price per product type");
+		//}
 	    }
 	}
 	
