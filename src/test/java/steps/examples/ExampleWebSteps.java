@@ -30,7 +30,7 @@ public class ExampleWebSteps extends BaseSteps {
      */
     @When("^I open seleniumframework website$")
     public void i_open_seleniumframework_website() throws Throwable {
-        Log.info("* StepCore started i_open_seleniumframework_website");
+        Log.info("* Step started i_open_seleniumframework_website");
 
         String url = Environment.readProperty("WEB_url");
         Log.debug("Going to open " + url);
@@ -45,7 +45,7 @@ public class ExampleWebSteps extends BaseSteps {
      */
     @Then("^I validate title and URL$")
     public void i_print_title_and_URL() throws Throwable {
-        Log.info("* StepCore started i_print_title_and_URL");
+        Log.info("* Step started i_print_title_and_URL");
 
         Log.debug("Going to validate an Url");
         Log.debug("Page title is " + PageCore.getTitle());
@@ -69,7 +69,7 @@ public class ExampleWebSteps extends BaseSteps {
      */
     @When("^I open google page$")
     public void i_open_google_website() throws Throwable {
-        Log.info("* StepCore started i_open_google_website");
+        Log.info("* Step started i_open_google_website");
 
         String url = Environment.readProperty("WEB_url");
         Log.debug("Going to open " + url);
@@ -84,7 +84,7 @@ public class ExampleWebSteps extends BaseSteps {
      */
     @Then("^I check for input element$")
     public void i_check_for_input_element() throws Throwable {
-        Log.info("* StepCore started i_check_for_input_element");
+        Log.info("* Step started i_check_for_input_element");
 
         Log.debug("Going to locate input element");
         WebElement element = PageCore.findElement(By.id("lst-ib"));
@@ -99,7 +99,7 @@ public class ExampleWebSteps extends BaseSteps {
      */
     @Then("^I search for text$")
     public void i_search_for() throws Throwable {
-        Log.info("* StepCore started i_search_for");
+        Log.info("* Step started i_search_for");
 
         Log.debug("Going to search for");
         WebElement element = PageCore.findElement(By.id("lst-ib"));
@@ -116,7 +116,7 @@ public class ExampleWebSteps extends BaseSteps {
      */
     @Then("^I search for text (.*)$")
     public void i_search_for2(String input) throws Throwable {
-        Log.info("* StepCore started i_search_for2");
+        Log.info("* Step started i_search_for2");
 
         Log.debug("Going to search for");
         WebElement element = PageCore.findElement(By.id("lst-ib"));
@@ -137,7 +137,7 @@ public class ExampleWebSteps extends BaseSteps {
      */
     @Then("^attach sample file to report$")
     public void attache_file_to_report() throws Throwable {
-        Log.info("* StepCore attache_file_to_report");
+        Log.info("* Step attache_file_to_report");
 
         Log.debug("Going to attach file");
         StepCore.attachFileToReport("SimpleTextAttachment", "text/plain", "C:\\Users\\akowa\\Documents\\przykladowy_plik_tekstowt.txt");

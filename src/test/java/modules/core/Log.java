@@ -8,6 +8,7 @@ import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.OutputStreamAppender;
 import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.junit.Assert;
 
@@ -20,7 +21,7 @@ public class Log {
     private static Logger Log = LogManager.getLogger(Log.class.getName());
 
     public static Logger getLogger() {
-    	return LogManager.getLogger("file"); //used to redirect logs from RestAssured to a file log
+    	return Log;//LogManager.getLogger("file"); //used to redirect logs from RestAssured to a file log
 	}
 
 	// Need to create these methods, so that they can be called
@@ -49,7 +50,7 @@ public class Log {
     public static void addAppender(final OutputStream outputStream, final String outputStreamName) {
         LoggerContext context = LoggerContext.getContext(false);
         Configuration config = context.getConfiguration();
-        PatternLayout layout = PatternLayout.newBuilder().withPattern("[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n").build();
+        PatternLayout layout = PatternLayout.newBuilder().withPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] %msg%n").build();
 
         Appender appender = OutputStreamAppender.createAppender(layout, null, outputStream, outputStreamName, false, true);
         appender.start();

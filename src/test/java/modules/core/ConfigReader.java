@@ -73,25 +73,29 @@ public class ConfigReader {
         //read each entry and create new shared object for it
         if(root.isJsonObject()){
             Set<Map.Entry<String, JsonElement>> entries = root.getAsJsonObject().entrySet();//will return members of your object
-            for (Map.Entry<String, JsonElement> entry: entries) {
-                try {
-                    object = root.getAsJsonObject().get(entry.getKey()).getAsJsonObject();
-                } catch (NullPointerException e) {
-                    Log.error("No objects defined in configuration file!", e);
-                }
+            if ( entries.size() > 0 ) {
+                for (Map.Entry<String, JsonElement> entry : entries) {
+                    try {
+                        object = root.getAsJsonObject().get(entry.getKey()).getAsJsonObject();
+                    } catch (NullPointerException e) {
+                        Log.error("No objects defined in configuration file!", e);
+                    }
 
-                result = parseObject(object);
+                    result = parseObject(object);
 
-                //if ctx object already exists overwrite/update its content else create new one
-                HashMap<String, Object> tmpMap = ctx.Object.get(entry.getKey(),HashMap.class);
-                if (tmpMap == null ) {
-                    ctx.Object.put(entry.getKey(), HashMap.class, result);
-                } else {
-                    tmpMap.putAll(result);
-                    ctx.Object.put(entry.getKey(), HashMap.class, tmpMap);
+                    //if ctx object already exists overwrite/update its content else create new one
+                    HashMap<String, Object> tmpMap = ctx.Object.get(entry.getKey(), HashMap.class);
+                    if (tmpMap == null) {
+                        ctx.Object.put(entry.getKey(), HashMap.class, result);
+                    } else {
+                        //tmpMap.putAll(result);
+                        deepMerge(tmpMap, result);
+                        ctx.Object.put(entry.getKey(), HashMap.class, tmpMap);
+                    }
                 }
+            } else {
+                Log.debug("No objects found");
             }
-
         }
     }
 
@@ -174,5 +178,30 @@ public class ConfigReader {
         }
         return map;
     }
+
+
+    // This is fancier than Map.putAll(Map)
+    // https://stackoverflow.com/questions/25773567/recursive-merge-of-n-level-maps
+    private Map deepMerge(Map original, Map newMap) {
+        for (Object key : newMap.keySet()) {
+            if (newMap.get(key) instanceof Map && original.get(key) instanceof Map) {
+                Map originalChild = (Map) original.get(key);
+                Map newChild = (Map) newMap.get(key);
+                original.put(key, deepMerge(originalChild, newChild));
+            } else if (newMap.get(key) instanceof List && original.get(key) instanceof List) {
+                List originalChild = (List) original.get(key);
+                List newChild = (List) newMap.get(key);
+                for (Object each : newChild) {
+                    if (!originalChild.contains(each)) {
+                        originalChild.add(each);
+                    }
+                }
+            } else {
+                original.put(key, newMap.get(key));
+            }
+        }
+        return original;
+    }
+
 
 }

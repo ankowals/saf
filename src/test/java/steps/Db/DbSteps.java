@@ -19,7 +19,7 @@ public class DbSteps extends BaseSteps {
 
     @When("^simple select is executed$")
     public void simple_select_is_executed_with_db_utils(){
-        Log.info("* StepCore started simple_select_is_executed");
+        Log.info("* Step started simple_select_is_executed");
 
         List<Map<String,Object>> list = SqlCore.selectList("SELECT * FROM Dept");
 
@@ -31,7 +31,7 @@ public class DbSteps extends BaseSteps {
 
     @Then("^validate that result is like (.*)$")
     public void validate_that_result_is_like(String templateName) throws Throwable {
-        Log.info("* StepCore started validate_that_result_is_like");
+        Log.info("* Step started validate_that_result_is_like");
 
         File toCompare = ctx.Object.get("SqlResults",File.class);
         String path = toCompare.getAbsolutePath();
@@ -43,7 +43,7 @@ public class DbSteps extends BaseSteps {
 
     @When("^data from csv file is loaded$")
     public void data_from_csv_file_is_loaded(){
-        Log.info("* StepCore started simple_select_is_executed");
+        Log.info("* Step started simple_select_is_executed");
 
         File input = new File(FileCore.getCurrentFeatureDirPath() + "/config/input.csv");
         SqlCore.insertFromFile(input,"Dept",true, "TestData.inputTypeMapping");

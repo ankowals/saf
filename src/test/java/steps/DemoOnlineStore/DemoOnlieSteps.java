@@ -36,7 +36,7 @@ public class DemoOnlieSteps extends BaseSteps {
      */
     @When("^open main page$")
     public void i_open_main_page() throws Throwable {
-        Log.info("* StepCore started i_open_main_page");
+        Log.info("* Step started i_open_main_page");
         //instantiate MainPage to open url in the browser
         main = new MainPage(ctx);
         main.load();
@@ -47,7 +47,7 @@ public class DemoOnlieSteps extends BaseSteps {
      */
     @And("^navigate to all products page$")
     public void navigate_to_all_products() throws Throwable{
-        Log.info("* StepCore started navigate_to_all_products");
+        Log.info("* Step started navigate_to_all_products");
         product = main.goToAllProduct();
     }
 
@@ -59,7 +59,7 @@ public class DemoOnlieSteps extends BaseSteps {
      */
     @And("^add product (.*) to cart$")
     public void add_product_to_cart(String productName) throws Throwable{
-        Log.info("* StepCore started add_product_to_cart");
+        Log.info("* Step started add_product_to_cart");
 
         String input = StepCore.checkIfInputIsVariable(productName);
         product.addToCart(input);
@@ -73,7 +73,7 @@ public class DemoOnlieSteps extends BaseSteps {
      */
     @And("^add product (.*) to cart and go to checkout$")
     public void add_product_to_cart_and_checkout(String productName) throws Throwable{
-        Log.info("* StepCore started add_product_to_cart_and_checkout");
+        Log.info("* Step started add_product_to_cart_and_checkout");
 
         String input = StepCore.checkIfInputIsVariable(productName);
         checkout = product.addToCartAndCheckout(input);
@@ -88,7 +88,7 @@ public class DemoOnlieSteps extends BaseSteps {
      */
     @Then("^verify that SubTotal value equals sum of totals per product type$")
     public void verify_sum_of_totals_per_product_type_equals_subTotal() throws Throwable{
-        Log.info("* StepCore started verify_sum_of_totals_per_product_type_equals_subTotal");
+        Log.info("* Step started verify_sum_of_totals_per_product_type_equals_subTotal");
 
         String totalPrice = checkout.getTotalPrice();
         ArrayList<String> totalPerProductType = checkout.getTotalPricePerProduct();

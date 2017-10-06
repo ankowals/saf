@@ -89,44 +89,6 @@ public class FileCore {
 
 
     /**
-     * Returns paths to to template file with particular name
-     * Search is done in local and global templates directories
-     *
-     * @param templateName String, name of the template file without extension
-     * @return templatePath String, path to the template file
-     */
-    public String searchForTemplate(String templateName) {
-        //find global template dir
-        String projectDir = getProjectPath();
-        String globalTemplateDir = projectDir + File.separator + "template";
-
-        //find local template dir
-        String localDir = ctx.Object.get("FeatureFileDir", String.class);
-        String localTemplateDir = localDir + File.separator + "template";
-
-        //search for template first in local dir
-        Log.debug("Looking for template " + templateName + " in " + localTemplateDir);
-        ArrayList<String> templates = searchForFile(localTemplateDir,templateName + ".template");
-
-        //if local template not found search for it in global dir
-        if ( templates.size() < 1 ) {
-            Log.debug("Looking for template " + templateName + " in " + globalTemplateDir);
-            templates = searchForFile(globalTemplateDir,templateName + ".template");
-        }
-
-        if ( templates.size() < 1 ) {
-            Log.error("Template " + templateName + ".template was not found!");
-        }
-
-        //return the template if multiple files found return just the first one!
-        String templatePath = templates.get(0);
-        Log.debug("Template found in " + templatePath);
-
-        return templatePath;
-    }
-
-
-    /**
      * Returns path to the feature file directory that is currently executed
      *
      * @return result String, path to the feature file directory
@@ -230,18 +192,15 @@ public class FileCore {
             try {
                 sFile = IOUtils.toString(inputStream);
             } catch (IOException e) {
-                Log.error("File " + path + " not found!");
-                Log.error(e.getMessage());
+                Log.error("", e);
             }
         } catch (FileNotFoundException e) {
-            Log.error("File " + path + " not found!");
-            Log.error(e.getMessage());
+            Log.error("", e);
         }finally {
             try {
                 inputStream.close();
             } catch (IOException e) {
-                Log.error("File " + path + " not found!");
-                Log.error(e.getMessage());
+                Log.error("", e);
             }
         }
 
@@ -292,19 +251,21 @@ public class FileCore {
         return result;
     }
 
-    public String createTempDir () {
-        Path result = null;
+    public File createTempDir () {
+        Path pathToTempDir = null;
         String systemTmpDirPath = FileUtils.getTempDirectoryPath();
         Path path = Paths.get(systemTmpDirPath);
 
         try {
-            result = Files.createTempDirectory(path, "SAF_dir_");
+            pathToTempDir = Files.createTempDirectory(path, "SAF_dir_");
         } catch (IOException | UnsupportedOperationException | IllegalArgumentException | SecurityException e ) {
             Log.error( "", e );
         }
 
-        String sResult = result.toAbsolutePath().toString();
-        return sResult;
+        String sPathToTempDir = pathToTempDir.toAbsolutePath().toString();
+        File result = new File(sPathToTempDir);
+
+        return result;
     }
 
     public List<String> readLines (File file) {

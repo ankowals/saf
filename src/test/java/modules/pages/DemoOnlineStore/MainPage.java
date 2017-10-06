@@ -25,10 +25,6 @@ public class MainPage extends BasePage {
         return new MainPage(ctx);
     }
 
-    public Boolean isLoaded(String pageTitle){
-        return PageCore.titleContains(pageTitle);
-    }
-
     /**
      * Navigates to all products page
      *

@@ -5,6 +5,8 @@ import modules.core.BaseSteps;
 import modules.core.Log;
 import modules.core.SharedContext;
 
+import java.io.File;
+
 import static io.restassured.RestAssured.given;
 
 public class ReqResInSteps extends BaseSteps {
@@ -24,16 +26,14 @@ public class ReqResInSteps extends BaseSteps {
      *  env.REST_url
      *
      */
-    @Given("service is available")
+    @Given("^service is available$")
     public void service_is_available() {
-        Log.info("* StepCore started service_is_available");
+        Log.info("* Step started service_is_available");
 
         String url = Environment.readProperty("REST_url");
         Long statusCode = Storage.get("Expected.statusOK");
         Integer expectedCode = statusCode.intValue();
         given().when().log().all().get(url).then().statusCode(expectedCode);
     }
-
-
 
 }

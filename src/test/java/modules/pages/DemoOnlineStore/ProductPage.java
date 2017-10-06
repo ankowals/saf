@@ -18,10 +18,6 @@ public class ProductPage extends BasePage {
         }
     }
 
-    public Boolean isLoaded(String pageTitle){
-        return PageCore.titleContains(pageTitle);
-    }
-
     //selectors
     private static final By addInputSelector = By.xpath("//*[contains(@class, 'product_view_')]/descendant::input[contains(@class,'wpsc_buy_button')]");
     private static final By productElementSelector = By.xpath("//*[contains(@class, 'product_view_')]");

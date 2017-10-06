@@ -117,7 +117,7 @@ public class StepCore {
         Log.debug("Template comparison started");
         Boolean result = false;
 
-        String templatePath = FileCore.searchForTemplate(templateName);
+        String templatePath = searchForTemplate(templateName);
 
         File template = new File(templatePath);
         File results = new File(pathToResults);
@@ -144,6 +144,25 @@ public class StepCore {
         }
     }
 
+    public File evaluateTemplate(String templateName) {
+        String templatePath = searchForTemplate(templateName);
+
+        File template = new File(templatePath);
+        String sFile = FileCore.readToString(template);
+
+        //evaluate the template
+        String templateAfteEval = replaceInTemplate(sFile);
+
+        //attach template after evaluation to the report
+        File temp = FileCore.createTempFile(templateName,"template");
+        FileCore.appendToFile(temp, templateAfteEval);
+        String tempPath = temp.getAbsolutePath();
+        attachFileToReport(templateName + ".template","text/plain",tempPath);
+
+        return temp;
+
+    }
+
     private String replaceInTemplate (String input) {
         Integer beignIdx = input.indexOf("${");
         Integer endIx = input.indexOf("}", beignIdx);
@@ -160,10 +179,49 @@ public class StepCore {
             }
             String result = checkIfInputIsVariable(toCheck).toString();
 
-            return replaceInTemplate(input.replace("${" + toReplace + "}", result));
+            if (  ! toReplace.equals("ctx." + result) ) {
+                return replaceInTemplate(input.replace("${" + toReplace + "}", result));
+            }
         }
 
         return input;
+    }
+
+    /**
+     * Returns paths to to template file with particular name
+     * Search is done in local and global templates directories
+     *
+     * @param templateName String, name of the template file without extension
+     * @return templatePath String, path to the template file
+     */
+    public String searchForTemplate(String templateName) {
+        //find global template dir
+        String projectDir = FileCore.getProjectPath();
+        String globalTemplateDir = projectDir + File.separator + "template";
+
+        //find local template dir
+        String localDir = ctx.Object.get("FeatureFileDir", String.class);
+        String localTemplateDir = localDir + File.separator + "template";
+
+        //search for template first in local dir
+        Log.debug("Looking for template " + templateName + " in " + localTemplateDir);
+        ArrayList<String> templates = FileCore.searchForFile(localTemplateDir,templateName + ".template");
+
+        //if local template not found search for it in global dir
+        if ( templates.size() < 1 ) {
+            Log.debug("Looking for template " + templateName + " in " + globalTemplateDir);
+            templates = FileCore.searchForFile(globalTemplateDir,templateName + ".template");
+        }
+
+        if ( templates.size() < 1 ) {
+            Log.error("Template " + templateName + ".template was not found!");
+        }
+
+        //return the template if multiple files found return just the first one!
+        String templatePath = templates.get(0);
+        Log.debug("Template found in " + templatePath);
+
+        return templatePath;
     }
 
     public String applyPositiveFilter (File input, List<String> filters) {
@@ -283,7 +341,6 @@ public class StepCore {
         return output;
     }
 
-
     /**
      * Attaches file to the report
      *
@@ -302,7 +359,7 @@ public class StepCore {
             Log.error( "File " + file.getAbsolutePath() + " not found!", e );
         }
 
-        Log.debug("File " + path + " attached to report with name " + name);
+        Log.debug("File " + path + " with name " + name + " attached to report");
 
         return bytes;
     }
@@ -327,6 +384,7 @@ public class StepCore {
      */
     @Attachment(value="{0}", type="text/plain")
     public String attachMessageToReport(String name, String message){
+        Log.debug("Message with name " + name + " attached to report");
         return message;
     }
 

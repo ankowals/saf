@@ -23,4 +23,8 @@ public class BasePage {
         PageCore.waitForPageToLoad();
     }
 
+    public Boolean isLoaded(String pageTitle){
+        return PageCore.titleContains(pageTitle);
+    }
+
 }

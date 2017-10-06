@@ -18,10 +18,6 @@ public class CheckoutPage extends BasePage {
         }
     }
 
-    public Boolean isLoaded(String pageTitle){
-        return PageCore.titleContains(pageTitle);
-    }
-
     //selectors
     private static final By TotalPriceElementSelector = By.xpath("//*[@class='yourtotal']/descendant::span[@class='pricedisplay']");
     private static final By ProductTotalPriceElementSelector = By.xpath("//*[contains(@class, 'wpsc_product_price')]/span[@class='pricedisplay']");

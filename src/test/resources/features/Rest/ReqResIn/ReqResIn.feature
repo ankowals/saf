@@ -11,3 +11,8 @@ Feature: ReqResIn
     And set TestData.DoubleMapa.second in storage TOJESTTEST3
     And set TestData.ostatni[1] in storage TOJESTTEST4
     And set TestData.Najgorsza.klucz2[1].klucz1 in storage TOJESTTEST5
+
+
+  Scenario: Tigger Post request
+
+    Given simple POST request post1

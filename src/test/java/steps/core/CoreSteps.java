@@ -20,7 +20,7 @@ public class CoreSteps extends BaseSteps {
      */
     @Given("^open browser$")
     public void open_browser() throws Throwable {
-        Log.info("* StepCore started open_browser");
+        Log.info("* Step started open_browser");
 
         EventFiringWebDriver driver = new DriverFactory(ctx).create();
         ctx.Object.put("Page", EventFiringWebDriver.class, driver);
@@ -32,7 +32,7 @@ public class CoreSteps extends BaseSteps {
 
     @Given("^open db$")
     public void open_db() throws Throwable {
-        Log.info("* StepCore started open_db");
+        Log.info("* Step started open_db");
 
         Connection connection = new DBConnector(ctx).create();
         ctx.Object.put("Sql", Connection.class, connection);
@@ -48,7 +48,7 @@ public class CoreSteps extends BaseSteps {
      */
     @And("^configuration data from \"(.*?)\" is loaded$")
     public void load_local_test_data(String arg1) throws Throwable {
-        Log.info("* StepCore started load_local_test_data");
+        Log.info("* Step started load_local_test_data");
 
         String path = FileCore.getFeaturesPath() + File.separator + arg1;
         ConfigReader Config = new ConfigReader(ctx);
@@ -62,7 +62,7 @@ public class CoreSteps extends BaseSteps {
      */
     @And("^macro evaluation is done$")
     public void eval_macro() throws Throwable {
-        Log.info("* StepCore started eval_macro");
+        Log.info("* Step started eval_macro");
 
         Log.info("<- evaluating macros ->");
         Macro.eval("TestData");
@@ -74,7 +74,7 @@ public class CoreSteps extends BaseSteps {
 
     @And("^set (.+) in storage (.+)$")
     public void set_in_storage(String storageName, String value) throws Throwable {
-        Log.info("* StepCore started set_in_storage");
+        Log.info("* Step started set_in_storage");
         Storage.set(storageName, value);
         Storage.get(storageName);
     }
