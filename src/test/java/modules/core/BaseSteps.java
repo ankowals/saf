@@ -11,6 +11,7 @@ public class BaseSteps {
     protected Storage Storage;
     protected FileCore FileCore;
     protected ExecutorCore ExecutorCore;
+    protected AssertCore AssertCore;
 
     // PicoContainer injects class SharedContext
     public BaseSteps (SharedContext ctx) {
@@ -23,6 +24,7 @@ public class BaseSteps {
         this.Storage = ctx.Object.get("Storage", Storage.class);
         this.FileCore = ctx.Object.get("FileCore",FileCore.class);
         this.ExecutorCore = ctx.Object.get("ExecutorCore", ExecutorCore.class);
+        this.AssertCore = ctx.Object.get("AssertCore", AssertCore.class);
     }
 
 }

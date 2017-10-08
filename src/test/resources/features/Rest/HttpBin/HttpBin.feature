@@ -3,7 +3,8 @@ Feature: HttpBin
 
   Scenario: Tigger Post request
 
-    Given simple POST request post1
+    Given json post request post1 is sent
     When the status code is Expected.statusOK
-    Then verify that response has
-      | data, containsString | Expected.a |
+    Then verify that rest response has
+      | key                     | action                   | expected   |
+      | data                    | containsString           | Expected.a |

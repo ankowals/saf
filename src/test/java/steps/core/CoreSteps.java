@@ -2,11 +2,20 @@ package steps.core;
 
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
+import cucumber.api.java.en.Then;
+import cucumber.api.java.en.When;
+import io.restassured.response.Response;
+import io.restassured.response.ValidatableResponse;
+import io.restassured.specification.RequestSpecification;
 import modules.core.*;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
 
 import java.io.File;
 import java.sql.Connection;
+import java.util.List;
+import java.util.Map;
+
+import static io.restassured.RestAssured.given;
 
 public class CoreSteps extends BaseSteps {
 
@@ -30,6 +39,9 @@ public class CoreSteps extends BaseSteps {
         Log.debug("Web driver created");
     }
 
+    /**
+     * Opens jdbc connection to database
+     */
     @Given("^open db$")
     public void open_db() throws Throwable {
         Log.info("* Step started open_db");
@@ -44,7 +56,8 @@ public class CoreSteps extends BaseSteps {
 
     /**
      * Loads configuration from a particular file {}
-     * File path shall be relative to features directory and shall start without separator
+     *
+     * @param arg1, String, file path relative to features directory (shall start without separator)
      */
     @And("^configuration data from \"(.*?)\" is loaded$")
     public void load_local_test_data(String arg1) throws Throwable {
@@ -72,11 +85,199 @@ public class CoreSteps extends BaseSteps {
         Storage.print("TestData");
     }
 
+    /**
+     * Sets particular value of a key in the storage
+     *
+     * @param storageName, String, name of the storage
+     * @param, value, String, value to be set
+     */
     @And("^set (.+) in storage (.+)$")
     public void set_in_storage(String storageName, String value) throws Throwable {
         Log.info("* Step started set_in_storage");
         Storage.set(storageName, value);
         Storage.get(storageName);
     }
+
+    /**
+    ************************************
+    ************************************
+    *************** REST ***************
+    ************************************
+    ************************************
+    **/
+
+    /**
+     * Verifies if service is available
+     * This is just a sanity check.
+     * It triggers GET request towards defined url
+     *
+     * Uses following objects:
+     *  Expected.statusOK
+     *  env.REST_url
+     *
+     */
+    @Given("^service is available$")
+    public void service_is_available() {
+        Log.info("* Step started service_is_available");
+
+        String url = Environment.readProperty("REST_url");
+        Long statusCode = Storage.get("Expected.statusOK");
+        Integer expectedCode = statusCode.intValue();
+        try {
+            given()
+                .when()
+                .log()
+                .all()
+                .get(url)
+                    .then()
+                    .statusCode(expectedCode);
+        } catch (AssertionError e) {
+            Log.error("", e);
+        }
+    }
+
+    /**
+     * Triggers http post request with json body. Content of the body comes from the file.
+     * ValidatableResponse is available as a context Object with name response.
+     *
+     * Uses following objects:
+     *  ctx.Object.response
+     *  Environment.REST_url
+     *
+     * @param name, String, name of the template that contains http body of the request
+     */
+    @When("^json post request (.*?) is sent$")
+    public void json_post_request_is_sent(String name) {
+        Log.info("* Step started json_post_request_is_sent");
+
+        String url = Environment.readProperty("REST_url");
+        String path = Environment.readProperty("Rest_url_post_path");
+
+        url = url + path;
+
+        File file = StepCore.evaluateTemplate(name);
+
+        //build specification and use file template as a body content
+        RequestSpecification request = given()
+                .body(file)
+                .with()
+                .contentType("application/json");
+
+        //trigger request and log it (it will be added as attachment to the report)
+        Response response = request
+                .when()
+                .log()
+                .all()
+                .post(url);
+
+        //store response as ctx object so it can be verify by other steps and attach it to report
+        ValidatableResponse vResp = response.then();
+        ctx.Object.put("response",ValidatableResponse.class, vResp);
+        StepCore.attachMessageToReport("Json response", response.prettyPrint().toString());
+    }
+
+
+    /**
+     * Triggers http post request with xml body (soap). Content of the body comes from the file.
+     * ValidatableResponse is available as a context Object with name response.
+     *
+     * Uses following objects:
+     *  ctx.Object.response
+     *  Environment.REST_url
+     *
+     * @param name, String, name of the template that contains http body of the request
+     * @param actionHeader, String, soap action that will be set in the header
+     */
+    @When("^xml post request (.*?) with soap action header (.*?) is sent$")
+    public void xml_post_request_is_sent(String name, String actionHeader) {
+        Log.info("* Step started xml_post_request_is_sent");
+
+        String url = Environment.readProperty("REST_url");
+        File file = StepCore.evaluateTemplate(name);
+        String sAction = StepCore.checkIfInputIsVariable(actionHeader);
+        String sFile = FileCore.readToString(file);
+
+        //build specification and use file template as a body content
+        RequestSpecification request = given()
+                .header("SOAPAction", sAction)
+                .body(sFile)
+                .with()
+                .contentType("text/xml");
+
+        //trigger request and log it (it will be added as attachment to the report)
+        Response response = request
+                .when()
+                .log()
+                .all()
+                .post(url);
+
+        //store response as ctx object so it can be verify by other steps and attach it to report
+        ValidatableResponse vResp = response.then();
+        ctx.Object.put("response",ValidatableResponse.class, vResp);
+        StepCore.attachMessageToReport("Xml response", response.prettyPrint().toString());
+    }
+
+    /**
+     * Verifies that particular key xml/json body response contains expected value
+     * Multiple different comparisons can be executed. Following actions are supported
+     * equalTo, containsString, containsInAnyOrder, greaterThan, lessThan
+     *
+     * @param table, DataTable, it shall contains 3 columns key, action, expected
+     */
+    @Then("^verify that rest response has$")
+    public void verify_that_response_has(List<Map<String, String>> table) {
+        Log.info("* Step started verify_that_response_has");
+
+        Response response = ctx.Object.get("response",Response.class);
+        ValidatableResponse vResp = response.then();
+
+        //get rows
+        for (int i = 0; i < table.size(); i++) {
+            Map<String, String> row = table.get(i);
+
+            Log.debug("Row is " + row);
+            //get columns
+            String key = null;
+            String action = null;
+            Object expectedValue = null;
+            for (Map.Entry<String, String> column : row.entrySet()) {
+                //get name of the column
+                String name = column.getKey();
+                //get value of that column for current row
+                String valueInRow = column.getValue();
+
+                //assign values from columns to variables
+                if ( name.equalsIgnoreCase("key") ){
+                    key = valueInRow;
+                    continue;
+                }
+                if ( name.equalsIgnoreCase("action") ){
+                    action = valueInRow;
+                    continue;
+                }
+                if ( name.equalsIgnoreCase("expected") ){
+                    expectedValue = StepCore.checkIfInputIsVariable(valueInRow);
+                }
+
+                //execute simple error handling
+                if(key == null){
+                    Log.error("key in verify step table does not exist or null!");
+                }
+                if(action == null){
+                    Log.error("key in verify step table does not exist or null!");
+                }
+                if (key.equals("")) {
+                    Log.error("key in verify step table is an empty string!");
+                }
+                if (action.equals("")) {
+                    Log.error("action in verify step table is an empty string!");
+                }
+
+                //execute comparison
+                AssertCore.validatableResponseBodyTableAssertion(vResp, key, action, expectedValue);
+            }
+        }
+    }
+
 
 }

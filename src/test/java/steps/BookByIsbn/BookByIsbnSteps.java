@@ -45,7 +45,7 @@ public class BookByIsbnSteps extends BaseSteps {
      * Response is stored as response ctx.obj and attached to the report
      *
      * Uses following objects:
-     *  ctx.obj.request
+     *  ctx.Object.request
      *
      */
     @When("^a user retrieves the book by isbn$")
@@ -92,7 +92,7 @@ public class BookByIsbnSteps extends BaseSteps {
      * Input requires a table
      *
      * Uses following objects:
-     *  ctx.obj.json
+     *  ctx.Object.json
      *
      * @param responseFields content of a table that contains key and expected value pairs to verify
      *

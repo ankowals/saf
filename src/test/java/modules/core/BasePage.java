@@ -9,6 +9,7 @@ public class BasePage {
     protected SqlCore SqlCore;
     protected Storage Storage;
     protected FileCore FileCore;
+    protected AssertCore AssertCore;
 
     // PicoContainer injects class SharedContext
     public BasePage (SharedContext ctx) {
@@ -19,6 +20,7 @@ public class BasePage {
         this.SqlCore = ctx.Object.get("SqlCore",SqlCore.class);
         this.Storage = ctx.Object.get("Storage", Storage.class);
         this.FileCore = ctx.Object.get("FileCore",FileCore.class);
+        this.AssertCore = ctx.Object.get("AssertCore", AssertCore.class);
 
         PageCore.waitForPageToLoad();
     }

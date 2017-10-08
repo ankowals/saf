@@ -66,6 +66,9 @@ public class HooksSteps {
         ExecutorCore executorCore = new ExecutorCore(ctx);
         ctx.Object.put("ExecutorCore", ExecutorCore.class, executorCore);
 
+        AssertCore assertCore = new AssertCore(ctx);
+        ctx.Object.put("AssertCore", AssertCore.class, assertCore);
+
         StepCore step = new StepCore(ctx);
         ctx.Object.put("StepCore", StepCore.class, step);
 

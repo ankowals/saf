@@ -4,6 +4,7 @@ Feature: ReqResIn
   Background: Sanity check
     Given service is available
 
+  @storageTest
   Scenario: Trigger a GET request to get a single user and validate the response
 
    Given set TestData.a_to_czwarty_kluczyk.test4.testx2 in storage TOJESTTEST
@@ -12,7 +13,6 @@ Feature: ReqResIn
     And set TestData.ostatni[1] in storage TOJESTTEST4
     And set TestData.Najgorsza.klucz2[1].klucz1 in storage TOJESTTEST5
 
-
   Scenario: Tigger Post request
 
-    Given simple POST request post1
+    Given json post request post1 is sent
