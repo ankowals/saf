@@ -7,10 +7,17 @@ import cucumber.api.java.Before;
 import io.restassured.RestAssured;
 import io.restassured.config.LogConfig;
 import org.apache.commons.lang.StringUtils;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.OutputStreamAppender;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.openqa.selenium.logging.LogEntry;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
 import ru.yandex.qatools.allure.annotations.Attachment;
 import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -35,10 +42,17 @@ public class HooksSteps {
      **/
     public void startUp(Scenario scenario) {
 
-        //this is used to add per scenario log to report
+        //this is used to add per scenario log to report with unique name
         long logging_start = System.nanoTime();
-        Log.addAppender(out,scenario.getName()+logging_start);
 
+        //initialize Logger class, without this line log for the first scenario will not be attached
+        Log.info("***");
+        Log.info("***");
+
+        //add appender to attache log for particular scenario to the report
+        addAppender(out,scenario.getName()+logging_start);
+
+        //start scenario
         String[] tId = scenario.getId().split(";");
         Log.info("*** Feature id: " + tId[0] + " ***");
         Log.info("***");
@@ -100,7 +114,8 @@ public class HooksSteps {
         }
 
         Log.info("<- configuring logger for rest operations ->");
-        ToLoggerPrintStream loggerPrintStream = new ToLoggerPrintStream( Log.getLogger() );
+        //ToLoggerPrintStream loggerPrintStream = new ToLoggerPrintStream( Log.getLogger() );
+        ToLoggerPrintStream loggerPrintStream = new ToLoggerPrintStream();
         RestAssured.config = RestAssured.config().logConfig(
                                  new LogConfig( loggerPrintStream.getPrintStream(), true ) );
         Log.info("Finished resources initialisation");
@@ -207,5 +222,27 @@ public class HooksSteps {
     public byte[] attachLogToReport(ByteArrayOutputStream out){
         return out.toByteArray();
     }
+
+    private static void addAppender(final OutputStream outputStream, final String outputStreamName) {
+        LoggerContext context = LoggerContext.getContext(false);
+        Configuration config = context.getConfiguration();
+
+        PatternLayout layout = PatternLayout.newBuilder()
+                .withPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] %msg%n")
+                .build();
+
+        Appender appender = OutputStreamAppender
+                .createAppender(layout, null, outputStream, outputStreamName, false, true);
+
+        appender.start();
+        config.addAppender(appender);
+
+        for (LoggerConfig loggerConfig : config.getLoggers().values()) {
+            loggerConfig.addAppender(appender, null, null);
+        }
+
+        context.updateLoggers();
+    }
+
 
 }

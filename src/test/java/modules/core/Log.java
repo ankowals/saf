@@ -4,27 +4,70 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.Appender;
-import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.LoggerContext;
-import org.apache.logging.log4j.core.appender.OutputStreamAppender;
-import org.apache.logging.log4j.core.config.Configuration;
-import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.apache.logging.log4j.core.appender.ConsoleAppender;
+import org.apache.logging.log4j.core.appender.FileAppender;
+import org.apache.logging.log4j.core.config.*;
 import org.apache.logging.log4j.core.layout.PatternLayout;
-import org.junit.Assert;
+import org.apache.logging.log4j.status.StatusLogger;
 
-import java.io.OutputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import static org.junit.Assert.fail;
 
 public class Log {
 
-    private static Logger Log = LogManager.getLogger(Log.class.getName());
+	static {
 
-    public static Logger getLogger() {
-    	return Log;//LogManager.getLogger("file"); //used to redirect logs from RestAssured to a file log
+		//turn off warning related to missing configuration
+		StatusLogger.getLogger().setLevel(Level.OFF);
+
+		//configure a layout and appender programmatically
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+		String pattern = LocalDateTime.now().format(formatter);
+
+		LoggerContext context = LoggerContext.getContext(false);
+		Configuration config = context.getConfiguration();
+
+		PatternLayout layout = PatternLayout.newBuilder()
+				.withConfiguration(config)
+				.withPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] %msg%n")
+				.build();
+
+		Appender appender = FileAppender.newBuilder()
+				.setConfiguration(config)
+				.withName("File-Appender")
+				.withLayout(layout)
+				.withFileName("target/"+pattern+"_FK_Prototype.log")
+				.build();
+
+		Appender appender2 = ConsoleAppender.newBuilder()
+				.setConfiguration(config)
+				.withName("Console-Appender")
+				.withLayout(layout)
+				.build();
+
+		appender.start();
+		appender2.start();
+		config.addAppender(appender);
+		config.addAppender(appender2);
+
+		//define a logger, associate the appender to it, and update the configuration
+		AppenderRef ref = AppenderRef.createAppenderRef("File-Appender", null, null);
+		AppenderRef ref2 = AppenderRef.createAppenderRef("Console-Appender", null, null);
+		AppenderRef[] refs = new AppenderRef[] { ref, ref2 };
+
+		LoggerConfig loggerConfig = LoggerConfig
+				.createLogger(false, Level.ALL, "modules.core", "true", refs, null, config, null);
+		loggerConfig.addAppender(appender, null, null);
+		loggerConfig.addAppender(appender2, null, null);
+		config.addLogger("modules.core", loggerConfig);
+		context.updateLoggers();
 	}
 
-	// Need to create these methods, so that they can be called
+    private static Logger Log = LogManager.getLogger("modules.core");
+
 	public static void info(String message) {
 		Log.info(message);
 	}
@@ -46,23 +89,4 @@ public class Log {
 	public static void debug(String message) {
 		Log.debug(message);
 	}
-
-    public static void addAppender(final OutputStream outputStream, final String outputStreamName) {
-        LoggerContext context = LoggerContext.getContext(false);
-        Configuration config = context.getConfiguration();
-        PatternLayout layout = PatternLayout.newBuilder().withPattern("%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] %msg%n").build();
-
-        Appender appender = OutputStreamAppender.createAppender(layout, null, outputStream, outputStreamName, false, true);
-        appender.start();
-        config.addAppender(appender);
-
-        Level level = null;
-        Filter filter = null;
-        //for (LoggerConfig loggerConfig : config.getLoggers().values()) {
-        //    loggerConfig.addAppender(appender, level, filter);
-        //}
-        config.getRootLogger().addAppender(appender, level, filter);
-        context.updateLoggers();
-    }
-
 }

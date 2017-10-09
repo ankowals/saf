@@ -1,0 +1,4 @@
+{
+    "name": "${ctx.TestData.name}",
+    "job": "${ctx.TestData.job}"
+}

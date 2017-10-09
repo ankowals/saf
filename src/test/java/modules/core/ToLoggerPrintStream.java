@@ -3,6 +3,8 @@ package modules.core;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
@@ -58,6 +60,15 @@ public class ToLoggerPrintStream {
         }
 
         return myPrintStream;
+    }
+
+
+    /**
+     * Constructor
+     */
+    public ToLoggerPrintStream() {
+        super();
+        myLog = LogManager.getLogger("modules.core");
     }
 
     /**
