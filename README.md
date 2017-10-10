@@ -121,7 +121,7 @@ How can we use test automation framework?
 	For parallel test execution one can use capabilities of framework or use multiple VMs to deploy multiple SUTs, framework instances, scheduler instances etc... 
 	in that case it has to be ensured that tests are seperated from each other 
 		- subsequent test does not depend on the result of previous test 
-		- tests are using separate test data/do not operate on the same config data at the same time (to avoid concurent modifciation)
+		- tests are using separate test data/config data (do not operate on the same config data at the same time to avoid concurent modifciation)
 
 ----------------------------------
 
@@ -136,12 +136,13 @@ Installation instructions
 	6 append %M2_HOME%\bin to PATH variable
 	7 verify maven installation; in cmd issue mvn -version
 	8 install intlliJ community edition -> this is our IDE in which tests can be written
-	9 download Chrome driver and other drivers if needed and put it for example in C:\SeleniumWebdrivers
-	10 in intelliJ go to Files->Settings->Plugins->Browse repositories and install Cucumber for Java plugin
-	11 restart or log out and log in so changes done to Path variable will be visible
-	12 install git
-	13 clone the repo for example to C:\Documents\Projects\SAF
-	14 in case of issues with JDK not found fix its path in pom.xml file under <executable> tag
+	9 download Selenium Chrome driver and other drivers if needed and put it for example in C:\SeleniumWebdrivers
+	10 download JDBC oracle driver and other drivers if needed and put it for example in C:\JdbcDrivers
+	11 in intelliJ go to Files->Settings->Plugins->Browse repositories and install Cucumber for Java plugin
+	12 restart or log out and log in so changes done to Path variable will be visible
+	13 install git
+	14 clone the repo for example to C:\Documents\Projects\SAF
+	15 in case of issues with JDK not found fix its path in pom.xml file under <executable> tag
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -154,10 +155,10 @@ Installation instructions
                 </configuration>
             </plugin>
 
-	15 Fix path to web drivers in /src/resources/config/env.config
-	16 Change the port number if needed (default is 8080) for jetty to see allure report after test execution
-
-	In addition if dB manipulations are desired jdbc integration is needed. To do so one needs to manually add dependency in pom.xml file. See https://stackoverflow.com/questions/1074869/find-oracle-jdbc-driver-in-maven-repository or http://www.mkyong.com/maven/how-to-add-oracle-jdbc-driver-in-your-maven-local-repository/ for more information.
+	16 Fix path to web drivers in /src/resources/config/environment/default.properties
+	17 Fix path to jdbc drivers in /src/resources/config/environment/default.properties
+	18 Change the port number if needed (default is 8082) for jetty to see allure report after test execution
+	
 
 ----------------------------------
 
@@ -166,7 +167,7 @@ How to imoprt project in IntelliJ?
 
 	1 open the IDE and click “Import Project”
 	2 point it to the location where your project is
-	3 select “Import project from external model”, select “Maven” and hit Next
+	3 select "Import project from external model", select "Maven" and hit Next
 	4 go with default options and click Next
 	5 the project is recognized as maven project and click Next
 	6 in case intelliJ is not able to locate your JDK, click "plus" icon in Select Project SDK window and point to the JDK installed on your machine, click Next
@@ -213,8 +214,6 @@ Other subdriectories contains project specific stuff like page obejct models etc
 
 
 Dir src/test/resources contains configuration files (*.properites and *.config) as well as features files (cotntainers for tests).
-
-It contains also a seperate property file log4j.properties used to configure logging feature.
 
 
 
@@ -275,12 +274,19 @@ Test report will be created.
 
 
 
-TestData can be passed to steps directly in a feature file or can be taken from a *.config file.
+TestData/ExpectedData can be passed to the steps directly in a feature file or can be taken from a *.config file.
 
 Global configuration is available but it can be overwritten/updated by local config.
 
-Config files will be loaded automatically as long as feature file name is same as feature name defined inside the file!!!
+Config files will be loaded automatically as long as feature file name is same as feature name defined inside the feature file file!!!
 
+For example file myTestFeature.feature shall contain
+	
+	Feature: myTestFeature
+		
+		Scenario: myTestScenario1
+		
+		...
 
 
 Log file will be created in target dir with a timestamp for each run, for example target/2017-09-11_103158_FK_Prototype
@@ -331,7 +337,7 @@ For json parsing gson library is used.
 
 When steps are executed we need to pass the same instance of a class to them, for example webdriver instance, test data storage, output of step def execution etc.
 
-To make it possible we are using so called dependency injection. Without it for eaxample each step will open a new browser window.
+To make it possible we are using so called dependency injection. Without it for example each step will open a new browser window.
 
 
 
@@ -343,7 +349,7 @@ For api automation RestAssured library is used.
 
 To read Csv files openCSV library is used.
 
-To better handle command execution and sql execution commons-dBUtils and Commons-exec libraries from Appache are used. Same for better handling of files and string manipulations (Commons-io and Commons-lang).
+To better handle command execution and sql execution Commons-exec and commons-dBUtils libraries from Appache are used. Same for better handling of files and string manipulations (Commons-io and Commons-lang).
 
 
 On top of that macro support, test data management, configuration files support, Page Object Model support and more was added.
@@ -363,18 +369,20 @@ To run a test from windows cmd please execute
 	mvn clean test -Dcucumber.options="--tags @bookByIsbn"
 	mvn site
 	mvn jetty:run
-	go to http://localhost:8080
+	go to http://localhost:8082
 
+
+Please note that usage of clean keywords ensures that artifacts from previous test execution are removed first.
 
 One can also use IntelliJ to run a feature file. In that case only log file will be created.
 
-To generate a report from test please execute mvn site, run jetty and check the browser.
+To generate a report from test please execute mvn site, mvn jetty:run to run jetty and check the report in the browser under http://localhost:<port>.
 
 It is possible to overwrite active_env property from the command line. In that case project specific config as specified by the CMD argument will be used during test execution. To do so please execute a test for example like below
 
 	mvn clean test -Dactive_env="bookByIsbn" -Dcucumber.options="--tags @bookByIsbn"
 
-In this particular case a default env configuration will be loaded and later on it will be overwritten by config available in a file bookByIsbn.properties.
+In this particular case a default environment (SUT) configuration will be loaded and later on it will be overwritten by config available in a file bookByIsbn.properties. Cucumber option --tags can be used to run only a subset of tests that are tagged with @bookByIsbn tag.
 
 --------------------------------
 
@@ -518,13 +526,13 @@ Each new scenario start will be indicated in the log as follows
 
 
 
-During this phase a file called /src/resources/config/env.properties will be checked for framework and SUT configuration.
+During this phase a file called /src/resources/config/environment/default.properties will be checked for framework and SUT configuration.
 
 It contains default settings and can be overwritten with project specific ones.
 
-Recommendation is to use project specific file to keep there System Under Test settings and framework settings shall stay in env.properties.
+Recommendation is to use project specific file to keep there System Under Test settings and framework settings shall stay in default.properties.
 
-Property active_env points to project specific SUT configuration file. For example we can have in env.properties
+Property active_env points to project specific SUT configuration file. For example we can have in default.properties
 
 
 
@@ -550,11 +558,11 @@ In this way multiple systems under test can be configured.
 
 Now it is time to read test data configuration from *.config files.
 
-Global configuration is available under /src/resources/config
+Global configuration is available under /src/resources/config/testdata
 
 Files under this directory are checked and evaluated. New storage is created based on their content.
 
-An example of test data configuration is below (content of /src/resources/config/testdata.config file)
+An example of test data configuration is below (content of /src/resources/config/testdata/testdata.config file)
 
 	TestData={
 	    "search_sentence" : "this is the default entry!",
