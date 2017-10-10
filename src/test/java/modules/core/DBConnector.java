@@ -1,6 +1,10 @@
 package modules.core;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
@@ -22,12 +26,23 @@ public class DBConnector {
         if ( JDBC_CONNECTION_URL.contains("jdbc:oracle") ) {
             try {
                 Log.debug("Try to load oracle driver");
-                Class.forName("oracle.jdbc.driver.OracleDriver");
+                String pathToDriver = Environment.readProperty("path_to_oracle_driver");
+                URL u = new URL("jar:file:"+pathToDriver+"!/");
+                String classname = "oracle.jdbc.driver.OracleDriver";
+                URLClassLoader ucl = new URLClassLoader(new URL[] { u });
+                Driver d = (Driver)Class.forName(classname, true, ucl).newInstance();
+                DriverManager.registerDriver(new DriverShim(d));
                 connection = DriverManager.getConnection(JDBC_CONNECTION_URL);
                 Log.debug("Connection to " + JDBC_CONNECTION_URL + " is open");
             } catch (ClassNotFoundException e) {
                 Log.error( "", e );
             } catch (SQLException e) {
+                Log.error( "", e );
+            } catch (IllegalAccessException e) {
+                Log.error( "", e );
+            } catch (InstantiationException e) {
+                Log.error( "", e );
+            } catch (MalformedURLException e) {
                 Log.error( "", e );
             }
         } else {
