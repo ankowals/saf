@@ -229,9 +229,9 @@ General concepts
 
 
 
-We follow BDD apporach. Reason is very simple. It is usually much easier for testers to write automated tests (following Gherking principles). In large projects (with large and separate teams of testers, analysts, devs) BDD main adventage so called common language to describe sytsem behaviours can be rarely seen but it is still giving testers the benefit of simpler tests implementation.
+We follow BDD apporach. Reason is very simple. It is usually much easier for testers to write automated tests (following Gherking principles). In large projects (with large and separate teams of testers, analysts, devs) BDD main adventage (so called common language to describe sytsem behaviours) can be rarely seen but BDD is still giving testers the benefit of simpler tests implementation. They can use step defs to write tests in plain english language.
 
-Tests are called Scenarios. They are grouped in Features.
+Tests are called Scenarios. They are grouped in Features. They are build using step defs.
 
 Features act as containers for Scenarios.
 
@@ -241,6 +241,8 @@ Feature file name shall be same like Feature name.
 
 Scenario names shall be unique per feature.
 
+Step defs represents test steps. They are used to execute actions during test. They are called by their names. A set of steps can be used to build a scenario.
+
 
 
 Test execution shall look like this
@@ -248,25 +250,44 @@ Test execution shall look like this
 	     ConfigurationData ------->	System Under Test 
 						^	
 	TestData & ExpectedData -----> | execution engine | -----> ResultData 	=> test result (OK/NOK)
-						^
+	    & EnvironmentData			^
 				    	user actions (steps)
 
 
+SUT is our system under test. It can be an application that we want to test. It can run locally on the same host where the framework is installed or it can run on remote host.
 
-Test result is the result of comparison between ResultData & ExpectedData
+ConfigurationData is a data that shall be loaded to the SUT before test suite is started. It can contain stuff like links configuration (ip address on the machine, ports, users, passwords, listeners configuration, urls, log level etc.) but it shall also contain business configuration that is applicable for particular application like for example tariff configuration etc.
+
+Usually it is enough to load configuration data once using separate feature file or manually or by using any 3rd party tool that can do it for us.
+
+TestData is a data that shall be given as an input for particular test. For example assuming we are testing different tariffs on particular offer we can give as an input an offer name. Other example can be a test where we would like to login to a web page. In this case part of the test data can be a particular login and password that we are going to use during test execution. Please keep in mind that login and password shall be earlier created on system under test as a part of configuration data.
+
+EnvironmentData describes SUT that shall be used by the framework. It is needed becuase we have to inform it to which application it shall connect, which url shall be open in the browser, which api shall be used etc. We can have multiple SUTs available (dev, test, release etc). It is possible to switch between them easily and execute the same tests on each of them.
+
+ExpectedData describes data that is expected as an outcome of an action performed during test. Actions are performed by the step defs. For example if we are sending http post request towards the system under test we can expect http result code to be 200 (OK). In this case our ExpectedData can be http result code equal to 200.
+
+Execution engine is our framework.
+
+ResultData is the output of test execution. It is everything that can be used for comparison with ExepctedData and is a result of step def execution.
+
+Test result is the result of comparison between ResultData & ExpectedData.
 
 
-Framework will execute each scenario in a feture file.
+
+
+Framework will execute each scenario in a feture file and each step in a scenario.
+
+When one step fails whole scanrio is marked as failed and next scenario in a feature is executed.
 
 Each scenario execution looks similar.
 
 
 
-First TestData storage and ExpectedData storage will be created. 
+First TestData, ExpectedData and EnvironmentData storage (SUT configuration) will be created. 
 
 Macro evaluation will be done.
 
-Execution engine will connect to SUT and execute any step (action) that is described in the scenario.
+Execution engine will connect to SUT (as configured in EnvironmentData) and execute any step (action) that is described in the scenario.
 
 Last step is to verify recieved test resutls against expected resutls from the storage.
 
@@ -309,7 +330,7 @@ Java is used for learning purposes.
 
 
 
-To make installation and deployment easy so called project dependency and management tool is used. It is called maven.
+To make installation and deployment easy so called project build, dependency and management tool is used. It is called maven.
 
 It will automatically download all needed libraries so there is no need to hunt them down on your own.
 
@@ -418,7 +439,7 @@ To pass data from configruation file use test data storage name and pass field a
 
 To pass multiple parameters to the test one can use tables. Of course step def needs to support it.
 
-As can be seen test data/expected data can be either hardcoded in the feature file or taken from configruation file. 
+As can be seen test data/expected data can be either hardcoded in the feature file or taken from a configruation file. 
 
 It is up to the tester to decide which approach to choose.
 
@@ -467,6 +488,19 @@ Test structure is
 						GetBookByIsbn.feature
 
 Please note that it is possible to use macros in TestData and Expected data definitions.
+
+TestData can be passed to the step explicitly like below
+
+	Given a book exists with an isbn TestData.isbn
+	 or
+	Given a book exists with an isbn "9781451648546"
+
+TestData can also be passed to the step silently like below
+
+	Given a book ecsits with an isbn
+
+In this case step def does no expect any parameters. It will read isbn from the configruation by calling a helper method. See below for more details.
+
 
 --------------------------------
 
@@ -742,7 +776,7 @@ They can be concatenated with a specific prefix or suffix.
 
 Macro values are always returned as strings. 
 
-Please note that macros have to be evaluated by calling of .eval(String storage_name) method from Macro.class in each step were such evaluaton shall be done.
+Please note that macros have to be evaluated by calling of Macro.eval(String storage_name) method from Macro.class in each step were such evaluaton shall be done.
 To use previously defined macros one can put into the test data storage such macro as a value of particular key, for example
 
 	TestData={
@@ -759,7 +793,87 @@ Data types supported in test data configuration are
 	ArraList,
 	Boolean
 
+TestData can be used in templates. For example if we would like to trigger an http request with json paylod we can take the body content (json structure) from the template. Similar for xml content. In this case please add your template to template directory like in example below.
 
+	features
+		- Rest
+			- ReqResIn
+				- config
+					test.data.config
+				- template
+					createUser.template
+				ReqResIn.feature
+					
+Template files shall have an extension of .template. They can contain a place holder for variable parts. They can be evaluated in a step def by using method StepCore.evaluateTemplate(name).
+
+Template content can be
+
+	{
+	    "name": "${ctx.TestData.name}",
+	    "job": "${ctx.TestData.job}"
+	}
+
+Where testdata.config can be
+
+	TestData:{
+	    name : "morpheus",
+	    job  : "leader"
+	}
+
+After evaluation a new file will be created with content injected from TestData.
+
+	{
+	    "name": "mopheus",
+	    "job": "leader"
+	}
+
+Similar for xml requests. Out template can be 
+
+	<?xml version="1.0" encoding="utf-8"?>
+	<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+	  <soap12:Body>
+	    <GetCitiesByCountry xmlns="http://www.webserviceX.NET">
+	      <CountryName>${ctx.TestData.countryName}</CountryName>
+	    </GetCitiesByCountry>
+	  </soap12:Body>
+	</soap12:Envelope>
+
+TestData shall contain
+
+	TestData:{
+	    countryName : "Poland"
+	}
+
+It is also possible to pass macro content to the template. In this case please assign macro to a key in TestData and use this key in the template.
+
+Please note that templates can also be used for comparison purposes and to validate test reults. For example we can compare a body of the message with a template, a trace file, a log/event file content etc. To make such comparions easier there is a set of filters available to filter out not needed parts of trace/body/log before comparison will start. In this case our template body can be much smaller. Available filters are negative to remove the lines, positive to keep the lines that match particular cirteria and a block filter to keep just the lines between specified keywords. 
+
+Template comparison can be invoked by calling StepCore.compareWithTemplate(templateName, pathToFileToCompare) in a step def. In a similar way one can invoke filters on a template or file to compare.
+
+Templates support regular expressions. This means that one can use following template to make sure that the content of the table is as expected.
+
+	expectedOutput.template
+
+	DEPTNO, DNAME, LOC
+	[0-9]{2}, ACCOUNTING, NEW YORK
+	20, [A-Z]+, DALLAS
+	\d+, SALES, CHICAGO
+	${Expected.lastId}, OPERATIONS, ${ctx.Expected.lastCity}
+	
+	where expected.config contains
+	
+	Expected:{
+	     lastId : "40",
+	     lastCity : "BOSTON"
+	 }
+
+shall match test result like below
+
+	DEPTNO, DNAME, LOC
+	10, ACCOUNTING, NEW YORK
+	20, QA, DALLAS
+	30, SALES, CHICAGO
+	40, OPERATIONS, BOSTON
 
 Each step execution is marked in a log with a "* Step started" string to make it easier to find it. For example
 
@@ -792,7 +906,7 @@ To grant access to it please make sure that your Steps calss extends BaseStep ca
 	 
 Where DemoOnlineSteps is a class that contains project specific steps to handle web automation for particular page.
 In this way we can pass same instance of ctx between steps and modules. With this approach we can use methods defined for objects available in ctx variable.
-BaseSteps calss define a set of helpers modules to make writing new step defs much easier. They are called as below
+BaseSteps class define a set of helpers modules to make writing new step defs much easier. They are called as below
 Environment, Macro, StepCore, PageCore, SqlCore, Storage, FileCore, ExecutorCore. They contain a set of methods that can be used to do common things in steps like creating files, evaluating macros, reading environment configuration, evaluating templates, attaching files to the report etc.
 
 For example lets have a look at 2 steps below
@@ -950,6 +1064,7 @@ Please use javadoc to document each step in the library. An example below
         ctx.Object.put("json",ValidatableResponse.class, json);
     }
     
+Please use StepCore module for template management/compariosn, to attache file to the report etc.    
 Please use FileCore module for any operation that shall be done on files.
 Please use ExecutorCore module for any commands that shall be executed on the local host.
 Please use SqlCore for any command that shall be executed in the dB under test.
@@ -1130,3 +1245,12 @@ With this approach steps class can be build like in an example below
 	}
 	
 Again we need to pass ctx object to the constructor and later on we can just call methods defined in each Page model.
+
+
+--------------------------------
+
+
+How to write steps for rest/soap api?
+
+
+
