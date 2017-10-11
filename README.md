@@ -743,7 +743,7 @@ Macro can be used to return a unix timestamp or a date in specified format.
 They can be concatenated with a specific prefix or suffix. 
 Macro values are always returned as strings. 
 
-Please note that macros have to be evaluated by calling of Macro.eval(String storage_name) method from Macro.class in each step were such evaluaton shall be done.
+Please note that macros have to be evaluated by calling of Macro.eval(String storage_name) method from Macro.class in each step were such evaluaton shall be done. They are evaluated once by default in @Before hook but this can be turned off in the configruation.
 To use previously defined macros one can put into the test data storage such macro as a value of particular key, for example
 
 	TestData={
