@@ -374,7 +374,7 @@ Please note that usage of clean keywords ensures that artifacts from previous te
 
 One can also use IntelliJ to run a feature file. In that case only log file will be created.
 
-To generate a report from test please execute mvn site, mvn jetty:run to run jetty and check the report in the browser under http://localhost:<port>.
+To generate a report from test please execute mvn site, mvn jetty:run to run jetty and check the report in the browser under http://localhost:port.
 
 It is possible to overwrite active_env property from the command line. In that case project specific config as specified by the CMD argument will be used during test execution. To do so please execute a test for example like below
 
