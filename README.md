@@ -472,9 +472,9 @@ TestData can be passed to the step explicitly like below
 
 TestData can also be passed to the step silently like below
 
-	Given a book ecsits with an isbn
+	Given a book exists with an isbn
 
-In this case step def does no expect any parameters. It will read isbn from the configruation by calling a helper method. See below for more details.
+In this case step def does not expect any parameters. It will read isbn from the configruation by calling a helper method. See below for more details.
 
 
 --------------------------------
