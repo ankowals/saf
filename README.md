@@ -619,6 +619,11 @@ Content of file resources/features/Web/test1/test1.config is
 
 In that case first file from #include directive will be read and processed. Order of the includes is important. They are always processed first before other content of a config file.
 
+----------------------------------
+
+Macros
+
+
 
 Simialr for macros. They are read from *.config file and stored for future usage.
 
@@ -752,6 +757,13 @@ Data types supported in test data configuration are
 	HashMap,
 	ArraList,
 	Boolean
+
+
+----------------------------------
+
+Templates
+
+
 
 TestData can be used in templates. For example if we would like to trigger an http request with json paylod we can take the body content (json structure) from the template. Similar for xml content. In this case please add your template to template directory like in example below.
 
