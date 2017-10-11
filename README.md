@@ -526,6 +526,10 @@ Each new scenario start will be indicated in the log as follows
 	[INFO ] 2017-09-11 12:32:27.564 [main] Log - Started resources initialisation
 	[INFO ] 2017-09-11 12:32:27.566 [main] Log - <- checking environment configuration ->
 
+----------------------------------
+
+Environment
+
 
 
 During this phase a file called /src/resources/config/environment/default.properties will be checked for framework and SUT configuration.
@@ -556,6 +560,12 @@ And in bookByIsbn.properties
 
 In this way multiple systems under test can be configured.
 Now it is time to read test data configuration from *.config files.
+
+----------------------------------
+
+TestData
+
+
 
 Global configuration is available under /src/resources/config/testdata
 Files under this directory are checked and evaluated. New storage is created based on their content.
