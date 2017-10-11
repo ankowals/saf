@@ -627,6 +627,8 @@ Macros
 
 Simialr for macros. They are read from *.config file and stored for future usage.
 
+Macro can be used to calculate some values at run time and place them in a test data or template. For example to trigger a request with particular timestamp, to enter random/unique value into the web form or to check that log contains a particular date.
+
 Macro works as follows.
 
 Macro definitions are kept in a *.config file under Macro object. For example
