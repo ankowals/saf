@@ -232,10 +232,15 @@ General concepts
 We follow BDD apporach. Reason is very simple. It is usually much easier for testers to write automated tests (following Gherking principles). In large projects (with large and separate teams of testers, analysts, devs) BDD main adventage (so called common language to describe sytsem behaviours) can be rarely seen but BDD is still giving testers the benefit of simpler tests implementation. They can use step defs to write tests in plain english language.
 
 Tests are called Scenarios. They are grouped in Features. They are build using step defs.
+
 Features act as containers for Scenarios.
+
 We try to keep 1 Feature per 1 file.
+
 Feature file name shall be same like Feature name.
+
 Scenario names shall be unique per feature.
+
 Step defs represents test steps. They are used to execute actions during test. They are called by their names. A set of steps can be used to build a scenario.
 
 
