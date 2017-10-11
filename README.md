@@ -232,15 +232,10 @@ General concepts
 We follow BDD apporach. Reason is very simple. It is usually much easier for testers to write automated tests (following Gherking principles). In large projects (with large and separate teams of testers, analysts, devs) BDD main adventage (so called common language to describe sytsem behaviours) can be rarely seen but BDD is still giving testers the benefit of simpler tests implementation. They can use step defs to write tests in plain english language.
 
 Tests are called Scenarios. They are grouped in Features. They are build using step defs.
-
 Features act as containers for Scenarios.
-
 We try to keep 1 Feature per 1 file.
-
 Feature file name shall be same like Feature name.
-
 Scenario names shall be unique per feature.
-
 Step defs represents test steps. They are used to execute actions during test. They are called by their names. A set of steps can be used to build a scenario.
 
 
@@ -276,21 +271,15 @@ Test result is the result of comparison between ResultData & ExpectedData.
 
 
 Framework will execute each scenario in a feture file and each step in a scenario.
-
 When one step fails whole scanrio is marked as failed and next scenario in a feature is executed.
-
 Each scenario execution looks similar.
 
 
 
 First TestData, ExpectedData and EnvironmentData storage (SUT configuration) will be created. 
-
 Macro evaluation will be done.
-
 Execution engine will connect to SUT (as configured in EnvironmentData) and execute any step (action) that is described in the scenario.
-
 Last step is to verify recieved test resutls against expected resutls from the storage.
-
 Test report will be created.
 
 
@@ -298,9 +287,7 @@ Test report will be created.
 TestData/ExpectedData can be passed to the steps directly in a feature file or can be taken from a *.config file.
 
 Global configuration is available but it can be overwritten/updated by local config.
-
 Config files will be loaded automatically as long as feature file name is same as feature name defined inside the feature file file!!!
-
 For example file myTestFeature.feature shall contain
 	
 	Feature: myTestFeature
@@ -311,9 +298,7 @@ For example file myTestFeature.feature shall contain
 
 
 Log file will be created in target dir with a timestamp for each run, for example target/2017-09-11_103158_FK_Prototype
-
 When run is done via mvn test command in addition to that a test report dir will be created, for example target/site
-
 Report can be viewed in the browser.
 
 
@@ -328,22 +313,13 @@ How the framework is build?
 
 Java is used for learning purposes.
 
-
-
 To make installation and deployment easy so called project build, dependency and management tool is used. It is called maven.
-
 It will automatically download all needed libraries so there is no need to hunt them down on your own.
-
 Maven configuration is available in so called pom.xml file. It contains not just dependencies but also plugins.
-
 Thanks to this maven can be used to start our tests from command line. For this purpose so called surefire plugin is used.
 
-
-
 For logging purposes log4j2 library is used.
-
 For BDD cucumber-jvm and junit libraries are used.
-
 For reporting purposes allure library is used.
 
 
@@ -363,18 +339,14 @@ To make it possible we are using so called dependency injection. Without it for 
 
 
 For dependency injection pico-container library is used.
-
 For web automation Selenium WebDriver library is used.
-
 For api automation RestAssured library is used.
-
 To read Csv files openCSV library is used.
 
 To better handle command execution and sql execution Commons-exec and commons-dBUtils libraries from Appache are used. Same for better handling of files and string manipulations (Commons-io and Commons-lang).
 
 
 On top of that macro support, test data management, configuration files support, Page Object Model support and more was added.
-
 Project and test structure is also enforced to keep things consistent.
 
 
@@ -438,9 +410,7 @@ Feature files can be tagged as well as scenarios. Use tags and cucumber options 
 To pass data from configruation file use test data storage name and pass field after dot. For example TestData.statusOK. Of course step def needs to support this.
 
 To pass multiple parameters to the test one can use tables. Of course step def needs to support it.
-
 As can be seen test data/expected data can be either hardcoded in the feature file or taken from a configruation file. 
-
 It is up to the tester to decide which approach to choose.
 
 
@@ -511,23 +481,16 @@ Details of what is happening during test execution
 
 
 Cucmber runner is available in src/test/java/steps/core/TestRunner.class
-
 It contains cucumber options like glue path (path to steps definitions), features path and allure report plugin.
-
 Its content shall not be changed for test purposes.
 
 
 
 Before each scenario execution so called @Before and @After hooks are run.
-
 In @Before hook we create context, read framework and SUT configurtion, create test data storage, evaluate macros and initialize helper modules (Core modules).
-
 It will also find local configuration files and load them for usage in steps.There is no need to do that in seperate steps or Background scenario.
-
 In an @After hook we try to close the resources like for example web driver, Sql connection or take a screenshot if test failed.
-
 As a last step we are attaching log from the scenario to the test report.
-
 Hooks implementation can be found under src/test/java/steps/core/HooksSteps.
 
 
@@ -561,9 +524,7 @@ Each new scenario start will be indicated in the log as follows
 
 
 During this phase a file called /src/resources/config/environment/default.properties will be checked for framework and SUT configuration.
-
 It contains default settings and can be overwritten with project specific ones.
-
 Recommendation is to use project specific file to keep there System Under Test settings and framework settings shall stay in default.properties.
 
 Property active_env points to project specific SUT configuration file. For example we can have in default.properties
@@ -589,13 +550,10 @@ And in bookByIsbn.properties
 
 
 In this way multiple systems under test can be configured.
-
 Now it is time to read test data configuration from *.config files.
 
 Global configuration is available under /src/resources/config/testdata
-
 Files under this directory are checked and evaluated. New storage is created based on their content.
-
 An example of test data configuration is below (content of /src/resources/config/testdata/testdata.config file)
 
 	TestData={
@@ -769,11 +727,8 @@ Macro defined as above (and overwritten by local config) after evaluation will b
 
 
 As can be seen different macro defintions are supported.
-
 Macro can be used to return a unix timestamp or a date in specified format.
-
 They can be concatenated with a specific prefix or suffix. 
-
 Macro values are always returned as strings. 
 
 Please note that macros have to be evaluated by calling of Macro.eval(String storage_name) method from Macro.class in each step were such evaluaton shall be done.
