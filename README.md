@@ -1231,7 +1231,7 @@ With this approach steps class can be build like in an example below
 Again we need to pass ctx object to the constructor and later on we can just call methods defined in each Page model.
 
 
-Steps prepared in this way can be used to write test. See example below. File structure is
+Steps prepared in this way can be used to write a test. See an example below. File structure is
 
 	features
 		Web
@@ -1270,13 +1270,17 @@ Please note that the web brwoser has to be explicitly open using step open brows
     public void open_browser() throws Throwable {
         Log.info("* Step started open_browser");
 
+	//create new selenium web driver
         EventFiringWebDriver driver = new DriverFactory(ctx).create();
         ctx.Object.put("Page", EventFiringWebDriver.class, driver);
 
+	//initiate PageCore module
         PageCore pageCore = new PageCore(ctx);
         ctx.Object.put("PageCore", PageCore.class, pageCore);
         Log.debug("Web driver created");
     }
+
+As can be see the main purpose of this step is to create new selenium web driver that can be used in tests.
 
 --------------------------------
 
