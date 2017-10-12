@@ -1236,5 +1236,345 @@ Again we need to pass ctx object to the constructor and later on we can just cal
 
 How to write steps for rest/soap api?
 
+What kind of test can/shall be performed for the rest/soap api? Tests that can excercise the most common usecases described as crud (create, read, update, delete). Such operations are executed by different http methods like post, get, put and delete. See table below for more details
 
+	operation	rest method	tests
+	create		post		post with all optional and required data
+					post with only required data
+					post with required data missing
+					post with invalid data for parameters
+	read		get		get when profile doesn't exist
+					get when profile exists
+					create profile then get
+					update profile then get
+					delete prifile then get
+	update		put		update existsing profile
+					update non-existing profile
+					update deleted profile
+					update then update again
+	delete		delete		delete profile
+					delete when there are depenedencies
+					delete after delete
+					delete non-existing
+		
+In practice typical rest implementation using http protocol for message transport and json for data transfer.
+In case we are dealing with soap api http is used for message transport and xml for data transfer.
+
+RestAssured is integrated which means we can either build rest/soap requests using method exposed by RestAssured or easier use template files to store message body (either json or xml) and read the message body from such template.
+This method is usually very easy to use because templates can be created using any other tool available like SopaUi or chrome plugins.
+Template support implemented in the framework allows us to put into the template data from configuration files and macros.
+The biggest drawback of this method is the fact that when we are dealing with an application that exposes a lot of different services number of templates can grow. So smart management of templates shall be used. For example whenever possible use global template storage. Templates used to excercise one service shall be grouped together under same directory etc.
+
+Please find below an example of step used to build rest post request with json body.
+
+    /**
+     * Triggers http post request with json body. Content of the body comes from the file.
+     * ValidatableResponse is available as a context Object with name response.
+     *
+     * Uses following objects:
+     *  ctx.Object.response
+     *  Environment.REST_url
+     *  Environment.Rest_url_post_path
+     *
+     * @param name, String, name of the template that contains http body of the request
+     */
+    @When("^json post request (.*?) is sent$")
+    public void json_post_request_is_sent(String name) {
+        Log.info("* Step started json_post_request_is_sent");
+
+	//read url base
+        String url = Environment.readProperty("REST_url");
+        
+	//read url path
+	String path = Environment.readProperty("Rest_url_post_path");
+
+	//build url from base and path because it can be different for each kind of request post/put/get/delete etc.
+        url = url + path;
+
+	//inject values to the the template
+        File file = StepCore.evaluateTemplate(name);
+
+        //build request specification and use file template as a body content, add http headers if any are required here
+        RequestSpecification request = given()
+                .body(file)
+                .with()
+                .contentType("application/json");
+
+        //trigger request and log it (it will be added as an attachment to the report)
+        Response response = request
+                .when()
+                .log()
+                .all()
+                .post(url);
+
+        //store response as ctx object so it can be verified by other steps and attach it to the report
+        ValidatableResponse vResp = response.then(); 
+	ctx.Object.put("response",ValidatableResponse.class, vResp);
+        StepCore.attachMessageToReport("Json response", response.prettyPrint().toString());
+    }
+
+
+where template content can be
+
+	{
+	    "name": "${ctx.TestData.name}",
+	    "job": "${ctx.TestData.job}"
+	}
+
+and TestData content can be
+
+	TestData:{
+	    name : "morpheus",
+	    job  : "leader"
+	}
+
+In case of soap we can build the request in this way
+
+    /**
+     * Triggers http post request with xml body (soap). Content of the body comes from the file.
+     * ValidatableResponse is available as a context Object with name response.
+     *
+     * Uses following objects:
+     *  ctx.Object.response
+     *  Environment.REST_url
+     *
+     * @param name, String, name of the template that contains http body of the request
+     * @param actionHeader, String, soap action that will be set in the header
+     */
+    @When("^xml post request (.*?) with soap action header (.*?) is sent$")
+    public void xml_post_request_is_sent(String name, String actionHeader) {
+        Log.info("* Step started xml_post_request_is_sent");
+
+	//in case multiple services are present each will have its own url available
+        String url = Environment.readProperty("REST_url");
+        
+	//inject values to the template
+	File file = StepCore.evaluateTemplate(name);
+        String sFile = FileCore.readToString(file);
+	 
+	//add action header or any other http headers if required
+	String sAction = StepCore.checkIfInputIsVariable(actionHeader);
+       
+        //build specification and use file template as a body content
+        RequestSpecification request = given()
+                .header("SOAPAction", sAction)
+                .body(sFile)
+                .with()
+                .contentType("text/xml");
+
+        //trigger request and log it (it will be added as an attachment to the report)
+        Response response = request
+                .when()
+                .log()
+                .all()
+                .post(url);
+
+        //store response as ctx object so it can be verified by other steps and attach it to report
+        ValidatableResponse vResp = response.then();
+        ctx.Object.put("response",ValidatableResponse.class, vResp);
+        StepCore.attachMessageToReport("Xml response", response.prettyPrint().toString());
+    }
+
+where template content can be
+
+	<?xml version="1.0" encoding="utf-8"?>
+	<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+	  <soap12:Body>
+	    <GetCitiesByCountry xmlns="http://www.webserviceX.NET">
+	      <CountryName>${ctx.TestData.countryName}</CountryName>
+	    </GetCitiesByCountry>
+	  </soap12:Body>
+	</soap12:Envelope>
+
+and TestData content can be
+
+	TestData:{
+	    soapActionHeader : "http://www.webserviceX.NET/GetCitiesByCountry",
+	    countryName : "Poland"
+	}
+
+In case we would like to trigger any other request like get we have to change the method used by RestAssured. See example below
+
+    /**
+     * Verifies that service is available
+     * This is just a sanity check.
+     * It triggers GET request towards defined url
+     * It checks that http response code is 200 (OK)
+     *
+     * Uses following objects:
+     *  Expected.statusOK
+     *  env.REST_url
+     *
+     */
+    @Given("^service is available$")
+    public void service_is_available() {
+        Log.info("* Step started service_is_available");
+
+        String url = Environment.readProperty("REST_url");
+        Long statusCode = Storage.get("Expected.statusOK");
+        Integer expectedCode = statusCode.intValue();
+        try {
+            given()
+                .when()
+                .log()
+                .all()
+                .get(url)
+                    .then()
+                    .statusCode(expectedCode);
+        } catch (AssertionError e) {
+            Log.error("", e);
+        }
+    }
+
+
+Now we can build a test to trigger http request towards SUT. File structure can be
+
+features
+	Rest
+		ReqResIn
+			config
+				testdata.config
+				expected.config
+			template
+				createUser.template
+			ReqRestIn.feature
+			
+Feature content can be
+
+	@reqResIn
+	Feature: ReqResIn
+
+	  Scenario: Tigger Post request to create single user
+
+		Given service is available
+	    	When json post request createUser is sent
+
+Similar for soap case.
+
+The most important part of the test case will be to validate content of the response. Here we can either compare it with a template or use another step to compare required fields value with the expected ones. This can be done like in example below
+
+	@globalWeather
+	Feature: GlobalWeather
+
+	  Scenario: Tigger Post request
+
+	    Given xml post request post1 with soap action header TestData.SoapActionHeader is sent
+	    When the status code is Expected.statusOK
+	    Then verify that rest response has
+	      | GetCitiesByCountryResponse.GetCitiesByCountryResult.NewDataSet.table[1].city | equalTo | Expected.CityName |
+
+Another example is available below
+
+	@bookByIsbn
+	Feature: Get book by ISBN
+	  Scenario: User calls web service to get a book by its ISBN
+	    Given a book exists with an isbn
+	    When a user retrieves the book by isbn
+	    Then the status code is Expected.statusOK
+
+	      And response includes the following
+		| totalItems 	 		                    | Expected.totalItems   |
+		| kind					            | Expected.kind         |
+
+	      And response includes the following in any order
+		| items.volumeInfo.title 				| Expected.title	|
+		| items.volumeInfo.publisher 				| Expected.publisher	|
+		| items.volumeInfo.pageCount 				| Expected.pageCount	|
+
+	      And response includes the following
+		| totalItems 	        	                	| 1                  |
+		| kind					                | books#volumes      |
+	      And response includes the following in any order
+		| items.volumeInfo.title 				| Steve Jobs	     |
+		| items.volumeInfo.publisher 				| Simon and Schuster |
+		| items.volumeInfo.pageCount 				| 630	             |
+
+	      And verify that rest response has
+		| key                           | action             | expected                        |
+		| totalItems                    | lessThan           | Expected.highAmountOfTotalItems |
+		| kind                          | containsString     | Expected.partOfKind             |
+		| items.volumeInfo.title        | containsInAnyOrder | Expected.title	               |
+		| items[0].volumeInfo.pageCount | greaterThan        | Expected.lowPageCount           |
+		| items[0].volumeInfo.authors   | containsInAnyOrder | Expected.author                 |
+
+	      And verify that rest response has
+		| key                           | action             | expected                |
+		| totalItems                    | lessThan           | 99                      |
+		| kind                          | containsString     | volumes                 |
+		| items.volumeInfo.title        | containsInAnyOrder | Steve Jobs	       |
+		| items[0].volumeInfo.pageCount | greaterThan 	     | 110                     |
+		| items[0].volumeInfo.authors   | containsInAnyOrder | Walter Isaacson         |
+		
+Step "verify that rest response has" is part of CoreSteps and implements just few checks that seems to be most useful. Other checks can be added in the future when needed. It is interesteing because it uses a data table to pass multiple parameters to it. It is implemented as follows.
+
+    /**
+     * Verifies that particular key xml/json body response contains expected value
+     * Multiple different comparisons can be executed. Following actions are supported
+     * equalTo, containsString, containsInAnyOrder, greaterThan, lessThan
+     *
+     * @param table, DataTable, it shall contains 3 columns key, action, expected
+     */
+    @Then("^verify that rest response has$")
+    public void verify_that_response_has(List<Map<String, String>> table) {
+        Log.info("* Step started verify_that_response_has");
+
+	//get json or xml response
+        Response response = ctx.Object.get("response",Response.class);
+        ValidatableResponse vResp = response.then();
+
+        //get rows
+        for (int i = 0; i < table.size(); i++) {
+            Map<String, String> row = table.get(i);
+
+            Log.debug("Row is " + row);
+            //get columns
+            String key = null;
+            String action = null;
+            Object expectedValue = null;
+            for (Map.Entry<String, String> column : row.entrySet()) {
+                //get name of the column
+                String name = column.getKey();
+                //get value of that column for current row
+                String valueInRow = column.getValue();
+
+                //assign values from columns to variables
+                if ( name.equalsIgnoreCase("key") ){
+                    key = valueInRow;
+                    continue;
+                }
+                if ( name.equalsIgnoreCase("action") ){
+                    action = valueInRow;
+                    continue;
+                }
+                if ( name.equalsIgnoreCase("expected") ){
+                    expectedValue = StepCore.checkIfInputIsVariable(valueInRow);
+                }
+
+                //execute simple error handling
+                if(key == null){
+                    Log.error("key in verify step table does not exist or null!");
+                }
+                if(action == null){
+                    Log.error("key in verify step table does not exist or null!");
+                }
+                if (key.equals("")) {
+                    Log.error("key in verify step table is an empty string!");
+                }
+                if (action.equals("")) {
+                    Log.error("action in verify step table is an empty string!");
+                }
+
+                //execute comparison
+                AssertCore.validatableResponseBodyTableAssertion(vResp, key, action, expectedValue);
+            }
+        }
+    }
+
+As can be seen it uses AssertCore module for validation purposes. It supports simple access to every response parameter using notation key.subkey and takes the response from ctx Object with name "response".
+
+
+--------------------------------
+
+
+How to write steps for dB tests?
 
