@@ -1231,6 +1231,53 @@ With this approach steps class can be build like in an example below
 Again we need to pass ctx object to the constructor and later on we can just call methods defined in each Page model.
 
 
+Steps prepared in this way can be used to write test. See example below. File structure is
+
+	features
+		Web
+			DemoOnlineShop
+				config
+					testdata.config
+				DemoOnlineShop.feature
+				
+
+where feature file content is
+
+	@demoOnline
+	Feature: DemoOnlineShop
+
+	  Scenario: Verify sum of 2 items equals total price
+	    Given open browser
+	    When open main page
+	      And navigate to all products page
+	      And add product TestData.product1 to cart
+	      And add product TestData.product2 to cart and go to checkout
+	    Then verify that SubTotal value equals sum of totals per product type
+
+testdata content is
+
+	TestData={
+	    product1 : "iPhone 5",
+	    product2 : "Magic Mouse"
+	}
+
+Please note that the web brwoser has to be explicitly open using step open browser. It is part of the CoreSteps and its content is
+
+    /**
+     * Opens browser of particular type as defined in the environment configuration
+     */
+    @Given("^open browser$")
+    public void open_browser() throws Throwable {
+        Log.info("* Step started open_browser");
+
+        EventFiringWebDriver driver = new DriverFactory(ctx).create();
+        ctx.Object.put("Page", EventFiringWebDriver.class, driver);
+
+        PageCore pageCore = new PageCore(ctx);
+        ctx.Object.put("PageCore", PageCore.class, pageCore);
+        Log.debug("Web driver created");
+    }
+
 --------------------------------
 
 
