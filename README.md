@@ -104,7 +104,7 @@ How can we use test automation framework?
 	to automate acceptance tests (after any deployment)
 	to automate integration tests
 	to automate regression tests
-	to execute sanity chcecks and make sure that SUT configuration is correct (like all urls are reachable, ports open, interfaces are up & apps are running, login is possible for each user etc.)
+	to execute sanity chcecks (smoke tests) and make sure that SUT configuration is correct (like all urls are reachable, ports open, interfaces are up & apps are running, login is possible for each user etc.)
 	to gether symptoms like traces/logs/tickets/events from multiple systems under test
 	to execute test system bringup and feed it with configruation data before test starts
 	to setup test environment using configuration management sytsem before test suite execution
