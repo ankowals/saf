@@ -50,7 +50,6 @@ What do we want from a test automation framework?
 
 Where are we now?
 	
-	(in progress) documentation update
 	(in progress) a way to execute tests related to  
 		(done) - rest json/xml (soap) => RestAssured integrated 
 		(done) - gui (web/native) => Selenium WebDriver integrated for chrome
@@ -71,7 +70,7 @@ Where are we now?
 	(to do) a way to downlaod any 3rd party symptoms from SUT like logs, trace files
 	(to do) a way to monitor and indicate quality of commited tests (see SonarQube for example )
 	(to do) a way to schedule test execution (see Jenkins/TeamCity)
-	(to do) a way to generate test documentation automatically => add new login categories, use scenrio outline with path to feature and log file after test execution	
+	(to do) a way to generate test documentation automatically => add new logging categories (like atmn(category, message)), use scenrio outline with path to feature and log file after test execution	
 	(to do) a way to pause test execution and allow for manual intervention => via autoIt script executed from a step def?	
 	(to do) add more tests examples
 	
