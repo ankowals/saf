@@ -55,8 +55,10 @@ public class BookByIsbnSteps extends BaseSteps {
         String url = Environment.readProperty("REST_url");
         RequestSpecification request = ctx.Object.get("request",RequestSpecification.class);
         Response response = request.when().log().all().get(url);
+        ValidatableResponse response2 = response.then();
         ctx.Object.put("response",Response.class, response);
-        StepCore.attachMessageToReport("Json response", response.prettyPrint().toString());
+        ctx.Object.put("response",ValidatableResponse.class, response2);
+        StepCore.attachMessageToReport("Json response", response.prettyPrint());
     }
 
 
@@ -74,13 +76,14 @@ public class BookByIsbnSteps extends BaseSteps {
     public void verify_status_code(String input){
         Log.info("* Step started verify_status_code");
 
-        Long statusCode = StepCore.checkIfInputIsVariable(input);
-        Integer code = statusCode.intValue();
+        Integer statusCode = StepCore.checkIfInputIsVariable(input);
+        //Integer code = statusCode.intValue();
 
-        Response response = ctx.Object.get("response",Response.class);
+        ValidatableResponse response = ctx.Object.get("response",ValidatableResponse.class);
+
         try {
-            ValidatableResponse json = response.then().statusCode(code);
-            ctx.Object.put("json",ValidatableResponse.class, json);
+            response.statusCode(statusCode);
+            ctx.Object.put("json",ValidatableResponse.class, response);
         } catch (AssertionError e) {
             Log.error("", e);
         }
@@ -105,13 +108,13 @@ public class BookByIsbnSteps extends BaseSteps {
         for (Map.Entry<String, String> field : responseFields.entrySet()) {
             Object expectedValue = StepCore.checkIfInputIsVariable(field.getValue());
             String type = expectedValue.getClass().getName();
-            if(type.contains("Long")){
-                Long lExpVal = (Long) expectedValue;
-                Log.debug("Expected is " + field.getKey() + "=" + lExpVal.intValue());
+            if(type.contains("Int")){
+                Integer iExpVal = (int) expectedValue;
+                Log.debug("Expected is " + field.getKey() + "=" + iExpVal);
                 Log.debug("Current is " + json.extract().path(field.getKey()));
 
                 try {
-                    json.body(field.getKey(), containsInAnyOrder(lExpVal.intValue()));
+                    json.body(field.getKey(), containsInAnyOrder(iExpVal));
                 } catch (AssertionError e) {
                     Log.error("", e);
                 }
@@ -156,13 +159,13 @@ public class BookByIsbnSteps extends BaseSteps {
         for (Map.Entry<String, String> field : responseFields.entrySet()) {
             Object expectedValue = StepCore.checkIfInputIsVariable(field.getValue());
             String type = expectedValue.getClass().getName();
-            if(type.contains("Long")){
-                Long lExpVal = (Long) expectedValue;
-                Log.debug("Expected is " + field.getKey() + "=" + lExpVal.intValue());
+            if(type.contains("Int")){
+                Integer iExpVal = (int) expectedValue;
+                Log.debug("Expected is " + field.getKey() + "=" + iExpVal.intValue());
                 Log.debug("Current is " + json.extract().path(field.getKey()));
 
                 try {
-                    json.body(field.getKey(), equalTo(lExpVal.intValue()));
+                    json.body(field.getKey(), equalTo(iExpVal.intValue()));
                 } catch (AssertionError e) {
                     Log.error("", e);
                 }

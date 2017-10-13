@@ -49,7 +49,7 @@ public class AssertCore {
         } else if (action.equalsIgnoreCase("greaterThan")){
             if (cType.contains("Int")) {
                 try {
-                    vResp.body(key, greaterThan((int) (long) expectedValue));
+                    vResp.body(key, greaterThan((int) expectedValue));
                 } catch (AssertionError e) {
                     Log.error("", e);
                 }
@@ -78,7 +78,7 @@ public class AssertCore {
         } else if (action.equalsIgnoreCase("lessThan")){
             if (cType.contains("Int")) {
                 try {
-                    vResp.body(key, lessThan((int) (long) expectedValue));
+                    vResp.body(key, lessThan((int) expectedValue));
                 } catch (AssertionError e) {
                     Log.error("", e);
                 }

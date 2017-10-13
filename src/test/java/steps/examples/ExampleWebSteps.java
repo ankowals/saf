@@ -121,9 +121,9 @@ public class ExampleWebSteps extends BaseSteps {
         Log.debug("Going to search for");
         WebElement element = PageCore.findElement(By.id("lst-ib"));
 
-        Long lVal = StepCore.checkIfInputIsVariable(input);
+        Integer iVal = StepCore.checkIfInputIsVariable(input);
 
-        String sVal = lVal.toString();
+        String sVal = iVal.toString();
 
         Log.debug("Show me sVal " + sVal);
 

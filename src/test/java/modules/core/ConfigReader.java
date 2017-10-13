@@ -7,6 +7,8 @@ import java.io.File;
 import java.text.NumberFormat;
 import java.util.*;
 
+import static java.lang.Math.toIntExact;
+
 public class ConfigReader {
 
     private SharedContext ctx;
@@ -122,6 +124,15 @@ public class ConfigReader {
                     Number num = null;
                     try {
                         num = NumberFormat.getInstance(Locale.getDefault()).parse(entry.getValue().getAsString());
+                        if ( num instanceof Long ) {
+                            Long tVal = (Long) num;
+                            try {
+                                int iVal = toIntExact(tVal);
+                                num = iVal;
+                            } catch (ArithmeticException e) {
+                                //do nothing just return Long
+                            }
+                        }
                     } catch (Exception e) {
                         Log.error("Not able to parse String to Number for " + key + " : " +
                                 entry.getValue().getAsString(), e);
@@ -149,6 +160,15 @@ public class ConfigReader {
                             Number num = null;
                             try {
                                 num = NumberFormat.getInstance(Locale.getDefault()).parse(entry.getValue().getAsJsonArray().get(i).getAsString());
+                                if ( num instanceof Long ) {
+                                    Long tVal = (Long) num;
+                                    try {
+                                        int iVal = toIntExact(tVal);
+                                        num = iVal;
+                                    } catch (ArithmeticException e) {
+                                        //do nothing just return Long
+                                    }
+                                }
                             } catch (Exception e) {
                                 Log.error("Not able to parse String to Number for " +
                                         key + " : " +

@@ -4,9 +4,11 @@ Feature: Get book by ISBN
     Given a book exists with an isbn
     When a user retrieves the book by isbn
     Then the status code is Expected.statusOK
+
       And response includes the following
         | totalItems 	 		                    | Expected.totalItems   |
         | kind					                    | Expected.kind         |
+
       And response includes the following in any order
         | items.volumeInfo.title 					| Expected.title		|
         | items.volumeInfo.publisher 				| Expected.publisher	|
@@ -20,7 +22,7 @@ Feature: Get book by ISBN
         | items.volumeInfo.publisher 				| Simon and Schuster |
         | items.volumeInfo.pageCount 				| 630	             |
 
-      And verify that rest response has
+      And verify that rest response body has
         | key                           | action             | expected                        |
         | totalItems                    | lessThan           | Expected.highAmountOfTotalItems |
         | kind                          | containsString     | Expected.partOfKind             |
@@ -28,7 +30,7 @@ Feature: Get book by ISBN
         | items[0].volumeInfo.pageCount | greaterThan        | Expected.lowPageCount           |
         | items[0].volumeInfo.authors   | containsInAnyOrder | Expected.author                 |
 
-      And verify that rest response has
+      And verify that rest response body has
         | key                           | action             | expected                |
         | totalItems                    | lessThan           | 99                      |
         | kind                          | containsString     | volumes                 |

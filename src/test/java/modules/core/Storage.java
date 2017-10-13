@@ -4,6 +4,8 @@ import org.apache.commons.lang.math.NumberUtils;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import static java.lang.Math.toIntExact;
+
 public class Storage {
 
     private SharedContext ctx;
@@ -78,6 +80,9 @@ public class Storage {
         }
         if(value.getClass().getName().contains("Double")){
             return Double.class;
+        }
+        if(value.getClass().getName().contains("Integer")){
+            return Integer.class;
         }
         if(value.getClass().getName().contains("Long")){
             return Long.class;

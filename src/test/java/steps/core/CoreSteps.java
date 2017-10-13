@@ -107,9 +107,10 @@ public class CoreSteps extends BaseSteps {
     **/
 
     /**
-     * Verifies if service is available
+     * Verifies that service is available
      * This is just a sanity check.
      * It triggers GET request towards defined url
+     * It checks that http response code is 200 (OK)
      *
      * Uses following objects:
      *  Expected.statusOK
@@ -121,8 +122,7 @@ public class CoreSteps extends BaseSteps {
         Log.info("* Step started service_is_available");
 
         String url = Environment.readProperty("REST_url");
-        Long statusCode = Storage.get("Expected.statusOK");
-        Integer expectedCode = statusCode.intValue();
+        Integer expectedCode = Storage.get("Expected.statusOK");
         try {
             given()
                 .when()
@@ -143,6 +143,7 @@ public class CoreSteps extends BaseSteps {
      * Uses following objects:
      *  ctx.Object.response
      *  Environment.REST_url
+     *  Environment.Rest_url_post_path
      *
      * @param name, String, name of the template that contains http body of the request
      */
@@ -170,10 +171,10 @@ public class CoreSteps extends BaseSteps {
                 .all()
                 .post(url);
 
-        //store response as ctx object so it can be verify by other steps and attach it to report
+        //store response as ctx object so it can be verified by other steps and attach it to report
         ValidatableResponse vResp = response.then();
         ctx.Object.put("response",ValidatableResponse.class, vResp);
-        StepCore.attachMessageToReport("Json response", response.prettyPrint().toString());
+        StepCore.attachMessageToReport("Json response", response.prettyPrint());
     }
 
 
@@ -211,10 +212,10 @@ public class CoreSteps extends BaseSteps {
                 .all()
                 .post(url);
 
-        //store response as ctx object so it can be verify by other steps and attach it to report
+        //store response as ctx object so it can be verified by other steps and attach it to report
         ValidatableResponse vResp = response.then();
         ctx.Object.put("response",ValidatableResponse.class, vResp);
-        StepCore.attachMessageToReport("Xml response", response.prettyPrint().toString());
+        StepCore.attachMessageToReport("Xml response", response.prettyPrint());
     }
 
     /**
@@ -224,12 +225,12 @@ public class CoreSteps extends BaseSteps {
      *
      * @param table, DataTable, it shall contains 3 columns key, action, expected
      */
-    @Then("^verify that rest response has$")
+    @Then("^verify that rest response body has$")
     public void verify_that_response_has(List<Map<String, String>> table) {
         Log.info("* Step started verify_that_response_has");
 
-        Response response = ctx.Object.get("response",Response.class);
-        ValidatableResponse vResp = response.then();
+        ValidatableResponse response = ctx.Object.get("response",ValidatableResponse.class);
+        //ValidatableResponse vResp = response.then();
 
         //get rows
         for (int i = 0; i < table.size(); i++) {
@@ -274,7 +275,7 @@ public class CoreSteps extends BaseSteps {
                 }
 
                 //execute comparison
-                AssertCore.validatableResponseBodyTableAssertion(vResp, key, action, expectedValue);
+                AssertCore.validatableResponseBodyTableAssertion(response, key, action, expectedValue);
             }
         }
     }

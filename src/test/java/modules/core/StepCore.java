@@ -12,6 +12,8 @@ import java.nio.file.Paths;
 import java.text.NumberFormat;
 import java.util.*;
 
+import static java.lang.Math.toIntExact;
+
 public class StepCore {
 
     private SharedContext ctx;
@@ -55,6 +57,9 @@ public class StepCore {
         if(value.getClass().getName().contains("Long")){
             return Long.class;
         }
+        if(value.getClass().getName().contains("Integer")){
+            return Integer.class;
+        }
         if(value.getClass().getName().contains("ArrayList")){
             return ArrayList.class;
         }
@@ -96,18 +101,27 @@ public class StepCore {
             Number num = null;
             try {
                 num = NumberFormat.getInstance(Locale.getDefault()).parse(input);
+                if ( num instanceof Long ) {
+                    Long tVal = (Long) num;
+                    try {
+                        int iVal = toIntExact(tVal);
+                        num = iVal;
+                    } catch (ArithmeticException e) {
+                        //do nothing just return Long
+                    }
+                }
             } catch (Exception e) {
                 Log.debug("Checking if String contains a numeric value " + input);
                 Log.error("Not able to parse String to Number for " + input, e);
             }
             Class<T> typeKey = (Class<T>) getType(num);
             result = typeKey.cast(num);
-            Log.debug("Converted String " + input + " to number");
+            Log.debug("Converted String " + input + " to number of class " + result.getClass().getName());
         }
 
         if ( tmp != null ){
             result = tmp;
-            Log.debug("Converted element from storage: " + input + " to " + result);
+            Log.debug("Converted element from storage: " + input + " to " + result + " of class " + result.getClass().getName());
         }
 
         return result;
