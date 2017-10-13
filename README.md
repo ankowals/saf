@@ -764,6 +764,7 @@ To use previously defined macros one can put into the test data storage such mac
 Data types supported in test data configuration are
 
 	String,
+	Integer,
 	Long,
 	Double,
 	HashMap,
@@ -1261,7 +1262,7 @@ testdata content is
 	    product2 : "Magic Mouse"
 	}
 
-Please note that the web brwoser has to be explicitly open using step open browser. It is part of the CoreSteps and its content is
+Please note that the web browser has to be explicitly open using step open browser. It is part of the CoreSteps and its content is
 
     /**
      * Opens browser of particular type as defined in the environment configuration
@@ -1281,6 +1282,18 @@ Please note that the web brwoser has to be explicitly open using step open brows
     }
 
 As can be see the main purpose of this step is to create new selenium web driver that can be used in tests.
+Browser type can be provided via configuration. For details please see parameters mentioned below in resources/config/environment/default.properties
+
+	# ### webDriver specific configuration
+	path_to_chrome_driver=C:\\SeleniumWebdrivers\\chromedriver.exe
+	browser=chrome
+	browser_timeout=10
+
+	# ### default system under test configuration
+	WEB_url=http://www.google.pl
+
+We have to provide path to a webDriver, browser type that shall be used in test and implicit timeout that will be used to report an exception if particular element will not be found on the page for amount of seconds defined.
+Url that will be open can be defined as WEB_url.
 
 --------------------------------
 
@@ -1629,3 +1642,149 @@ As can be seen it uses AssertCore module for validation purposes. It supports si
 
 How to write steps for dB tests?
 
+dB support maybe be useful in few cases, for example to load test data directly to dB (this approach is not recomended as dB structure can change with product development -> it is better to use exposed api, usually rest or file/bulk/batch interface to load data to dB) or to test that table data after some transformation is correct (like due to the user interaction via web, or rest client, etl process etc). In addition to that there maybe be a need to support procedure/scripts execution. It seems that the best approach to do it is to simply call a cmd client delivered with particular db, for example sqlplus in case of oracle via executor module.
+
+In case we are working with BI system that maybe used for data analysis purposes it may happen that data will be loaded to the db from multiple sources and modified by so called ETL (extract, transform, load) process. In this case there maybe a need to compare data before and after modification. When amount of data is high (millions of rows) template comparison may not be the optimal solution.
+One can consider to use sql capabilitis to backup an existing table and compare its conetent with a table after modification.
+
+A simple feture file that can load data from csv file to the db can look like this
+
+	@db
+	Feature: Basic
+
+	  Scenario: Load data from csv file to dB
+
+	    Given open db
+	      And data from input csv file is loaded to table Dept
+	    When simple select is executed
+	    Then validate that result is like expectedOutput
+
+File structure is
+
+	features
+		DB
+			Basic
+				config
+					expected.config
+					testdata.config
+				input
+					input.csv
+				template
+					expectedOutput.template
+				Basic.feature
+
+where content of test data is
+
+	TestData : {
+	    inputTypeMapping : ["NUMERIC","VARCHAR","VARCHAR"]
+	}
+
+It contains list of types used for loading the data from csv file to the table. Each column from csv file has a coresponding data type. File name is used to distinguish between different mappings. For example if input file name is input.csv, mapping instance name shall be inputTypeMapping. Mapping between java and sql types is available for example here https://www.service-architecture.com/articles/database/mapping_sql_and_java_data_types.html
+
+content of expected data is 
+
+	Expected:{
+	     lastId : "40",
+	     lastCity : "BOSTON"
+	 }
+	 
+content of input file is
+
+	DEPTNO, DNAME, LOC
+	10, ACCOUNTING, NEW YORK
+	20, RESEARCH, DALLAS
+	30, SALES, CHICAGO
+	40, OPERATIONS, BOSTON
+
+content of the expectedOutput template is
+
+	DEPTNO, DNAME, LOC
+	[0-9]{2}, ACCOUNTING, NEW YORK
+	20, [A-Z]+, DALLAS
+	\d+, SALES, CHICAGO
+	${Expected.lastId}, OPERATIONS, ${ctx.Expected.lastCity}
+
+As can be seen it uses regexp and variable parts so we need to evaluate it before comparison will be done.
+Now we just need to write a step that will read the content of csv and load it to our dB. Such step can look like this
+
+    @When("^data from (.*?) csv file is loaded to table (.*?)$")
+    public void data_from_csv_file_is_loaded(String fileName, String tableName){
+        Log.info("* Step started data_from_csv_file_is_loaded");
+
+        File input = new File(FileCore.getCurrentFeatureDirPath() + "/input/" +fileName+".csv");
+        SqlCore.insertFromFile(input,tableName,true, "TestData."+fileName+"TypeMapping");
+    }
+
+Before we can load the data dB connection have to be open. For this we will use a step from CoreSteps.
+
+    /**
+     * Opens jdbc connection to database
+     */
+    @Given("^open db$")
+    public void open_db() throws Throwable {
+        Log.info("* Step started open_db");
+
+        Connection connection = new DBConnector(ctx).create();
+        ctx.Object.put("Sql", Connection.class, connection);
+
+        SqlCore sqlCore = new SqlCore(ctx);
+        ctx.Object.put("SqlCore", SqlCore.class, sqlCore);
+        Log.debug("Connected to the data base");
+    }
+    
+It will open a new resource (connection) towards selected dB. Db can be set via environment configruation. See parameters mentioned below in resources/config/environment/default.properties
+ 
+	 # ### jdbc drivers specific configuration
+	path_to_oracle_driver=C:\\JdbcDrivers\\ojdbc6.jar
+
+	 # see https://docs.oracle.com/cd/B25329_01/doc/appdev.102/b25320/getconn.htm for details
+	JDBC_CONNECTION_url=jdbc:oracle:thin:scott/oracle@localhost:1521/XE
+ 
+First of them points to the directory with the jdbc drivers and second one configures connection url that is going to be used. String jdbc:oracle indicates that oracle driver shall be used.
+ 
+Now let's try to execute a simple select statement to extract previously inserted data
+
+    @When("^simple select is executed$")
+    public void simple_select_is_executed_with_db_utils(){
+        Log.info("* Step started simple_select_is_executed");
+
+        List<Map<String,Object>> list = SqlCore.selectList("SELECT * FROM Dept");
+
+        SqlCore.printList(list);
+        File results = SqlCore.writeListToFile(list,"SqlResult","txt");
+
+        ctx.Object.put("SqlResults",File.class, results);
+    }
+    
+Results will be stored as ctx Object SqlResults for validation pruposes which can be done by other step def. They will be printed to the console and to a file for the purpose of template comparison.
+To make writing of such steps as simple as possible please use SqlCore module.
+Becuase our data set is very small we will use template compariosn
+
+    @Then("^validate that result is like (.*)$")
+    public void validate_that_result_is_like(String templateName) throws Throwable {
+        Log.info("* Step started validate_that_result_is_like");
+
+        File toCompare = ctx.Object.get("SqlResults",File.class);
+        String path = toCompare.getAbsolutePath();
+
+        StepCore.attachFileToReport("SqlQueryResult.txt","text/plain",path);
+        StepCore.compareWithTemplate(templateName, path);
+    }
+    
+It maybe a better idea for a huge data set to compare 2 tables in sql. For example by executing query like below
+ 
+ 	select from table a
+	except
+	select from table b 
+
+Where table a and table b are tables we would like to compare. If no rows is returned this means that both tables a and b are the same.
+
+In case table a was modified by some ETL we can backup it by executing
+
+	select * into a_backup from a
+	
+After that we can compare content of a table before and after modification using previously privide query. Of course it is also possible to use select column1, column2... instead of select * if all we want to do is to compare just selected columns.
+
+DB connection will be automatically closed in @After hook.
+
+ 
