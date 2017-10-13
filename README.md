@@ -1787,3 +1787,110 @@ After that we can compare content of a table before and after modification using
 DB connection will be automatically closed in @After hook.
 
  
+ --------------------------------
+
+
+How to use executor to run system commands or 3rd party apps?
+
+
+
+It is often needed and desired to have a possibility to execute any system command on a local host. Usually this can be used to trigger powershell commands or batch scripts on windows host but it maybe used to integrate any 3rd party application as well like wireshark to catch network traces or autoIT to have a possibility to automate application under windows etc.
+
+Such possibility is available by means of ExecutorCore module. It contains functions that allows us to call any command or app.
+Lets have a look at very simple step def that checks which java version is installed on the system.
+
+Feature file can look like that
+
+	@exec
+	Feature: SimpleCommand
+
+	  Scenario: Execute simple command on local host
+
+	    Given execute sample command
+	    
+where file structure is like
+
+	features
+		Executor
+			test1
+				SimpleCommand.feature
+				
+Our "execute sample command" step def can look like
+
+    @Given("^execute sample command$")
+    public void execute_sample_command() throws Throwable {
+        Log.info("* Step started execute_sample_command");
+
+        String cmd = "java -version";
+
+        File workingDir = FileCore.createTempDir();
+
+        ByteArrayOutputStream out = ExecutorCore.execute(cmd, workingDir, 10, true);
+
+        Log.debug("Output is ");
+        Log.debug(new String(out.toByteArray(), Charset.defaultCharset()));
+    }
+    
+As can be seen we are calling execute method from ExecutorCore module. It expects a working directory in which command shall be executed, command to be executed itself, timeout and a flag indicating whether to call this command in the background or not.
+This method returns the output (StdOut and StdErr). So it is very easy to print it to the log or attach it to a file.
+
+Output of the command execution can also be exposed as a context Object for furter validation and processing. Let's have a look at more complex example where a powershell command is used to generate a file and then read it.
+
+Our feature file can look like this
+
+	@exec
+	Feature: ReadHugeFile
+
+	  Scenario: Execute simple command on local host
+
+	    Given new text file is created
+	    When read the file
+	    
+File structure is
+
+	features
+		Executor
+			test2
+				ReadHugeFile.feature
+				
+Steps that are used can look like follows
+
+    @Given("^new text file is created$")
+    public void new_text_file_is_created() throws Throwable {
+        Log.info("* Step started new_text_file_is_created");
+
+        String cmd = "powershell.exe " +
+                "\"$stream = [System.IO.StreamWriter] " +
+                "'t2.txt';" +
+                "$line = 'testTestTESTtestTestTESTtestTestTESTtestTestTESTtestTestTESTtestTestTESTtestTestTEST';" +
+                "1..100000 | % {$stream.WriteLine($line)};" +
+                "$stream.close()\"";
+
+        File workingDir = FileCore.createTempDir();
+        String sWorkingDirPath = workingDir.getAbsolutePath();
+        ctx.Object.put("WorkingDir", String.class, sWorkingDirPath);
+
+        ByteArrayOutputStream out = ExecutorCore.execute(cmd, workingDir, 10, true);
+
+        Log.debug("Output is ");
+        Log.debug(new String(out.toByteArray(), Charset.defaultCharset()));
+    }
+
+As can be seen step "new test file is created" will create w temporary directory and call a powershell script inside. It will create a new file with 100000 lines inside.
+
+    @When("^read the file$")
+    public void read_the_file() throws Throwable {
+        Log.info("* Step started read_the_file");
+
+        String path = ctx.Object.get("WorkingDir", String.class);
+        String cmd = "powershell.exe 'Get-Content -Path " + path + "\\t2.txt'";
+
+        File workingDir = FileCore.createTempDir();
+
+        ByteArrayOutputStream out = ExecutorCore.execute(cmd, workingDir, 10, true);
+
+        Log.debug("Output is ");
+        Log.debug(new String(out.toByteArray(), Charset.defaultCharset()));
+    }
+
+Path to this directory can be given as a context Object to next step "read the file" that can read that file using powershell and print its content to the log file.
