@@ -8,6 +8,6 @@ Feature: Basic
   Scenario: Load data from csv file to dB
 
     Given open db
-      And data from csv file is loaded
+      And data from input csv file is loaded to table Dept
     When simple select is executed
     Then validate that result is like expectedOutput

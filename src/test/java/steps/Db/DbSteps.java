@@ -41,12 +41,12 @@ public class DbSteps extends BaseSteps {
     }
 
 
-    @When("^data from csv file is loaded$")
-    public void data_from_csv_file_is_loaded(){
-        Log.info("* Step started simple_select_is_executed");
+    @When("^data from (.*?) csv file is loaded to table (.*?)$")
+    public void data_from_csv_file_is_loaded(String fileName, String tableName){
+        Log.info("* Step started data_from_csv_file_is_loaded");
 
-        File input = new File(FileCore.getCurrentFeatureDirPath() + "/config/input.csv");
-        SqlCore.insertFromFile(input,"Dept",true, "TestData.inputTypeMapping");
+        File input = new File(FileCore.getCurrentFeatureDirPath() + "/input/" +fileName+".csv");
+        SqlCore.insertFromFile(input,tableName,true, "TestData."+fileName+"TypeMapping");
     }
 
 }
