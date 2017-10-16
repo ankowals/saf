@@ -105,13 +105,12 @@ How can we use test automation framework?
 	to automate integration tests
 	to automate regression tests
 	to execute sanity chcecks (smoke tests) and make sure that SUT configuration is correct (like all urls are reachable, ports open, interfaces are up & apps are running, login is possible for each user etc.)
-	to gether symptoms like traces/logs/tickets/events from multiple systems under test
+	to gether symptoms like traces/logs/tickets/events from multiple components of a system under test
 	to execute test system bringup and feed it with configruation data before test starts
-	to setup test environment using configuration management sytsem before test suite execution
+	to setup test environment using configuration management system before test suite execution
 	to restore the system to the state before test started
 	to move configuration data between test systems
-	to use tests implementation as test documentation
-	to describe system behavior via tests implementation (using Gherkin) - living documentation
+	to describe system behavior via tests implementation (using Gherkin) - use tests as a living documentation
 	to use automated equipment for any not strictly test related activities like for example automate mobile phones to detect changes in the offer from a telco operator:)
 	
 	load genration/performance checks are out of scope
