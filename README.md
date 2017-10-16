@@ -378,6 +378,7 @@ Please note that usage of clean keywords ensures that artifacts from previous te
 One can also use IntelliJ to run a feature file. In that case only log file will be created.
 To run a test from IntelliJ a cucumber plugin is used. Please click with right mouse button on the feature file name and choose 'Run'.
 In case of an exception indicating that step defs were not found please double check plugin configuration. To do so go to Run menu in the toolbar and choose Edit configurations. Select cucumber java and make sure that glue points to the correct directory or package.
+If test run fine via mvn test command but not using IntelliJ this indicates missconfigruation of cucumber-jvm plugin.
 
 To generate a report from test please execute mvn site, mvn jetty:run to run jetty and check the report in the browser under http://localhost:port.
 
