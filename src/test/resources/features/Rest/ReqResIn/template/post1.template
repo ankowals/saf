@@ -1,7 +1,0 @@
-{ params: {
-    a: "a",
-    b: 2,
-    c: "c"
-    },
-  params2: "to jest drugi parametr"
-}
