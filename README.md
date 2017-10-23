@@ -59,8 +59,6 @@ Where are we now?
 		- others??
 		
 		further enhancements:
-			- add support for more browsers
-			- add support for setting of browser width/high
 			- enhance logging to log more exceptions
 			- add more helper functions
 			
@@ -134,12 +132,12 @@ Installation instructions
 	6 append %M2_HOME%\bin to PATH variable
 	7 verify maven installation; in cmd issue mvn -version
 	8 install intlliJ community edition -> this is our IDE in which tests can be written
-	9 download Selenium Chrome driver and other drivers if needed and put it for example in C:\SeleniumWebdrivers
-	10 download JDBC oracle driver and other drivers if needed and put it for example in C:\JdbcDrivers
-	11 in intelliJ go to Files->Settings->Plugins->Browse repositories and install Cucumber for Java plugin
-	12 restart or log out and log in so changes done to Path variable will be visible
-	13 install git
-	14 clone the repo for example to C:\Documents\Projects\SAF
+	9 install git
+	10 clone the repo for example to C:\Documents\Projects\SAF	
+	11 download Selenium Chrome driver and other drivers if needed and put it in <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
+	12 download JDBC oracle driver and other drivers if needed and put it in  <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
+	13 in intelliJ go to Files->Settings->Plugins->Browse repositories and install Cucumber for Java plugin
+	14 restart or log out and log in so changes done to Path variable will be visible
 	15 in case of issues with JDK not found fix its path in pom.xml file under <executable> tag
 
             <plugin>
@@ -153,17 +151,30 @@ Installation instructions
                 </configuration>
             </plugin>
 
-	16 Fix path to web drivers in /src/resources/config/environment/default.properties
-	17 Fix path to jdbc drivers in /src/resources/config/environment/default.properties
-	18 Change the port number if needed (default is 8082) for jetty to see allure report after test execution
+	16 Fix relative path (relative to project dir) to web drivers in \src\test\java\config\framework\framework.config
+	17 Fix relative path (relative to project dir) path to jdbc drivers in \src\test\java\config\framework\framework.config
+	18 Change the port number in pom.xml file if needed (default is 8082) for jetty to see allure report after test execution
 	
+	     <plugin>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
+                <version>9.2.10.v20150310</version>
+                <configuration>
+                    <webAppSourceDirectory>${project.build.directory}/site/allure-maven-plugin</webAppSourceDirectory>
+					<httpConnector>
+						<port>8082</port>
+					</httpConnector>
+					<stopKey>stop</stopKey>
+                    <stopPort>1234</stopPort>
+                </configuration>
+            </plugin>
 
 ----------------------------------
 
 
 How to imoprt project in IntelliJ?
 
-	1 open the IDE and click “Import Project”
+	1 open the IDE and click "Import Project"
 	2 point it to the location where your project is
 	3 select "Import project from external model", select "Maven" and hit Next
 	4 go with default options and click Next
@@ -183,39 +194,53 @@ Dir structure shall be like this
 		- src
 			- test
 				-java
-					- modules
-						- core
-						- pages.DemoOnlieStore
-					- steps
-						- core
-						- DemoOnlieStore
-				- resources
 					- config
+						- environment
+						- framework
+						- testdata
 					- features
-						- Rest
 						- Web
-							- DemoOnlieShop
+							- feature1
+							- feature2
+							...
+						- Rest
+						...
+					- libs
+						- libCore
+							- modules
+							- steps
+						- libProject1
+						- libProject2
+						...
+					- resources
+						chromedriver.exe
+						ojdbc6.jar
+						...
 		- target
+		pom.xml
 
 
 
-Dir src/test/java/modules contains all methods needed to run the test.
-
-Dir src/test/java/steps contains all step defs needed to run the test.
-
+Dir src/test/java/libs/<lib name>/modules contains methods needed to run the test. 
+Dir src/test/java/libs/<lib name>/steps contains step defs defintion and implementation.
 
 
-Subdirectory core cotnains saf freamework steps and methods. It is mandatory to have it in each project.
+
+Subdirectory libCore cotnains saf freamework steps and methods. It is mandatory to have it in each project!
 
 Other subdriectories contains project specific stuff like page obejct models etc. They are optional and can be added as git submodules for example.
 
 
 
-Dir src/test/resources contains configuration files (*.properites and *.config) as well as features files (cotntainers for tests).
+Dir src/test/java/resources contains additional resources used by tests like drivers, 3rd party apps etc.
+
+Dir src/test/java/config contains configuration files (*.config) 
+
+Dir src/test/java/features contains features files (cotntainers for tests).
 
 
 
-Dir traget/ will be used to store results of test execution.
+Dir traget/ will be used to store results of test execution like for example test report.
 
  
 
@@ -227,13 +252,13 @@ General concepts
 
 
 
-We follow BDD apporach. Reason is very simple. It is usually much easier for testers to write automated tests (following Gherking principles). In large projects (with large and separate teams of testers, analysts, devs) BDD main adventage (so called common language to describe sytsem behaviours) can be rarely seen but BDD is still giving testers the benefit of simpler tests implementation. They can use step defs to write tests in plain english language.
+We follow BDD apporach. Reason is very simple. It is usually much easier for testers to write automated tests (following Gherking principles). In large projects (with large and separate teams of testers, analysts, devs) BDD main adventage (so called common language to describe sytsem behaviours) can be rarely implemented but BDD is still giving testers the benefit of simpler tests creation. They can use step defs to write tests in plain english language.
 
 Tests are called Scenarios. They are grouped in Features. They are build using step defs.
 
 Features act as containers for Scenarios.
 
-We try to keep 1 Feature per 1 file.
+Please keep 1 Feature per 1 file.
 
 Feature file name shall be same like Feature name.
 
@@ -256,7 +281,7 @@ SUT is our system under test. It can be an application that we want to test. It 
 
 ConfigurationData is a data that shall be loaded to the SUT before test suite is started. It can contain stuff like links configuration (ip address on the machine, ports, users, passwords, listeners configuration, urls, log level etc.) but it shall also contain business configuration that is applicable for particular application like for example tariff configuration etc.
 
-Usually it is enough to load configuration data once using separate feature file or manually or by using any 3rd party tool that can do it for us.
+Usually it is enough to load configuration data once using separate feature file, manually or by using any 3rd party tool that can do it for us.
 
 TestData is a data that shall be given as an input for particular test. For example assuming we are testing different tariffs on particular offer we can give as an input an offer name. Other example can be a test where we would like to login to a web page. In this case part of the test data can be a particular login and password that we are going to use during test execution. Please keep in mind that login and password shall be earlier created on system under test as a part of configuration data.
 
@@ -274,7 +299,7 @@ Test result is the result of comparison between ResultData & ExpectedData.
 
 
 Framework will execute each scenario in a feture file and each step in a scenario.
-When one step fails whole scanrio is marked as failed and next scenario in a feature is executed.
+When one step fails whole scenario is marked as failed and next scenario in a feature is executed.
 Each scenario execution looks similar.
 
 
@@ -282,7 +307,7 @@ Each scenario execution looks similar.
 First TestData, ExpectedData and EnvironmentData storage (SUT configuration) will be created. 
 Macro evaluation will be done.
 Execution engine will connect to SUT (as configured in EnvironmentData) and execute any step (action) that is described in the scenario.
-Last step is to verify recieved test resutls against expected resutls from the storage.
+Last step is to verify recieved resutls against expected resutls from the storage.
 Test report will be created.
 
 
@@ -290,7 +315,7 @@ Test report will be created.
 TestData/ExpectedData can be passed to the steps directly in a feature file or can be taken from a *.config file.
 
 Global configuration is available but it can be overwritten/updated by local config.
-Config files will be loaded automatically as long as feature file name is same as feature name defined inside the feature file file!!!
+Config files will be loaded automatically as long as feature file name is same as feature name defined inside the feature file file!
 For example file myTestFeature.feature shall contain
 	
 	Feature: myTestFeature
@@ -316,7 +341,7 @@ How the framework is build?
 
 Java is used for learning purposes.
 
-To make installation and deployment easy so called project build, dependency and management tool is used. It is called maven.
+To make installation and deployment easy so called project build and dependency management tool is used. It is called maven.
 It will automatically download all needed libraries so there is no need to hunt them down on your own.
 Maven configuration is available in so called pom.xml file. It contains not just dependencies but also plugins.
 Thanks to this maven can be used to start our tests from command line. For this purpose so called surefire plugin is used.
@@ -386,7 +411,13 @@ It is possible to overwrite active_env property from the command line. In that c
 
 	mvn clean test -Dactive_env="bookByIsbn" -Dcucumber.options="--tags @bookByIsbn"
 
-In this particular case a default environment (SUT) configuration will be loaded and later on it will be overwritten by config available in a file bookByIsbn.properties. Cucumber option --tags can be used to run only a subset of tests that are tagged with @bookByIsbn tag.
+In this particular case a default environment (SUT) configuration will be loaded and later on it will be overwritten by config available in a file src\test\java\config\environment\bookByIsbn.config. Cucumber option --tags can be used to run only a subset of tests that are tagged with @bookByIsbn tag.
+
+It is possible to set browser width and height via command line argument. To do so please execute test using command like below
+
+	mvn clean test -Dactive_env="demoOnline" -DwidthXheight="800 x 640" -Dcucumber.options="--tags @demoOnline"
+
+Argument -DwidthXheight= will be used to set browser dimensions.
 
 --------------------------------
 
@@ -491,9 +522,22 @@ Details of what is happening during test execution
 
 
 
-Cucmber runner is available in src/test/java/steps/core/TestRunner.class
+Cucmber runner is available in src/test/java/libs/libCore/steps/TestRunner.class
 It contains cucumber options like glue path (path to steps definitions), features path and allure report plugin.
-Its content shall not be changed for test purposes.
+There shall be no need to change it parameters.
+
+	package libs.libCore.steps;
+
+	import cucumber.api.junit.Cucumber;
+	import org.junit.runner.RunWith;
+	import cucumber.api.CucumberOptions;
+
+	@RunWith(Cucumber.class)
+	@CucumberOptions(
+		plugin = {"ru.yandex.qatools.allure.cucumberjvm.AllureReporter"},
+		features = "src/test/java/features",
+		glue = "libs")
+	public class TestRunner {}
 
 
 
@@ -502,15 +546,15 @@ In @Before hook we create context, read framework and SUT configurtion, create t
 It will also find local configuration files and load them for usage in steps.There is no need to do that in seperate steps or Background scenario.
 In an @After hook we try to close the resources like for example web driver, Sql connection or take a screenshot if test failed.
 As a last step we are attaching log from the scenario to the test report.
-Hooks implementation can be found under src/test/java/steps/core/HooksSteps.
+Hooks implementation can be found under src/test/java/libs/libCore/steps/HooksSteps.class
 
 
 
 After @Before method execution cucumber-jvm will execute each step.
 
-Steps shall be implemented under steps directory. Please use seperete package for your project steps and group them to make files management easier when project grows.
+Steps shall be implemented under src/test/java/libs/<lib name>/steps directory. Please use seperete package for your project steps and group them to make files management easier when project grows.
 
-
+There is also possibility to execute some actions before the whole test suite (a set of feature files) will be executed. There are 2 additional global hooks available. So called beforeAll and afterAll hook. They can be used to initialize logger, print system properties or try to close the resources like web drivers etc.
 
 Each new scenario start will be indicated in the log as follows
 
@@ -538,34 +582,115 @@ Environment
 
 
 
-During this phase a file called /src/resources/config/environment/default.properties will be checked for framework and SUT configuration.
-It contains default settings and can be overwritten with project specific ones.
-Recommendation is to use project specific file to keep there System Under Test settings and framework settings shall stay in default.properties.
+During this phase a files available in /src/test/java/config will be checked for framework and SUT configuration.
+They contain defult environment configuration as well as global test data configuration. Each setting can be overwritten later on during test execution by local test configuration.
+Recommendation is to use project specific file to keep there System Under Test settings and framework settings shall stay in separate file.
 
-Property active_env points to project specific SUT configuration file. For example we can have in default.properties
-
-
-
-	# Default Configuration
-	# ### pointer to active project configuration that can overwrite the defaults
-	active_env=bookByIsbn
-	# ### webDriver specific configuration
-	path_to_chrome_driver=C:\\SeleniumWebdrivers\\chromedriver.exe
-	browser=chrome
-	browser_timeout=10
-
-
-And in bookByIsbn.properties
+Property Environment.Active.name available in src/test/java/config/environment/active.config indicates which SUT configuration shall be used. For example we can have in default.properties
 
 
 
-	# reqResIn project Configuration
-	REST_url=https://www.googleapis.com/books/v1/volumes
+	Environment={
+
+	    Active : {
+		name : "reqResIn"
+	    }
+
+	}
 
 
+And in src/test/java/config/environment/reqResIn.config
+
+
+
+	Environment={
+
+	    reqResIn : {
+
+		Rest : {
+		    url : "https://reqres.in",
+		    url_post_suffix : "/api/users",
+		    url_get_suffix : "/api/users/"
+		}
+
+	    }
+
+	}
+
+Please note that not the file name but Environment object name is important. If object Environment.Active.name="reqResIn" then object  Environment.reqResIn has to exist.
+
+Default configuration will be used when Environment.Active.name="Default" or is empty or does not exists.
+On the other hand object Environment.Active has to exists. It can be empty if it is enough to use default environment configuration.
+
+File src/test/java/config/environment/default.config contains Default configuration and it has to exist!
+
+	Environment={
+
+	    Default : {
+
+		Web : {
+		    browser : "Chrome",
+		    timeout : 10,
+		    url : "http://www.google.pl",
+		    size : "Max" #width x height -> 1024 x 960
+		},
+
+		Rest : {
+		    url : "http://default.com"
+		},
+
+		Jdbc : {
+		    url : "jdbc:oracle:thin:scott/oracle@localhost:1521/XE"
+		}
+
+	    }
+
+	}
+
+This configuration will be used in case there is no other active configuration specified.
+Please note that this configuration is divided into 2 parts. Second part contains configuration specific for the framework like paths to the drivers etc. It can be found in src/test/java/config/framework/framework.config. All settings can be put into one file but usually it is easier to manage complex configurations if they are logically splited between few files.
+
+	Environment={
+
+	    Default : {
+
+		WebDrivers : {
+		    CloseBrowserAfterScenario : true,
+		    Chrome : {
+			path : "src\\test\\java\\resources\\chromedriver.exe"
+		    },
+		    FireFox : {
+			path : "src\\test\\java\\resources\\geckodriver.exe"
+		    },
+		    InternetExplorer : {
+			path : "src\\test\\java\\resources\\IEDriverServer.exe"
+		    }
+		},
+
+		JdbcDrivers : {
+		    Oracle : {
+			path : "src\\test\\java\\resources\\ojdbc6.jar"
+		    }
+		},
+
+		MacroEval : true
+	    }
+
+	}
+
+Please note that the paths are relative to the project directory! 
+In addition there are flags available that can be used to indicate 
+
+	- whether macro evaluation shall be done before run of each scenario
+		MacroEval : true
+	- whether to close the web browser after each scenarion or to keep it open until whole suite will be executed
+		CloseBrowserAfterScenario : true
 
 In this way multiple systems under test can be configured.
 Now it is time to read test data configuration from *.config files.
+Everything that is written below applies also to environment configuration files behaviour.
+
+
 
 ----------------------------------
 
@@ -573,9 +698,9 @@ TestData
 
 
 
-Global configuration is available under /src/resources/config/testdata
+Global configuration is available under src/test/java/config/testdata directory.
 Files under this directory are checked and evaluated. New storage is created based on their content.
-An example of test data configuration is below (content of /src/resources/config/testdata/testdata.config file)
+An example of test data configuration is below (content of src/test/java/config/testdata/testdata.config file)
 
 	TestData={
 	    "search_sentence" : "this is the default entry!",
@@ -621,9 +746,9 @@ An example of log is below
 	[INFO ] 2017-09-11 12:32:27.603 [main] Log - (HashMap)DoubleMapa = {third=3, first=1, second=2}
 	[INFO ] 2017-09-11 12:32:27.604 [main] Log - --- end ---
 
-Configuration files can include conent for other configuration files. To do so please use #include directive and provide reltive path to the other config file. Path shall be relative to project resources directory. An example is visible below.
+Configuration files can include conent of other configuration files. To do so please use #include directive and provide reltive path to the other config file. Path shall be relative to project directory. An example is visible below.
 
-Content of file resources/features/Web/test1/test1.config is
+Content of file src/test/java/features/Web/test1/test1.config is
 
 	#include "features/Web/test4/test45.config"
 	
@@ -633,9 +758,22 @@ Content of file resources/features/Web/test1/test1.config is
 	    nowy_wpis : test
 	       }
 
-In that case first file from #include directive will be read and processed. Order of the includes is important. They are always processed first before other content of a config file.
+In this case first the file from #include directive will be read and processed. Order of the includes is important. They are always processed first before other content of a config file.
+
+Please note that config files are processed in alphabetical order. It shall be avoided but if certain order of processing is required please use specific config files names like 00_first.config, 01_second.config, 02_third.config etc.
+
+It is also possible to use comments in the configuration files. To do so please start the commet with #, for example
+
+	#this is just a comment exmaple 
+	TestData:{
+	    "search_sentence" : "cucumber", #this is another comment example
+	    notAnInteger : 3.5123,
+	    #this is yet another comment example
+	    nowy_wpis : test
+	       }
 
 ----------------------------------
+
 
 Macros
 
@@ -673,13 +811,13 @@ Macro definitions are kept in a *.config file under Macro object. For example
 
 
 
-File /src/test/java/core/Macro.class contains methods to calculate macros based on their definitions and evaluate test storage.
+File /src/test/java/libs/libCore/modules/Macro.class contains methods to calculate macros based on their definitions and evaluate test storage.
 
 Global test data and macro configuration can be overwritten by local configuration files available under the same directory as feature file.
 
 
 
-For example directory /src/resources/features/Rest/GetBookByISBN/config can contain 2 files
+For example directory /src/test/java/features/Rest/GetBookByISBN/config can contain 2 files
 
 
 
