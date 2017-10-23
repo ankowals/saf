@@ -617,10 +617,61 @@ And in src/test/java/config/environment/reqResIn.config
 
 	}
 
-Please note that not the file name but Environment object name is important. If object Environment.Active.name="reqResIn" then object  Environment.reqResIn has to exist.
+Please note that not the file name but Environment object name is important. If object Environment.Active.name equals "reqResIn" then object Environment.reqResIn has to exist.
 
-Default configuration will be used when Environment.Active.name="Default" or is empty or does not exists.
+Default configuration will be used when Environment.Active.name equals "Default" or is empty or does not exists.
 On the other hand object Environment.Active has to exists. It can be empty if it is enough to use default environment configuration.
+
+Project specific configuration will overwrite settings that are defined in Default config and add more if they do not exsits. Deep merge is in use so it is possible to add nested parameters to exsiting configuration. For example assuming that Default contains
+
+	Environment={
+	    Default : {
+		Rest : {
+		    url : "http://default.com"
+		}
+	     }
+	}
+
+
+Assuming that active configuration points to
+
+	Environment={
+
+	    Active : {
+		name : "reqResIn"
+	    }
+
+	}
+	
+Assuming that project specific configuration is
+
+
+	Environment={
+
+	    reqResIn : {
+
+		Rest : {
+		    url_get_suffix : "/api/users/"
+		}
+
+	    }
+
+	}
+	
+Final configuration that can be used in tests is
+
+	Environment={
+
+	    Active : {
+		name : "reqResIn",
+		Rest : {
+		    url : "http://default.com",
+		    url_get_suffix : "/api/users/"
+		}		
+	    }
+
+	}
+
 
 File src/test/java/config/environment/default.config contains Default configuration and it has to exist!
 
@@ -690,8 +741,17 @@ In this way multiple systems under test can be configured.
 Now it is time to read test data configuration from *.config files.
 Everything that is written below applies also to environment configuration files behaviour.
 
+From now on in case there is a need to access any configuration parameter one can use in the step def Storage.get() method. For example
 
+    @When("^xml post request (.*?) with soap action header (.*?) is sent$")
+    public void xml_post_request_is_sent(String name, String actionHeader) throws Throwable {
+        Log.info("* Step started xml_post_request_is_sent");
 
+        String url = Storage.get("Environment.Active.Rest.url");
+	...
+	
+Storage.get("Environment.Active.Rest.url") method returns url value from active configuration. Please note that is is assigned to variable of type String. In case Storage.get() returns other type of data than String we may encounter ClassCastException.
+	
 ----------------------------------
 
 TestData
@@ -771,6 +831,7 @@ It is also possible to use comments in the configuration files. To do so please 
 	    #this is yet another comment example
 	    nowy_wpis : test
 	       }
+
 
 ----------------------------------
 
@@ -912,7 +973,7 @@ Data types supported in test data configuration are
 	Long,
 	Double,
 	HashMap,
-	ArraList,
+	ArrayList,
 	Boolean
 
 
@@ -956,7 +1017,7 @@ After evaluation a new file will be created with content injected from TestData.
 	    "job": "leader"
 	}
 
-Similar for xml requests. Out template can be 
+Similar for xml requests. Our template can be 
 
 	<?xml version="1.0" encoding="utf-8"?>
 	<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
@@ -981,7 +1042,7 @@ Template comparison can be invoked by calling StepCore.compareWithTemplate(templ
 
 Templates support regular expressions. This means that one can use following template to make sure that the content of the table is as expected.
 
-	expectedOutput.template
+content expectedOutput.template is
 
 	DEPTNO, DNAME, LOC
 	[0-9]{2}, ACCOUNTING, NEW YORK
@@ -989,14 +1050,14 @@ Templates support regular expressions. This means that one can use following tem
 	\d+, SALES, CHICAGO
 	${Expected.lastId}, OPERATIONS, ${ctx.Expected.lastCity}
 	
-	where expected.config contains
+where expected.config contains
 	
 	Expected:{
 	     lastId : "40",
 	     lastCity : "BOSTON"
 	 }
 
-shall match test result like below
+it shall match test result like below
 
 	DEPTNO, DNAME, LOC
 	10, ACCOUNTING, NEW YORK
@@ -1018,9 +1079,11 @@ Each step execution is marked in a log with a "* Step started" string to make it
 
 How to write step and share data between steps?
 
-Thanks to dependency injection there is a way to share objects between steps and modules. In SharedContext.class available under /src/test/java/modules/core so called Context Object was defined.
 
-To grant access to it please make sure that your Steps calss extends BaseStep calss and create a constructor like below
+
+Thanks to dependency injection there is a way to share objects between steps and modules. In SharedContext.class available under /src/test/java/libs/libCore/modules so called Context Object was defined.
+
+To grant access to it please make sure that your Steps class extends BaseStep class and create a constructor like below
 
 	public class DemoOnlieSteps extends BaseSteps {
 
@@ -1036,7 +1099,7 @@ To grant access to it please make sure that your Steps calss extends BaseStep ca
 Where DemoOnlineSteps is a class that contains project specific steps to handle web automation for particular page.
 In this way we can pass same instance of ctx between steps and modules. With this approach we can use methods defined for objects available in ctx variable.
 BaseSteps class define a set of helpers modules to make writing new step defs much easier. They are called as below
-Environment, Macro, StepCore, PageCore, SqlCore, Storage, FileCore, ExecutorCore. They contain a set of methods that can be used to do common things in steps like creating files, evaluating macros, reading environment configuration, evaluating templates, attaching files to the report etc.
+Macro, StepCore, PageCore, SqlCore, Storage, FileCore, ExecutorCore. They contain a set of methods that can be used to do common things in steps like creating files, evaluating macros, reading environment configuration, evaluating templates, attaching files to the report etc.
 
 For example lets have a look at 2 steps below
 
@@ -1062,8 +1125,8 @@ For example lets have a look at 2 steps below
     }
     
 To retrieve test data storage one can write HashMap<String, Object> testDataMap = ctx.Object.get("TestData",HashMap.class);
-From now one testDataMap and its values can be used in the step.
-Other and uch simpler way to retrieve a particular value from the storage is String isbn = Storage.get("TestData.isbn");
+From now on testDataMap and its values can be used in the step.
+Other and much simpler way to retrieve a particular value from the storage is String isbn = Storage.get("TestData.isbn");
 Nested objects can be provided using dots like for example Storage.get("TestData.isbn.some_nested_key[0]") etc.
 
 ctx.Object is a bucket to which we can throw anything and later on we can retrieve it. This is useful to share data between steps that are defined in different class. For example
@@ -1105,15 +1168,15 @@ or
 	Then the status code is 200
 	
 In both cases step shall pass.
-Please note that step def input parameter is of type String. method checkIfInputIsVariable can return an object of different type (for example Long, Double, String, Boolean). Please do not hardcode Maps or Lists directly in the feature files, rather define them in a config file and use such config pointer in the feature. For example instead of writing "Then expected result is {key1:1, key2:2}" write "Then expected result is Expected.resultMap" 
+Please note that step def input parameter is of type String. method checkIfInputIsVariable can return an object of different type (for example Int, Long, Double, String, Boolean). Please do not hardcode Maps or Lists directly in the feature files, rather define them in a config file and use such config pointer in the feature. For example instead of writing "Then expected result is {key1:1, key2:2}" write "Then expected result is Expected.resultMap" 
 
 It is assumed that user knowns what type is expected otherwise we can get type missmatch exception.
 
-If there is a need to read any environment property one can use in a step Environment module. An example below
+If there is a need to read any environment property one can use in a step Storage module. An example below
 
-        if(Environment.readProperty("do_macro_eval_in_hooks").equalsIgnoreCase("true")){
-            Log.info("<- evaluating macros ->");
-            Macro.eval("TestData");
+        Boolean doMacroEval = Storage.get("Environment.Active.MacroEval");
+        if ( doMacroEval == null ){
+            Log.error("Environment.Active.MacroEval null or empty!");
         }
 	
 Similar for macro evaluation. It is enough to just call Macro.eval(input) method. Where input is the name of storage (of type HashMap).
@@ -1200,17 +1263,142 @@ Please use SqlCore for any command that shall be executed in the dB under test.
 Please use PageCore for any action that shall be done on the web page.
 Please use Macro for macro evaluations.
 Please use Storage to read/write new values to the storage.
-Please use Environment to read any SUT configuration value.
 Please use ctx.Object to pass objects between step defs.
 
+It is also possible to write test data into a file. In this way it can be read later on and used during other test. Even though this created dependecies between tests it maybe useful some times. Please consider following example we run a long lasting test. Action that has to be trigger takes 10 minutes to execute. In this case there is no point to wait for its results. Instead it maybe desired to divide the test into 2 parts (feature files). One will be called to trigger the action. Second one can contain validation steps.
+Second feture can be executed few minutes later and in the meantime other test can run.
+In such case we have to extract test data that was used in the first part of the test (first feature file).
 
+See an example below to understand how to write test data storage (or any other storage) to a text file.
+
+	@reqResIn
+	Feature: ReqResIn
+
+	  Scenario: Tigger Post request to create single user
+
+	      ...
+	      And write storage TestData with id ReqRestInScenario1 to file
+	      And read storage TestData with id ReqRestInScenario1 from file
+	      ....
+
+Steps that are involved will create a file that can contains the storage with identifier, like
+
+	id1={key1:"value1", ...}
+	id2={key2:"value2", ...}
+
+Later on such storage can be retrived using the identifier and used during scenario execution.
+File will be created in system temporary directory. Usually C:\Users\<user name>\AppData\Local\Temp\FK_Prototype_Persistent_Storage_File.json
+
+Users also have a possibility to pass data between scenarios and features using so called execution context. This is not recommended and usually there exists a better way to write the test than using such feature, for example add Background scenario or enhance Given steps. 
+To use this capability please see an example below.
+
+	@reqResIn
+	Feature: ReqResIn
+
+	  Scenario: Tigger Post request to create single user
+
+	    Given service is available
+	    When json post request createUser is sent
+	    Then extract user id as userId of type String
+
+	  Scenario: Trigger a Get request to get a single user and validate the response
+
+	    Given service is available
+	    When json get single user with id userId of type String request is sent
+	    Then verify that rest response body has
+	      | key                        | action            | expected        |
+	      | data.id                    | equalTo           | Expected.userId |
+
+Step 'extract user id as userId of type String' extracts user id in first scenario and stores its value in the execution context (implemented using singelton pattern with lazy intializaton and synchronization).
+      
+    /**
+     * extract user id from the response
+     * Creates new object UserId and stores it as UserId ctx.obj
+     *
+     * Uses following objects:
+     *  ctx.Object.response
+     *
+     */
+    @Then("^extract user id as (.+) of type (.+)$")
+    public void extract_user_id(String identifier, String type){
+        Log.info("* Step started extract_user_id");
+
+        ValidatableResponse response = ctx.Object.get("response",ValidatableResponse.class);
+        String userId = response.extract().path("id");
+
+        if ( userId == null || Integer.parseInt(userId) <= 0 ) {
+            Log.error("UserId was not found in the response!");
+        }
+
+        Class clazz = ExecutionContext.executionContextObject().setType("java.lang." + type);
+        ExecutionContext.executionContextObject().put(identifier,clazz,userId);
+    }      
+ 
+In this case user id will be stored as a string. Class type has to be provided by the user using method like below
+
+	Class clazz = ExecutionContext.executionContextObject().setType("java.lang." + type);
+ 
+To store the value please use method like below
+
+        ExecutionContext.executionContextObject().put(identifier,clazz,userId);
+ 
+It can be retrieved later on in the next Scenario or different Feature. See an example of step def implementation below.
+
+    /**
+     * Triggers http get request with variable path
+     * ValidatableResponse is available as a context Object with name response.
+     *
+     * Uses following objects:
+     *  ctx.Object.response
+     *  Environment.REST_url
+     *  Environment.Rest_url_get_path
+     *
+     */
+    @When("^json get single user with id (.+) of type (.+) request is sent$")
+    public void json_get_request_is_sent(String id, String type) throws Throwable {
+        Log.info("* Step started json_get_single_user_with_id_is_sent");
+
+        String url = Storage.get("Environment.Active.Rest.url");
+        String path = Storage.get("Environment.Active.Rest.url_get_suffix");
+
+        Class clazz = ExecutionContext.executionContextObject().setType("java.lang." + type);
+        String userId = ExecutionContext.executionContextObject().get(id,clazz);
+
+        Log.debug("userId is " + userId);
+        url = url + path + userId;
+
+        //build specification and use file template as a body content
+        RequestSpecification request = given()
+                .with()
+                .contentType("application/json");
+
+        //trigger request and log it (it will be added as attachment to the report)
+        Response response = request
+                .when()
+                .log()
+                .all()
+                .get(url);
+
+        //store response as ctx object so it can be verified by other steps and attach it to report
+        ValidatableResponse vResp = response.then();
+        ctx.Object.put("response",ValidatableResponse.class, vResp);
+        StepCore.attachMessageToReport("Json response", response.prettyPrint());
+    }
+ 
+ Methods below are used to retrieve the value
+ 
+        Class clazz = ExecutionContext.executionContextObject().setType("java.lang." + type);
+        String userId = ExecutionContext.executionContextObject().get(id,clazz);
+ 
+Please keep in mind that it is not recommended to use this feautre as it created dependencies between tests (Scenarios) that shall be avoided as much as possible. 
+ 
 --------------------------------
 
 
 How to write Page Object Model for web automation purposes?
 
 
-Let us have a look at an example of a MainPage that can be used for web automation purposes. It comes from /src/test/java/modules/pages/DemoOnlineStore.
+Let us have a look at an example of a MainPage that can be used for web automation purposes. It comes from /src/test/java/libs/libDemoOnlineStore/modules.
 
 	public class MainPage extends BasePage {
 
@@ -1257,9 +1445,9 @@ In the constructor we shall check if the page is loaded and if not decide what t
 
 Then we can define selectors as global variables in the class. We shall define methods load and isLoaded (if the one from BasePage is not enough -> we can overwrite it).
 
-When access to SUT configruation is needed use Environment.readProperty(input) method, for example
+When access to SUT configruation is needed use Storage.get("Environment.Active." + input) method, for example
 
-	Environment.readProperty("WEB_url");
+	String url = Storage.get("Environment.Active.Web.url");
 	
 To access the driver just call PageCore.findElement... Use previously defined selectors to find elements on the page and execute actions on them.
 
@@ -1426,18 +1614,45 @@ Please note that the web browser has to be explicitly open using step open brows
     }
 
 As can be see the main purpose of this step is to create new selenium web driver that can be used in tests.
-Browser type can be provided via configuration. For details please see parameters mentioned below in resources/config/environment/default.properties
+Browser type can be provided via configuration. For details please see parameters mentioned below in src/test/java/config/framework/framework.config as well as in src/test/java/config/environment/default.config
 
-	# ### webDriver specific configuration
-	path_to_chrome_driver=C:\\SeleniumWebdrivers\\chromedriver.exe
-	browser=chrome
-	browser_timeout=10
+	Environment={
 
-	# ### default system under test configuration
-	WEB_url=http://www.google.pl
+	    Default : {
+
+		WebDrivers : {
+		    CloseBrowserAfterScenario : true,
+		    Chrome : {
+			path : "src\\test\\java\\resources\\chromedriver.exe"
+		    },
+		    FireFox : {
+			path : "src\\test\\java\\resources\\geckodriver.exe"
+		    },
+		    InternetExplorer : {
+			path : "src\\test\\java\\resources\\IEDriverServer.exe"
+		    }
+		}
+		...
+
+
+
+
+	Environment={
+
+	    Default : {
+
+		Web : {
+		    browser : "Chrome",
+		    timeout : 10,
+		    url : "http://www.google.pl",
+		    size : "Max" #width x height -> 1024 x 960
+		}
+	...
+
 
 We have to provide path to a webDriver, browser type that shall be used in test and implicit timeout that will be used to report an exception if particular element will not be found on the page for amount of seconds defined.
-Url that will be open can be defined as WEB_url.
+Url that will be open can be defined as Environment.Default.Web.url.
+It is also possible to provide browser width and height. To indicate max dimensions please use keyword "Max" else define them as String with format "width x height", for example "1024 x 960".
 
 --------------------------------
 
@@ -1481,8 +1696,8 @@ Please find below an example of step used to build rest post request with json b
      *
      * Uses following objects:
      *  ctx.Object.response
-     *  Environment.REST_url
-     *  Environment.Rest_url_post_path
+     *  Environment.Active.Rest.url
+     *  Environment.Active.Rest.url_post_suffix
      *
      * @param name, String, name of the template that contains http body of the request
      */
@@ -1491,10 +1706,10 @@ Please find below an example of step used to build rest post request with json b
         Log.info("* Step started json_post_request_is_sent");
 
 	//read url base
-        String url = Environment.readProperty("REST_url");
+        String url = Storage.get("Environment.Active.Rest.url");
         
 	//read url path
-	String path = Environment.readProperty("Rest_url_post_path");
+	String path = Storage.get("Environment.Active.Rest.url_post_suffix");
 
 	//build url from base and path because it can be different for each kind of request post/put/get/delete etc.
         url = url + path;
@@ -1544,7 +1759,7 @@ In case of soap we can build the request in this way
      *
      * Uses following objects:
      *  ctx.Object.response
-     *  Environment.REST_url
+     *  Environment.Active.Rest.url
      *
      * @param name, String, name of the template that contains http body of the request
      * @param actionHeader, String, soap action that will be set in the header
@@ -1554,7 +1769,7 @@ In case of soap we can build the request in this way
         Log.info("* Step started xml_post_request_is_sent");
 
 	//in case multiple services are present each will have its own url available
-        String url = Environment.readProperty("REST_url");
+        String url = Storage.get("Environment.Active.Rest.url");
         
 	//inject values to the template
 	File file = StepCore.evaluateTemplate(name);
@@ -1611,14 +1826,14 @@ In case we would like to trigger any other request like get we have to change th
      *
      * Uses following objects:
      *  Expected.statusOK
-     *  env.REST_url
+     *  Environment.Active.Rest.url
      *
      */
     @Given("^service is available$")
     public void service_is_available() {
         Log.info("* Step started service_is_available");
 
-        String url = Environment.readProperty("REST_url");
+        String url = Storage.get("Environment.Active.Rest.url");
         Long statusCode = Storage.get("Expected.statusOK");
         Integer expectedCode = statusCode.intValue();
         try {
@@ -1876,13 +2091,27 @@ Before we can load the data dB connection have to be open. For this we will use 
         Log.debug("Connected to the data base");
     }
     
-It will open a new resource (connection) towards selected dB. Db can be set via environment configruation. See parameters mentioned below in resources/config/environment/default.properties
+It will open a new resource (connection) towards selected dB. Db can be set via environment configruation. See parameters mentioned below in src/test/java/config/framework/framework.config as well as src/test/java/config/environment/default.config
  
-	 # ### jdbc drivers specific configuration
-	path_to_oracle_driver=C:\\JdbcDrivers\\ojdbc6.jar
+	Environment={
 
-	 # see https://docs.oracle.com/cd/B25329_01/doc/appdev.102/b25320/getconn.htm for details
-	JDBC_CONNECTION_url=jdbc:oracle:thin:scott/oracle@localhost:1521/XE
+	    Default : {
+		    JdbcDrivers : {
+		    Oracle : {
+			path : "src\\test\\java\\resources\\ojdbc6.jar"
+		    }
+		}
+		...
+	
+
+
+	Environment={
+
+	    Default : {
+		    Jdbc : {
+		    url : "jdbc:oracle:thin:scott/oracle@localhost:1521/XE"
+		}
+
  
 First of them points to the directory with the jdbc drivers and second one configures connection url that is going to be used. String jdbc:oracle indicates that oracle driver shall be used.
  
