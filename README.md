@@ -68,8 +68,7 @@ Where are we now?
 	(to do) a way to downlaod any 3rd party symptoms from SUT like logs, trace files
 	(to do) a way to monitor and indicate quality of commited tests (see SonarQube for example )
 	(to do) a way to schedule test execution (see Jenkins/TeamCity)
-	(to do) a way to generate test documentation automatically => add new logging categories (like atmn(category, message)), use scenrio outline with path to feature and log file after test execution	
-	(to do) a way to pause test execution and allow for manual intervention => via autoIt script executed from a step def?	
+	(to do) a way to generate test documentation automatically => add new logging categories (like atmn(category, message)), use scenrio outline with path to feature and log file after test execution		
 	(to do) add more tests examples
 	
 	----------------------------------	
@@ -92,7 +91,8 @@ Where are we now?
 	(done) a way to manage templates => via CoreStep model
 	(done) a way to intergate any 3rd party app by execution of any command on local host => via ExecutorCore
 	(done) a way to integrate with test/requirement management tool (like for example jira, so we can have links to tests/epic/stories in the test report) => via allure integration
-	(done) a way to intgrate with incident management tool (like for example jira, so we can have at least links to defects that affect particular test in the report and maybe their status etc.) => via allure integration	
+	(done) a way to intgrate with incident management tool (like for example jira, so we can have at least links to defects that affect particular test in the report and maybe their status etc.) => via allure integration
+	(done) a way to pause test execution and allow for manual intervention => via autoIt script executed from a step def
 	
 ----------------------------------
 
@@ -169,6 +169,7 @@ Installation instructions
                 </configuration>
             </plugin>
 
+	19 Install autoIt
 ----------------------------------
 
 
@@ -701,30 +702,40 @@ File src/test/java/config/environment/default.config contains Default configurat
 This configuration will be used in case there is no other active configuration specified.
 Please note that this configuration is divided into 2 parts. Second part contains configuration specific for the framework like paths to the drivers etc. It can be found in src/test/java/config/framework/framework.config. All settings can be put into one file but usually it is easier to manage complex configurations if they are logically splited between few files.
 
-	Environment={
+	Environment:{
 
-	    Default : {
+	    Default: {
 
-		WebDrivers : {
-		    CloseBrowserAfterScenario : true,
-		    Chrome : {
-			path : "src\\test\\java\\resources\\chromedriver.exe"
+		MacroEval: true,
+		PauseDuration: 300,
+
+		WebDrivers: {
+		    CloseBrowserAfterScenario: true,
+		    Chrome: {
+			path: "src\\test\\java\\resources\\webDrivers\\chromedriver.exe"
 		    },
-		    FireFox : {
-			path : "src\\test\\java\\resources\\geckodriver.exe"
+		    FireFox: {
+			path: "src\\test\\java\\resources\\webDrivers\\geckodriver.exe"
 		    },
-		    InternetExplorer : {
-			path : "src\\test\\java\\resources\\IEDriverServer.exe"
+		    InternetExplorer: {
+			path: "src\\test\\java\\resources\\webDrivers\\IEDriverServer.exe"
 		    }
 		},
 
-		JdbcDrivers : {
-		    Oracle : {
-			path : "src\\test\\java\\resources\\ojdbc6.jar"
+		JdbcDrivers: {
+		    Oracle: {
+			path: "src\\test\\java\\resources\\jdbcDrivers\\ojdbc6.jar"
 		    }
 		},
 
-		MacroEval : true
+		scripts: {
+		    path: "src\\test\\java\\resources\\scripts"
+		},
+
+		apps: {
+		    autoIt: "C:\\Program Files (x86)\\AutoIt3\\AutoIt3.exe"
+		}
+
 	    }
 
 	}
@@ -736,6 +747,11 @@ In addition there are flags available that can be used to indicate
 		MacroEval : true
 	- whether to close the web browser after each scenarion or to keep it open until whole suite will be executed
 		CloseBrowserAfterScenario : true
+	- pause duration in case manual intervention during test execution is needed
+		PauseDuration
+
+Entity scripts.path can be use to indicate a path relative to project directory where some autoIT or shell scripts can be found for example.
+Entity apps can be used to group together any 3rd party apps that can be called by the step defs like for example autoIt, wireshark, mergecap etc.
 
 In this way multiple systems under test can be configured.
 Now it is time to read test data configuration from *.config files.
@@ -2268,3 +2284,40 @@ As can be seen step "new test file is created" will create w temporary directory
     }
 
 Path to this directory can be given as a context Object to next step "read the file" that can read that file using powershell and print its content to the log file.
+
+
+Pause test execution
+
+
+ExecutorCore can be used to run 3rd party apps like autoIT framework which can be used to automate windows applications or create a pop up window to inform user about status of some action. One of the ideas how this can be used is to create a pause step def. It can pasue execution of a scenario and inform user about it. User can wait for a timeout or manually cancel the pause message box. An usage example is below.
+
+	@exec
+	Feature: SimpleCommand
+
+	  Scenario: Execute simple command on local host
+
+	    Given execute sample command
+	    And pause execution
+	    And execute sample command
+
+
+Step def can be implemented like below.
+
+    @And("^pause execution$")
+    public void pause_execution() throws Throwable {
+        Log.info("* Step started pause execution");
+
+        File workingDir = FileCore.createTempDir();
+        String autoItPath = Storage.get("Environment.Active.apps.autoIt");
+        String scriptsPath = Storage.get("Environment.Active.scripts.path");
+        Integer timeout = Storage.get("Environment.Active.PauseDuration");
+
+        String cmd = autoItPath + " " + FileCore.getProjectPath() + "\\" + scriptsPath + "\\pause.exe" + " " + Integer.toString(timeout);
+
+        Log.debug("Calling autoIt pause script with timeout " + timeout + " seconds");
+
+        ExecutorCore.execute(cmd, workingDir, timeout+3, true);
+
+        Log.debug("Pause canceled or timeout. Resuming execution");
+    }
+
