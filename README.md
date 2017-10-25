@@ -42,9 +42,11 @@ What do we want from a test automation framework?
 	a way to write simmple step defs (for example usage of try-catch blocks is ugly)
 	a way to manage templates
 	
-	a way to integrate with configuration management tool can be a nice addon (like Puppet, Ansible or Chef)
+	a way to integrate with configuration(infrastructure) management tool can be a nice addon (like Puppet, Ansible or Chef)
+	a way to intgreate VM/container managament tool like Docker or Vagrant can be a nice addon
 	a way to re-run failed test can be a nice addon
 	a way to execute test remotely can be a nice addon
+	a way to encrypt/decrypt test data can be a nice addon
 
 ----------------------------------
 
