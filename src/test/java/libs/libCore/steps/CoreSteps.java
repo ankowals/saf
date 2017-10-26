@@ -5,6 +5,7 @@ import cucumber.api.java.en.Given;
 import libs.libCore.modules.*;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.sql.Connection;
 
@@ -96,7 +97,6 @@ public class CoreSteps extends BaseSteps {
     public void write_storage_to_file(String storageName, String StorageId) throws Throwable {
         Log.info("* Step started write_storage_to_file");
         Storage.writeToFile(storageName, StorageId);
-        //Storage.get(storageName);
     }
 
 
@@ -104,7 +104,25 @@ public class CoreSteps extends BaseSteps {
     public void read_storage_to_file(String storageName, String StorageId) throws Throwable {
         Log.info("* Step started read_storage_to_file");
         Storage.readFromFile(storageName, StorageId);
-        //Storage.get(storageName);
+    }
+
+
+    @And("^pause execution$")
+    public void pause_execution() throws Throwable {
+        Log.info("* Step started pause execution");
+
+        File workingDir = FileCore.createTempDir();
+        String autoItPath = Storage.get("Environment.Active.apps.autoIt");
+        String scriptsPath = Storage.get("Environment.Active.scripts.path");
+        Integer timeout = Storage.get("Environment.Active.PauseDuration");
+
+        String cmd = autoItPath + " " + FileCore.getProjectPath() + "\\" + scriptsPath + "\\pause.exe" + " " + Integer.toString(timeout);
+
+        Log.debug("Calling autoIt pause script with timeout " + timeout + " seconds");
+
+        ExecutorCore.execute(cmd, workingDir, timeout+3, true);
+
+        Log.debug("Pause canceled or timeout. Resuming execution");
     }
 
 }

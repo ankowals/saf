@@ -487,6 +487,16 @@ public class PageCore {
 
 
     /**
+     * opens new browser window
+     * Simulates pressing of CTRL+n keys combination
+     */
+    public void openNewWindow() {
+        Page.findElement(By.cssSelector("body")).sendKeys(Keys.CONTROL +"n");
+        Log.debug("New window open");
+    }
+
+
+    /**
      * waits for an Alert pop up
      * Simulates pressing of CTRL+t keys combination
      * Switches focus to the alert pop Up

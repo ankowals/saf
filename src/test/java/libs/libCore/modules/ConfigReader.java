@@ -63,14 +63,14 @@ public class ConfigReader {
             sFile = "{" + sFile + "}";
         }
 
+        Log.debug("Reading configuration file " + path);
+
         //read the JSON file and make sure that format is correct
         try {
             root = new JsonParser().parse(sFile);
         } catch (JsonSyntaxException e) {
                 Log.error("Typo in file " + file.getAbsolutePath(), e);
         }
-
-        Log.debug("Reading configuration file " + path);
 
         //read each entry and create new shared object for it
         if(root.isJsonObject()){

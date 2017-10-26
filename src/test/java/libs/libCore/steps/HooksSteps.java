@@ -94,6 +94,9 @@ public class HooksSteps {
         AssertCore assertCore = new AssertCore(ctx);
         ctx.Object.put("AssertCore", AssertCore.class, assertCore);
 
+        PdfCore pdfCore = new PdfCore(ctx);
+        ctx.Object.put("PdfCore", PdfCore.class, pdfCore);
+
         StepCore step = new StepCore(ctx);
         ctx.Object.put("StepCore", StepCore.class, step);
 
@@ -103,7 +106,22 @@ public class HooksSteps {
         StepCore = ctx.Object.get("StepCore", StepCore.class);
         Storage = ctx.Object.get("Storage", Storage.class);
 
-        Log.info("<- reading default and global configuration ->");
+        Log.info("<- reading default configuration ->");
+        String defaultConfigDir = FileCore.getProjectPath() + "//src//test//java//libs//libCore//config";
+        Log.debug("Default configuration directory is " + defaultConfigDir);
+
+        ArrayList<String> defaultConfigFiles = FileCore.searchForFile(defaultConfigDir,".config");
+        if(defaultConfigFiles.size()!=0) {
+            Log.debug("Following config files were found inside ");
+            for (String globalConfigFile : defaultConfigFiles) {
+                Log.debug(globalConfigFile);
+            }
+            for (String globalConfigFile : defaultConfigFiles) {
+                Config.create(globalConfigFile);
+            }
+        }
+
+        Log.info("<- reading global configuration ->");
         String globalConfigDir = FileCore.getGlobalConfigPath();
         Log.debug("Global configuration directory is " + globalConfigDir);
 
