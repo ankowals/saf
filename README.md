@@ -54,10 +54,11 @@ Where are we now?
 	
 	(in progress) a way to execute tests related to  
 		(done) - rest json/xml (soap) => RestAssured integrated 
-		(done) - gui (web/native) => Selenium WebDriver integrated for chrome
+		(done) - gui (web/native) => Selenium WebDriver integrated for chrome, ff and ie
 		(done) - sql => jdbc integrated for oracle
+		(done) - pdf validation => pdfbox2 integrated 
 		(to do) - mobile => Appium integration
-		(to do) - pdf validation 
+		
 		- others??
 		
 		further enhancements:
@@ -376,6 +377,9 @@ To read Csv files openCSV library is used.
 
 To better handle command execution and sql execution Commons-exec and commons-dBUtils libraries from Appache are used. Same for better handling of files and string manipulations (Commons-io and Commons-lang).
 
+To read/write pdf files pdfBox2 library is used.
+
+To have possibility to pause test execution autoIt scirpt is used.
 
 On top of that macro support, test data management, configuration files support, Page Object Model support and more was added.
 Project and test structure is also enforced to keep things consistent.
@@ -586,7 +590,7 @@ Environment
 
 
 During this phase a files available in /src/test/java/config will be checked for framework and SUT configuration.
-They contain defult environment configuration as well as global test data configuration. Each setting can be overwritten later on during test execution by local test configuration.
+They contain global environment configuration as well as global test data configuration. Each setting can be overwritten later on during test execution by local test configuration.
 Recommendation is to use project specific file to keep there System Under Test settings and framework settings shall stay in separate file.
 
 Property Environment.Active.name available in src/test/java/config/environment/active.config indicates which SUT configuration shall be used. For example we can have in default.properties
@@ -676,7 +680,7 @@ Final configuration that can be used in tests is
 	}
 
 
-File src/test/java/config/environment/default.config contains Default configuration and it has to exist!
+File src/test/java/config/environment/default.config contains global Default configuration.
 
 	Environment={
 
@@ -742,7 +746,7 @@ Please note that this configuration is divided into 2 parts. Second part contain
 
 	}
 
-Please note that the paths are relative to the project directory! 
+Please note that the paths are relative to the project directory.
 In addition there are flags available that can be used to indicate 
 
 	- whether macro evaluation shall be done before run of each scenario
@@ -756,6 +760,9 @@ Entity scripts.path can be use to indicate a path relative to project directory 
 Entity apps can be used to group together any 3rd party apps that can be called by the step defs like for example autoIt, wireshark, mergecap etc.
 
 In this way multiple systems under test can be configured.
+
+Please note that in libs/libCore/config user can find default configruation that can be overwriten by global config available in  src/test/java/config/framework or src/test/java/config/environment subdirectories. For this reason please do not change anything in libs/libCore/config files.
+
 Now it is time to read test data configuration from *.config files.
 Everything that is written below applies also to environment configuration files behaviour.
 
@@ -1117,7 +1124,7 @@ To grant access to it please make sure that your Steps class extends BaseStep cl
 Where DemoOnlineSteps is a class that contains project specific steps to handle web automation for particular page.
 In this way we can pass same instance of ctx between steps and modules. With this approach we can use methods defined for objects available in ctx variable.
 BaseSteps class define a set of helpers modules to make writing new step defs much easier. They are called as below
-Macro, StepCore, PageCore, SqlCore, Storage, FileCore, ExecutorCore. They contain a set of methods that can be used to do common things in steps like creating files, evaluating macros, reading environment configuration, evaluating templates, attaching files to the report etc.
+Macro, StepCore, PageCore, SqlCore, Storage, FileCore, ExecutorCore, PdfCore. They contain a set of methods that can be used to do common things in steps like creating files, evaluating macros, reading environment configuration, evaluating templates, attaching files to the report etc.
 
 For example lets have a look at 2 steps below
 
@@ -1282,6 +1289,7 @@ Please use PageCore for any action that shall be done on the web page.
 Please use Macro for macro evaluations.
 Please use Storage to read/write new values to the storage.
 Please use ctx.Object to pass objects between step defs.
+Please use PdfCore module for pdf manipulation.
 
 It is also possible to write test data into a file. In this way it can be read later on and used during other test. Even though this created dependecies between tests it maybe useful some times. Please consider following example we run a long lasting test. Action that has to be trigger takes 10 minutes to execute. In this case there is no point to wait for its results. Instead it maybe desired to divide the test into 2 parts (feature files). One will be called to trigger the action. Second one can contain validation steps.
 Second feture can be executed few minutes later and in the meantime other test can run.
@@ -2323,3 +2331,44 @@ Step def can be implemented like below.
         Log.debug("Pause canceled or timeout. Resuming execution");
     }
 
+
+
+
+Read pdf filel
+
+PdfCore can be used to read/write pdf files. It such possibility maybe useful to validate pdf files content. They maybe created as an output of a test. For example in case test shall validate content of an invoice etc.
+Step that reads pdf file can look like this
+
+    /**
+     * Reads unencrypted pdf file line by line and prints it content to the log file
+     *
+     * @param pathToFile, String, path to pdf file
+     */
+    @Given("^read pdf file from (.+)$")
+    public void read_pdf_file_from(String pathToFile) throws Throwable {
+        Log.info("* Step started read_pdf_file_from");
+
+        String path = StepCore.checkIfInputIsVariable(pathToFile);
+
+        File file = new File(path);
+        if (! file.exists()) {
+            Log.error("File " + path + " does not exists");
+        }
+
+        Log.debug("Reading pdf file " + file.getAbsolutePath());
+        List<String> lines = PdfCore.readLines(file);
+
+        for (String line : lines) {
+            Log.debug(line);
+        }
+    }
+    
+Output of PdfCore.readLines(file) can be used in other step for validation purposes. Feature file can look like this
+
+
+	@pdf
+	Feature: ReadPdf
+
+	  Scenario: read pdf file content and print it to the log file
+
+	    Given read pdf file from TestData.file
