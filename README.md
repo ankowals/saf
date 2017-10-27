@@ -47,6 +47,7 @@ What do we want from a test automation framework?
 	a way to re-run failed test can be a nice addon
 	a way to execute test remotely can be a nice addon
 	a way to encrypt/decrypt test data can be a nice addon
+	a way to integrate with network protocols (like diameter) simulator or others can be a nice addon
 
 ----------------------------------
 
