@@ -27,10 +27,22 @@ public class SqlCore {
     public SqlCore(SharedContext ctx) {
         this.ctx = ctx;
         this.FileCore = ctx.Object.get("FileCore",FileCore.class);
-        this.Sql = ctx.Object.get("Sql",Connection.class);
         this.Storage = ctx.Object.get("Storage", Storage.class);
     }
 
+    public void open(){
+        Sql = new DBConnector(ctx).create();
+    }
+
+    public void close() {
+        if (Sql != null) {
+            try {
+                Sql.close();
+            } catch (SQLException e) {
+                Log.error("", e);
+            }
+        }
+    }
 
     /**
      * Executes sql select statement and returns results in the for of a DataTable (List of Maps)

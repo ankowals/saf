@@ -4,10 +4,7 @@ import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
 import libs.libCore.modules.*;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
-
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.sql.Connection;
 
 public class CoreSteps extends BaseSteps {
 
@@ -23,7 +20,26 @@ public class CoreSteps extends BaseSteps {
     public void open_browser() throws Throwable {
         Log.info("* Step started open_browser");
 
-        EventFiringWebDriver driver = new DriverFactory(ctx).create();
+        String browser = Storage.get("Environment.Active.Web.browser");
+        EventFiringWebDriver driver = new DriverFactory(ctx).create(browser);
+        ctx.Object.put("Page", EventFiringWebDriver.class, driver);
+
+        PageCore pageCore = new PageCore(ctx);
+        ctx.Object.put("PageCore", PageCore.class, pageCore);
+        PageCore = ctx.Object.get("PageCore", PageCore.class);
+        Log.debug("Web driver created");
+    }
+
+    /**
+     * Opens browser of particular type
+     *
+     * @param browser, String, describes browser type
+     */
+    @Given("^open browser of type (.+)$")
+    public void open_browser_of_type(String browser) throws Throwable {
+        Log.info("* Step started open_browser_of_type");
+
+        EventFiringWebDriver driver = new DriverFactory(ctx).create(browser);
         ctx.Object.put("Page", EventFiringWebDriver.class, driver);
 
         PageCore pageCore = new PageCore(ctx);
@@ -39,13 +55,31 @@ public class CoreSteps extends BaseSteps {
     public void open_db() throws Throwable {
         Log.info("* Step started open_db");
 
-        Connection connection = new DBConnector(ctx).create();
-        ctx.Object.put("Sql", Connection.class, connection);
+        //Connection connection = new DBConnector(ctx).create();
+        //ctx.Object.put("Sql", Connection.class, connection);
 
-        SqlCore sqlCore = new SqlCore(ctx);
-        ctx.Object.put("SqlCore", SqlCore.class, sqlCore);
-        SqlCore = ctx.Object.get("SqlCore", SqlCore.class);
+        //SqlCore sqlCore = new SqlCore(ctx);
+        //ctx.Object.put("SqlCore", SqlCore.class, sqlCore);
+        //SqlCore = ctx.Object.get("SqlCore", SqlCore.class);
+        Log.debug("Create new db connection");
+        SqlCore.open();
         Log.debug("Connected to the data base");
+    }
+
+    /**
+     * Opens ssh connection to remote host
+     */
+    @Given("^open ssh to (.+)$")
+    public void open_ssh_to(String node) throws Throwable {
+        Log.info("* Step started open_ssh_to");
+
+        Log.debug("Create new ssh client");
+        SshCore.createClient(node);
+
+        //SshCore sshCore = new SshCore(ctx);
+        //ctx.Object.put("SshCore", SshCore.class, sshCore);
+        //SshCore = ctx.Object.get("SshCore", SshCore.class);
+        Log.debug("Connected to " + node);
     }
 
     /**
@@ -113,7 +147,7 @@ public class CoreSteps extends BaseSteps {
 
         File workingDir = FileCore.createTempDir();
         String autoItPath = Storage.get("Environment.Active.apps.autoIt");
-        String scriptsPath = Storage.get("Environment.Active.scripts.path");
+        String scriptsPath = Storage.get("Environment.Active.libCoreScripts.path");
         Integer timeout = Storage.get("Environment.Active.PauseDuration");
 
         String cmd = autoItPath + " " + FileCore.getProjectPath() + "\\" + scriptsPath + "\\pause.exe" + " " + Integer.toString(timeout);

@@ -12,6 +12,7 @@ public class BaseSteps {
     protected ExecutorCore ExecutorCore;
     protected AssertCore AssertCore;
     protected PdfCore PdfCore;
+    protected SshCore SshCore;
 
     // PicoContainer injects class SharedContext
     public BaseSteps (SharedContext ctx) {
@@ -25,6 +26,7 @@ public class BaseSteps {
         this.ExecutorCore = ctx.Object.get("ExecutorCore", ExecutorCore.class);
         this.AssertCore = ctx.Object.get("AssertCore", AssertCore.class);
         this.PdfCore = ctx.Object.get("PdfCore", PdfCore.class);
+        this.SshCore = ctx.Object.get("SshCore", SshCore.class);
     }
 
 }

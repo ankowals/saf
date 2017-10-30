@@ -1,5 +1,6 @@
 package libs.libCore.steps;
 
+import io.restassured.config.ConnectionConfig;
 import libs.libCore.modules.*;
 import cucumber.api.Scenario;
 import cucumber.api.java.After;
@@ -24,7 +25,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+
+import static io.restassured.config.HttpClientConfig.httpClientConfig;
 
 public class HooksSteps {
 
@@ -97,6 +101,12 @@ public class HooksSteps {
         PdfCore pdfCore = new PdfCore(ctx);
         ctx.Object.put("PdfCore", PdfCore.class, pdfCore);
 
+        SshCore sshCore = new SshCore(ctx);
+        ctx.Object.put("SshCore", SshCore.class, sshCore);
+
+        SqlCore sqlCore = new SqlCore(ctx);
+        ctx.Object.put("SqlCore", SqlCore.class, sqlCore);
+
         StepCore step = new StepCore(ctx);
         ctx.Object.put("StepCore", StepCore.class, step);
 
@@ -137,10 +147,12 @@ public class HooksSteps {
         }
 
         Log.info("<- configuring logger for rest operations ->");
-        //ToLoggerPrintStream loggerPrintStream = new ToLoggerPrintStream( Log.getLogger() );
         ToLoggerPrintStream loggerPrintStream = new ToLoggerPrintStream();
+
         RestAssured.config = RestAssured.config().logConfig(
-                                 new LogConfig( loggerPrintStream.getPrintStream(), true ) );
+                new LogConfig( loggerPrintStream.getPrintStream(), true )
+        );
+
         Log.info("Finished resources initialisation");
 
         /* Local resources load */
@@ -214,6 +226,31 @@ public class HooksSteps {
             Log.info( "(" + type + ")" + entry.getKey() + " = " + entry.getValue() );
         }
 
+        //adjust default RestAssured config
+        Log.debug("adjusting RestAssured config");
+        int maxConnections = Storage.get("Environment.Active.Rest.http_maxConnections");
+        Log.debug("Setting http.maxConnections to " + maxConnections);
+        System.setProperty("http.maxConnections", "" + maxConnections);
+
+        Boolean closeIdleConnectionsAfterEachResponseAfter = Storage.get("Environment.Active.Rest.closeIdleConnectionsAfterEachResponseAfter");
+        if ( closeIdleConnectionsAfterEachResponseAfter ) {
+            int idleTime = Storage.get("Environment.Active.Rest.closeIdleConnectionsAfterEachResponseAfter_idleTime");
+            Log.debug("Setting closeIdleConnectionsAfterEachResponseAfter=true with idleTime " + idleTime);
+            RestAssured.config = RestAssured.config().connectionConfig(
+                    new ConnectionConfig().closeIdleConnectionsAfterEachResponseAfter(
+                            idleTime,
+                            TimeUnit.SECONDS)
+            );
+        }
+
+        Boolean reuseHttpClientInstance = Storage.get("Environment.Active.Rest.reuseHttpClientInstance");
+        if ( reuseHttpClientInstance ) {
+            Log.debug("Setting reuseHttpClientInstance=true");
+            RestAssured.config = RestAssured.config().httpClient(
+                    httpClientConfig().reuseHttpClientInstance()
+            );
+        }
+
         //check if macro evaluation shall be done in hooks
         Boolean doMacroEval = Storage.get("Environment.Active.MacroEval");
         if ( doMacroEval == null ){
@@ -284,17 +321,15 @@ public class HooksSteps {
             }
         }
 
-        Connection Sql = ctx.Object.get("Sql", Connection.class);
         // Close DB connection
-        if ( Sql != null ) {
-            try {
-                Log.debug("Db connection cleanup started");
-                Sql.close();
-                Log.debug("Db connection cleanup done");
-            } catch (SQLException e) {
-                Log.error("", e);
-            }
-        }
+        Log.debug("Db connection cleanup started");
+        SqlCore SqlCore = ctx.Object.get("SqlCore", SqlCore.class);
+        SqlCore.close();
+        Log.debug("Db connection cleanup done");
+
+        //Close ssh connection
+        SshCore SshCore = ctx.Object.get("SshCore", SshCore.class);
+        SshCore.closeClient();
 
         Log.info("Finished resources clean up");
 

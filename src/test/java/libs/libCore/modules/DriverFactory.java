@@ -33,9 +33,11 @@ public class DriverFactory {
      *  env.browser
      *  env.path_to_browser_driver
      */
-    public EventFiringWebDriver create(){
+    public EventFiringWebDriver create(String browser){
         Log.debug("Going to create new driver");
-        String browser = Storage.get("Environment.Active.Web.browser");
+        if ( browser == null ) {
+            Log.error("Browser type null or empty!");
+        }
         if (browser.equalsIgnoreCase("chrome")) {
             String path = Storage.get("Environment.Active.WebDrivers.Chrome.path");
             System.setProperty("webdriver.chrome.driver", FileCore.getProjectPath() + "/" + path);
@@ -54,7 +56,7 @@ public class DriverFactory {
             dr = new InternetExplorerDriver();
         } else {
             Log.error( "Can't read browser type or wrong name provided." +
-                            "Supported browser types are: chrome" );
+                            "Supported browser types are: chrome, firefox, ie" );
         }
 
         EventFiringWebDriver driver = EventFiringWebDriver(dr);

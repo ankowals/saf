@@ -24,7 +24,7 @@ public class HooksGlobal {
 
     @Before
     public void beforeAll() {
-        if(!dunit) {
+        if( ! dunit ) {
 
             //after All hook
             Runtime.getRuntime().addShutdownHook(new Thread() {
