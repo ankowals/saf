@@ -99,6 +99,7 @@ Where are we now?
 	(done) a way to integrate with test/requirement management tool (like for example jira, so we can have links to tests/epic/stories in the test report) => via allure integration
 	(done) a way to intgrate with incident management tool (like for example jira, so we can have at least links to defects that affect particular test in the report and maybe their status etc.) => via allure integration
 	(done) a way to pause test execution and allow for manual intervention => via autoIt script executed from a step def
+	(done) a way to manage resources (make sure that open connections will be closed when test is over) => via RestAssured config and closing of ssh, jdbc, web driver in scenario hooks
 	
 ----------------------------------
 
@@ -179,7 +180,7 @@ Installation instructions
 ----------------------------------
 
 
-How to imoprt project in IntelliJ?
+How to import project in IntelliJ?
 
 	1 open the IDE and click "Import Project"
 	2 point it to the location where your project is
@@ -2024,6 +2025,49 @@ Step "verify that rest response has" is part of CoreSteps and implements just fe
 
 As can be seen it uses AssertCore module for validation purposes. It supports simple access to every response parameter using notation key.subkey and takes the response from ctx Object with name "response".
 
+One thing to remember is to always close unused connections so we can avoid situation where SUT will not allow for any more new sessions because the pool of available connections will be used up.
+To do so a RestAssured configuration can be adjusted. Please see an excerpt from libs/libCore/HooksSteps.java
+
+Following configuration is used
+
+        //adjust default RestAssured config
+        Log.debug("adjusting RestAssured config");
+        int maxConnections = Storage.get("Environment.Active.Rest.http_maxConnections");
+        Log.debug("Setting http.maxConnections to " + maxConnections);
+        System.setProperty("http.maxConnections", "" + maxConnections);
+
+        Boolean closeIdleConnectionsAfterEachResponseAfter = Storage.get("Environment.Active.Rest.closeIdleConnectionsAfterEachResponseAfter");
+        if ( closeIdleConnectionsAfterEachResponseAfter ) {
+            int idleTime = Storage.get("Environment.Active.Rest.closeIdleConnectionsAfterEachResponseAfter_idleTime");
+            Log.debug("Setting closeIdleConnectionsAfterEachResponseAfter=true with idleTime " + idleTime);
+            RestAssured.config = RestAssured.config().connectionConfig(
+                    new ConnectionConfig().closeIdleConnectionsAfterEachResponseAfter(
+                            idleTime,
+                            TimeUnit.SECONDS)
+            );
+        }
+
+        Boolean reuseHttpClientInstance = Storage.get("Environment.Active.Rest.reuseHttpClientInstance");
+        if ( reuseHttpClientInstance ) {
+            Log.debug("Setting reuseHttpClientInstance=true");
+            RestAssured.config = RestAssured.config().httpClient(
+                    httpClientConfig().reuseHttpClientInstance()
+            );
+        }
+
+User can change it if needed for a particular project. To do so please edit following parameters in configuration file, for example under src/test/java/config/environment/default.config. Default settings are visible below.
+
+	Environment:{
+
+	    Default: {
+
+		    Rest: {
+		    closeIdleConnectionsAfterEachResponseAfter: true,
+		    closeIdleConnectionsAfterEachResponseAfter_idleTime: 10,
+		    reuseHttpClientInstance: true,
+		    http_maxConnections: 100
+		}
+		...
 
 --------------------------------
 
