@@ -385,6 +385,8 @@ To read/write pdf files pdfBox2 library is used.
 
 To have possibility to pause test execution autoIt scirpt is used.
 
+To manage remote hosts via ssh and transfer files via scp/sftp sshj and expectit-core libraries are used.
+
 On top of that macro support, test data management, configuration files support, Page Object Model support and more was added.
 Project and test structure is also enforced to keep things consistent.
 
@@ -1294,6 +1296,7 @@ Please use Macro for macro evaluations.
 Please use Storage to read/write new values to the storage.
 Please use ctx.Object to pass objects between step defs.
 Please use PdfCore module for pdf manipulation.
+Please use SshCore module for ssh/scp/sftp execution.
 
 It is also possible to write test data into a file. In this way it can be read later on and used during other test. Even though this created dependecies between tests it maybe useful some times. Please consider following example we run a long lasting test. Action that has to be trigger takes 10 minutes to execute. In this case there is no point to wait for its results. Instead it maybe desired to divide the test into 2 parts (feature files). One will be called to trigger the action. Second one can contain validation steps.
 Second feture can be executed few minutes later and in the meantime other test can run.
