@@ -18,19 +18,19 @@ What do we want from a test automation framework?
 		- pdf validation
 		- others??
 	a way to intergate any 3rd party app by execution of any command on local host 
-	a way to execute any command on remote host over ssh
+	a way to execute any command on remote host over ssh/winRM
 	a way to manage and configure test environment
 	a way to manage and configure test data
 	a way to prepare/calculate test data at runtime (macros)
 	a way to manage and code a set of common modules/step/functions to be used for testing purposes
 	a way to downlaod any 3rd party symptoms from SUT like logs, trace files
 	a way to log any activity dony by the framework
-	a way to report test status
+	a way to report tests status
 	a way to attach logs/files/messages/screenshots to the report
 	a way to start test from IDE and command line as well as an ability to overwrite parameters when test suite started from cmd
 	a way to automatically deploy the framework under windows (dependency management)
-	a way to share the code/tests between testers to increae re-usability (version control system)
-	a way to monitor and indicate quality of commited tests (see SonarQube for example )
+	a way to share the code/tests between testers to increae re-usability (version control system, re-usable libraries of keywords)
+	a way to monitor and indicate quality of commited tests (see SonarQube for example)
 	a way to support PageObject model for web automation purposes
 	a way to share common data between steps (dependency injection)
 	a way to schedule test execution (see Jenkins/TeamCity)
@@ -39,15 +39,16 @@ What do we want from a test automation framework?
 	a way to pause test execution and allow for manual intervention (integrate autoIT pause script)
 	a way to integrate with test/requirement management tool (like for example jira, so we can have links to tests/epic/stories in the test report)
 	a way to intgrate with incident management tool (like for example jira, so we can have at least links to defects that affect particular test in the report and maybe their status etc.)
-	a way to write simmple step defs (for example usage of try-catch blocks is ugly)
+	a way to write simmple step defs (libraries of methods support because for example usage of try-catch blocks is ugly)
 	a way to manage templates
+	a way to manage resources (make sure that open connections will be closed when test is over)
 	
 	a way to integrate with configuration(infrastructure) management tool can be a nice addon (like Puppet, Ansible or Chef)
-	a way to intgreate VM/container managament tool like Docker or Vagrant can be a nice addon
-	a way to re-run failed test can be a nice addon
-	a way to execute test remotely can be a nice addon
+	a way to integrate VM/container managament tool like Docker or Vagrant can be a nice addon
+	a way to re-run failed tests can be a nice addon
+	a way to execute tests remotely can be a nice addon
 	a way to encrypt/decrypt test data can be a nice addon
-	a way to integrate with network protocols (like diameter) simulator or others can be a nice addon
+	a way to integrate with network protocols simulator (like diameter) or others can be a nice addon (see Seagull: an Open Source Multi-protocol traffic generator)
 
 ----------------------------------
 
@@ -60,15 +61,16 @@ Where are we now?
 		(done) - pdf validation => pdfbox2 integrated 
 		(to do) - mobile => Appium integration
 		
-		- others??
-		
 		further enhancements:
 			- enhance logging to log more exceptions
 			- add more helper functions
 			
+	(in progress) a way to execute any command on remote host over ssh/winRM
+		(done) ssh/scp/sftp support => sshj library integrated
+	
 	----------------------------------	
 		
-	(to do) a way to execute any command on remote host over ssh	
+		
 	(to do) a way to downlaod any 3rd party symptoms from SUT like logs, trace files
 	(to do) a way to monitor and indicate quality of commited tests (see SonarQube for example )
 	(to do) a way to schedule test execution (see Jenkins/TeamCity)
