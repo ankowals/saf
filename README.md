@@ -66,7 +66,7 @@ Where are we now?
 			- add more helper functions
 			
 	(in progress) a way to execute any command on remote host over ssh/winRM
-		(done) ssh/scp/sftp support => sshj library integrated
+		(done) ssh/scp/sftp support => sshj library integrated and expectit-core library integrated
 	
 	----------------------------------	
 		
