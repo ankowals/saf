@@ -2234,7 +2234,7 @@ After that we can compare content of a table before and after modification using
 DB connection will be automatically closed in @After hook.
 
  
- --------------------------------
+--------------------------------
 
 
 How to use executor to run system commands or 3rd party apps?
@@ -2379,9 +2379,13 @@ Step def can be implemented like below.
     }
 
 
+--------------------------------
 
 
-Read pdf filel
+Read pdf file
+
+
+
 
 PdfCore can be used to read/write pdf files. It such possibility maybe useful to validate pdf files content. They maybe created as an output of a test. For example in case test shall validate content of an invoice etc.
 Step that reads pdf file can look like this
@@ -2419,3 +2423,145 @@ Output of PdfCore.readLines(file) can be used in other step for validation purpo
 	  Scenario: read pdf file content and print it to the log file
 
 	    Given read pdf file from TestData.file
+
+
+--------------------------------
+
+
+
+Usage of ssh/scp/sftp
+
+
+
+
+User can use ssh to execute commands on remote unix hosts. Scp can be used to transfer files between tester's workstation and sytsem under test as well as sftp/ftp.
+To use this feature we have to define ssh nodes in the configruation. Configuration is falt. This means that for each node we shall have a seperate entry in the config file. See an excerpt from /src/test/java/config/environment/default.config below.
+
+	Environment:{
+
+	    Default: {
+
+		    Ssh: {
+		    node1: {
+			host: "127.0.0.1",
+			port: 4567,
+			user: "vagrant",
+			password: "vagrant"
+		    }
+		}
+		...
+
+Where node1 is an identifier of an ssh node. We can configure multiple nodes in this way. By default port number 22 is going to be used.
+
+User can have 2 options to interact with a node via ssh. It can execute a command in a session. After each command execution session is closed. For the next command new session is created. This is useful in case there are simple commands to be executed or user is interested in the stdout or exit status code. Alternatively user can open a shell and execute multiple commands in an interactive shell session. This is useful when user wants to for example switch to superuser account, run tcpdump, await for command execution etc.
+In this case it is possible to define a timeout and expected output in the console. In case command does not return any output to the console user can append echo to make sure that something will be printed or await for a prompt symbol.
+
+SshCore module is provided and contains a set of methods that can be use to manage ssh sessions as well as execute common tasks like for example check that node is accessible, wait for a file to be present on remote host or simply check that file exists.
+
+See some example below how to start simple session or shell session.
+
+Feature file is
+
+	@ssh
+	Feature: Ssh
+
+	  Scenario: list files in users home directory
+
+	    Given list files in users home directory
+
+Step implementation is available below
+
+    @When("^list files in users home directory$")
+    public void list_files_in_users_home_directory() throws Throwable {
+        Log.info("* Step started list_files_in_users_home_directory");
+
+        String singleCmd = "ls";
+
+        Log.debug("Create new client and connect to node1");
+        SshCore.createClient("node1");
+        Log.debug("Command to execute vis ssh is " + singleCmd);
+        SSHResult result = SshCore.execute(singleCmd, 10);
+        Log.debug("Result is " + result.getStdout());
+        Log.debug("Exit code is " + result.getExitCode());
+        SshCore.closeClient();
+    }
+    
+As can be seen user can open new ssh session by calling SshCore.createClient(node), where node is taken from configuration object Environment.Active.Ssh. Please note that only 1 connection can be open at a time. That is fine because ssh execution is very quick. So we can connect to each node one by one and execute commands on each of them in a sequence. Please remember to close the client when ssh is not needed any more.
+ 
+
+Similar for shell sessions. See an example below.
+Feature file is
+
+	@ssh
+	Feature: Ssh
+
+	  Scenario: switch user to root
+
+	    Given switch user to root
+	    
+Where step can be implemeted like below
+
+    @When("^switch user to root$")
+    public void switch_user_to_root() throws Throwable {
+        Log.info("* Step started switch_user_to_root");
+
+        String userChangeCmd = "su - root";
+        String passOfUserCmd = "vagrant";
+        String validateCmd = "whoami";
+
+        Log.debug("Create new client and connect to node1");
+        SshCore.createClient("node1");
+        SshCore.startShell(10);
+        SshCore.executeInShell("", "$");
+        Log.debug("Command to execute vis ssh is " + userChangeCmd);
+        SshCore.executeInShell(userChangeCmd, "Password");
+        Log.debug("Command to execute vis ssh is " + passOfUserCmd);
+        SshCore.executeInShell(passOfUserCmd, "root@");
+        Log.debug("Command to execute vis ssh is " + validateCmd);
+        SshCore.executeInShell(validateCmd, "root");
+        SshCore.closeShell();
+        SshCore.closeClient();
+    }
+    
+In this case user needs to create new client and open a session. From that point he can execute commands in a shell. Stdout can also be assigned to variable of type SSHResult if user would like to access it.
+
+Now let us have a look how we can download a file using scp. 
+Feature file is
+
+	@ssh
+	Feature: Ssh
+
+	  Scenario: download file from users home dir
+
+	    Given check that file exists on remote node
+
+Step can be implemented like below.
+
+    @When("^check that file exists on remote node$")
+    public void check_that_file_exists_on_remote_node() throws Throwable {
+        Log.info("* Step started check_that_file_exists_on_remote_node");
+
+        Log.debug("Check that node is alive");
+        Boolean isAlive = SshCore.checkThatNodeIsAlive("node1");
+
+        if ( ! isAlive ) {
+            Log.error("Host node1 is not available");
+        }
+
+        Log.debug("Check that file is present on the remote host");
+        String pathToFile = "postinstall.sh";
+        Boolean isAvailable = SshCore.checkThatFileExists("node1", pathToFile);
+
+        if ( ! isAvailable ){
+            Log.error("File postinstall.sh was not found");
+        }
+
+        Log.debug("Download file via scp");
+        File file = SshCore.downloadFileViaScp("node1","postinstall.sh","C:\\Users\\akowa\\Documents\\Projects\\FK_Prototype");
+        Log.debug("Path to file is " + file.getAbsolutePath());
+    }
+
+First it checks that node is alive. Then it checks if file is available and uses scp to download it to the directory on the local file system.
+
+Please note that SshCore contains methods to download/upload files via scp and sftp.
+ 
