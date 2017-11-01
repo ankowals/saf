@@ -418,6 +418,22 @@ public class StepCore {
 
 
     /**
+     * Creates random string of desired length
+     *
+     * @param length
+     * @return String
+     */
+    public String makeRandomString(int length) {
+        Random rand = new Random();
+        StringBuilder result = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            result.append( (char) ('a' + rand.nextInt(26)));
+        }
+        return result.toString();
+    }
+
+
+    /**
      * Attaches file to the report
      *
      * @param name name of the file to be displayed in the report

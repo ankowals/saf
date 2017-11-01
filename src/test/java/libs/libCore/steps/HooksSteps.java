@@ -19,8 +19,6 @@ import org.openqa.selenium.support.events.EventFiringWebDriver;
 import ru.yandex.qatools.allure.annotations.Attachment;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -104,6 +102,9 @@ public class HooksSteps {
         SshCore sshCore = new SshCore(ctx);
         ctx.Object.put("SshCore", SshCore.class, sshCore);
 
+        WinRMCore winRmCore = new WinRMCore(ctx);
+        ctx.Object.put("WinRMCore", WinRMCore.class, winRmCore);
+
         SqlCore sqlCore = new SqlCore(ctx);
         ctx.Object.put("SqlCore", SqlCore.class, sqlCore);
 
@@ -180,13 +181,27 @@ public class HooksSteps {
         //show default config
         Log.debug("Checking default environment configuration");
         HashMap<String, Object> defaultEnvConfig = Storage.get("Environment.Default");
-        Map<String, Object> finallEnvConfig = Storage.get("Environment.Active");
+        HashMap<String, Object> sshConfig = Storage.get("Ssh");
+        HashMap<String, Object> winRmConfig = Storage.get("WinRM");
+        Map<String, Object> finalEnvConfig = Storage.get("Environment.Active");
         if ( defaultEnvConfig == null || defaultEnvConfig.size() == 0 ){
-            Log.error("Default configuration Environment.Default not found or empty. Please create it!");
+            Log.error("Default configuration Environment."
+                    + " Default not found or empty. Please create it!");
         }
-        if ( finallEnvConfig == null ) {
-            Log.error("Environment.Active object does not exists or null. Please create such entry in default configuration");
+        if ( finalEnvConfig == null ) {
+            Log.error("Environment.Active object does not exists or null."
+                    + " Please create such entry in global configuration");
         }
+        if ( sshConfig == null ) {
+            Log.error("Ssh object does not exists or null. Please create it!");
+        }
+        if ( winRmConfig == null ) {
+            Log.error("WinRM object does not exists or null. Please create it!");
+        }
+        //merge ssh with default
+        defaultEnvConfig.put("Ssh", sshConfig);
+        //merge winRM with default
+        defaultEnvConfig.put("WinRM", winRmConfig);
         //check if cmd argument active_env was provided to overwrite active_env
         String cmd_arg  = System.getProperty("active_env");
         if ( cmd_arg != null ) {
@@ -210,7 +225,7 @@ public class HooksSteps {
             defaultEnvConfig = Storage.get("Environment.Default");
         }
         //create final
-        deepMerge(finallEnvConfig, defaultEnvConfig);
+        deepMerge(finalEnvConfig, defaultEnvConfig);
 
         //check if cmd argument widthXheight was provided to overwrite active_env
         String cmd_arg2  = System.getProperty("widthXheight");
@@ -220,7 +235,7 @@ public class HooksSteps {
         }
 
         Log.debug("Following configuration Environment.Active is going to be used");
-        for (HashMap.Entry<String, Object> entry : finallEnvConfig.entrySet()) {
+        for (HashMap.Entry<String, Object> entry : finalEnvConfig.entrySet()) {
             String[] tmp = entry.getValue().getClass().getName().split(Pattern.quote(".")); // Split on period.
             String type = tmp[2];
             Log.info( "(" + type + ")" + entry.getKey() + " = " + entry.getValue() );
@@ -331,6 +346,10 @@ public class HooksSteps {
         SshCore SshCore = ctx.Object.get("SshCore", SshCore.class);
         SshCore.closeClient();
 
+        //Close winRM connection
+        WinRMCore WinRMCore = ctx.Object.get("WinRMCore", WinRMCore.class);
+        WinRMCore.closeClient();
+
         Log.info("Finished resources clean up");
 
         //this is used to add per scenario log to the report
@@ -375,6 +394,15 @@ public class HooksSteps {
 
     // This is fancier than Map.putAll(Map)
     // https://stackoverflow.com/questions/25773567/recursive-merge-of-n-level-maps
+    /**
+     * helper function used to merge to maps from a configuration files
+     * it adds merges nested maps and tables
+     *
+     * @param original, Map
+     * @param newMap, Map
+     *
+     * @return Map
+     */
     private Map deepMerge(Map original, Map newMap) {
         for (Object key : newMap.keySet()) {
             if (newMap.get(key) instanceof Map && original.get(key) instanceof Map) {

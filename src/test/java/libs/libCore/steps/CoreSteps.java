@@ -117,7 +117,7 @@ public class CoreSteps extends BaseSteps {
      * Sets particular value of a key in the storage
      *
      * @param storageName, String, name of the storage
-     * @param, value, String, value to be set
+     * @param value, String, value to be set
      */
     @And("^set (.+) in storage (.+)$")
     public void set_in_storage(String storageName, String value) throws Throwable {
@@ -127,6 +127,12 @@ public class CoreSteps extends BaseSteps {
     }
 
 
+    /**
+     * write storage content to the file and assigns an identifier to it
+     *
+     * @param storageName, String, name of the storage
+     * @param StorageId, String, identifier to be used
+     */
     @And("^write storage (.+) with id (.+) to file$")
     public void write_storage_to_file(String storageName, String StorageId) throws Throwable {
         Log.info("* Step started write_storage_to_file");
@@ -134,6 +140,12 @@ public class CoreSteps extends BaseSteps {
     }
 
 
+    /**
+     * reads storage content from a file using provided identifier
+     *
+     * @param storageName, String, name of the storage
+     * @param StorageId, String, identifier to be used
+     */
     @And("^read storage (.+) with id (.+) from file$")
     public void read_storage_to_file(String storageName, String StorageId) throws Throwable {
         Log.info("* Step started read_storage_to_file");
@@ -141,6 +153,12 @@ public class CoreSteps extends BaseSteps {
     }
 
 
+    /**
+     * pauses scenario execution for defined amount of time
+     * Timeout is defined in configuration as Environment.Active.PauseDuration
+     * Default is 300 seconds (5 minutes)
+     *
+     */
     @And("^pause execution$")
     public void pause_execution() throws Throwable {
         Log.info("* Step started pause execution");

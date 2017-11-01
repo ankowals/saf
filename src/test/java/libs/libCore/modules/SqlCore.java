@@ -30,10 +30,21 @@ public class SqlCore {
         this.Storage = ctx.Object.get("Storage", Storage.class);
     }
 
+
+    /**
+     * Opens new jdbc connection using params from the configuration Environment.Active.Jdbc
+     * and Environment.Active.JdbcDrivers
+     *
+     */
     public void open(){
         Sql = new DBConnector(ctx).create();
     }
 
+
+    /**
+     * Closes open jdbc connection
+     *
+     */
     public void close() {
         if (Sql != null) {
             try {

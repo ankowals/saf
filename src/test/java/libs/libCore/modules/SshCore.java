@@ -36,8 +36,13 @@ public class SshCore {
         this.Storage = ctx.Object.get("Storage", Storage.class);
     }
 
+
+    /**
+     * Creates new Ssh client and opens connection. Uses password authentication.
+     *
+     * @param node, String, node name as defined in configuration Environment.Active.Ssh.node
+     */
     public void createClient(String node) {
-        client = new SSHClient();
 
         String address = Storage.get("Environment.Active.Ssh." + node + ".host");
         Integer port = Storage.get("Environment.Active.Ssh." + node + ".port");
@@ -48,7 +53,7 @@ public class SshCore {
             Log.error("Environment.Active.Ssh. " + node + ".host " + " is null or empty!");
         }
         if ( port == null ) {
-            Log.error("Environment.Active.Ssh. " + node + ".port " + " is null or empty!");
+            port = 22;
         }
         if ( user == null ) {
             Log.error("Environment.Active.Ssh. " + node + ".user " + " is null or empty!");
@@ -58,10 +63,12 @@ public class SshCore {
         }
 
         try {
+            client = new SSHClient();
             client.addHostKeyVerifier(dummyHostKeyVerifier());
             client.connect(address, port);
         } catch (IOException e) {
-            Log.error("", e);
+            Log.error("Unable to connect via ssh to " + node + " as " + user
+                    + " on " + address + " and port " + port, e);
         }
 
         try {
@@ -74,9 +81,15 @@ public class SshCore {
             Log.error("", e);
         }
 
-        Log.debug("Connected to " + node + " as " + user + " on " + address + " and port " + port);
+        Log.debug("Connected via ssh to " + node + " as " + user + " on " + address + " and port " + port);
     }
 
+
+    /**
+     * Starts Ssh session that can be used for single command execution
+     * helper function used by execute
+     *
+     */
     private void startSession() {
         try {
             session = client.startSession();
@@ -91,6 +104,15 @@ public class SshCore {
     }
 
 
+    /**
+     * Executes a single command in a session. For each command new session is open and closed
+     * after command execution
+     *
+     * @param cmd, String, command to execute
+     * @param timeout, Integer, timeout
+     *
+     * @return SSHResult, result set that contains stdout, stderr and exit status code
+     */
     public SSHResult execute(String cmd, Integer timeout) {
         startSession();
         Session.Command command;
@@ -115,6 +137,15 @@ public class SshCore {
         return result;
     }
 
+
+    /**
+     * Checks that particular file exists on remote host
+     *
+     * @param nodeName, String, node name as defined in configuration Environment.Active.Ssh.node
+     * @param pathToFile, String, path to the file on remote host
+     *
+     * @return Boolean, true if file exits, false otherwise
+     */
     public Boolean checkThatFileExists(String nodeName, String pathToFile) {
         Boolean result = false;
 
@@ -130,6 +161,16 @@ public class SshCore {
 
     }
 
+
+    /**
+     * Waits for a file to be present on a remote host for defined time duration
+     *
+     * @param nodeName, String, node name as defined in configuration Environment.Active.Ssh.node
+     * @param pathToFile, String, path to the file on remote host
+     * @param timeout, Integer, timeout
+     *
+     * @return Boolean, true if file exists, false otherwise
+     */
     public Boolean waitForFile(String nodeName, String pathToFile, Integer timeout) {
 
         if ( timeout < 0 ) {
@@ -148,6 +189,14 @@ public class SshCore {
         return result;
     }
 
+
+    /**
+     * Checks that node is accessible
+     *
+     * @param nodeName, String, node name as defined in configuration Environment.Active.Ssh.node
+     *
+     * @return Boolean, true if alive, false otherwise
+     */
     public Boolean checkThatNodeIsAlive(String nodeName){
         Boolean result = false;
 
@@ -163,6 +212,16 @@ public class SshCore {
         return result;
     }
 
+
+    /**
+     * Downloads file from remote node using scp
+     *
+     * @param nodeName, String, node name as defined in configuration Environment.Active.Ssh.node
+     * @param pathToFileOnRemote, String, path to the file on remote host
+     * @param pathToLocalDir, String, path to the directory where file shall be downloaded
+     *
+     * @return File, file handle
+     */
     public File downloadFileViaScp(String nodeName, String pathToFileOnRemote, String pathToLocalDir){
         createClient(nodeName);
         String fileName = FilenameUtils.getName(pathToFileOnRemote);
@@ -184,6 +243,16 @@ public class SshCore {
         return new File(pathToLocalDir + File.separator + fileName);
     }
 
+
+    /**
+     * Uploads file via scp
+     *
+     * @param nodeName, String, node name as defined in configuration Environment.Active.Ssh.node
+     * @param pathToLocalFile, String, path to the file on local host
+     * @param pathToUploadDirOnRemote, String, path to the directory where file shall be uploaded on remote host
+     *
+     * @return Boolean, true if upload was successful, false otherwise
+     */
     public Boolean uploadFileViaScp(String nodeName, String pathToLocalFile, String pathToUploadDirOnRemote) {
         Boolean result = false;
 
@@ -200,6 +269,16 @@ public class SshCore {
         return result;
     }
 
+
+    /**
+     * Downloads file from remote node using sftp
+     *
+     * @param nodeName, String, node name as defined in configuration Environment.Active.Ssh.node
+     * @param pathToFileOnRemote, String, path to the file on remote host
+     * @param pathToLocalDir, String, path to the directory where file shall be downloaded
+     *
+     * @return File, file handle
+     */
     public File downloadFileViaSftp(String nodeName, String pathToFileOnRemote, String pathToLocalDir) {
         createClient(nodeName);
         String fileName = FilenameUtils.getName(pathToFileOnRemote);
@@ -220,6 +299,16 @@ public class SshCore {
 
     }
 
+
+    /**
+     * Uploads file via sftp
+     *
+     * @param nodeName, String, node name as defined in configuration Environment.Active.Ssh.node
+     * @param pathToLocalFile, String, path to the file on local host
+     * @param pathToUploadDirOnRemote, String, path to the directory where file shall be uploaded on remote host
+     *
+     * @return Boolean, true if upload was successful, false otherwise
+     */
     public Boolean uploadFileViaSftp(String nodeName, String pathToLocalFile, String pathToUploadDirOnRemote) {
         Boolean result = false;
 
@@ -241,6 +330,12 @@ public class SshCore {
         return result;
     }
 
+
+    /**
+     * Starts interactive shell
+     *
+     * @param timeout, Integer, timeout used for supervision of each command
+     */
     public void startShell(Integer timeout){
         startSession();
         try {
@@ -265,6 +360,16 @@ public class SshCore {
 
     }
 
+
+    /**
+     * Executes a command in am interactive shell. Shell has to be open to make use of this method.
+     * It shall be closed when all commands are executed using separate method.
+     *
+     * @param cmd, String, command to execute
+     * @param expectedOutput, String, expected output in stdout, it can be prompt or string
+     *
+     * @return SSHResult, result set that contains stdout, stderr="" and exit status code=0
+     */
     public SSHResult executeInShell(String cmd, String expectedOutput) {
         String stdout;
         SSHResult result = null;
@@ -283,6 +388,10 @@ public class SshCore {
         return result;
     }
 
+
+    /**
+     * Closes interactive shell
+     */
     public void closeShell() {
         try {
             expect.close();
@@ -292,6 +401,11 @@ public class SshCore {
         closeSession();
     }
 
+
+    /**
+     * Closes session
+     * helper function used by execute method
+     */
     private void closeSession() {
         try {
             if ( session != null ) {
@@ -307,6 +421,10 @@ public class SshCore {
         }
     }
 
+
+    /**
+     * Closes ssh client and connection to remote host
+     */
     public void closeClient() {
         try {
             if ( client != null ) {
@@ -320,6 +438,11 @@ public class SshCore {
         }
     }
 
+
+    /**
+     * creates a blank host key verifier
+     * helper function used by createClient method to always pass key verification
+     */
     private HostKeyVerifier dummyHostKeyVerifier() {
         return new HostKeyVerifier() {
             @Override
