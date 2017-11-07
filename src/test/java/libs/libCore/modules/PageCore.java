@@ -42,6 +42,7 @@ public class PageCore {
     }
 
 
+
     /**
      * Waits for page to load anc checks if page title contains
      *

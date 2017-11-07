@@ -8,6 +8,9 @@ import cucumber.api.java.Before;
 import io.restassured.RestAssured;
 import io.restassured.config.LogConfig;
 import org.apache.commons.lang.StringUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.OutputStreamAppender;
@@ -18,7 +21,9 @@ import org.openqa.selenium.logging.LogEntry;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
 import ru.yandex.qatools.allure.annotations.Attachment;
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,6 +64,10 @@ public class HooksSteps {
 
         //add appender to attach log for particular scenario to the report
         addAppender(out,scenario.getName()+logging_start);
+
+        //redirect StdOut and StdErr to the logger so we can catch logs written by other tools
+        System.setErr(new PrintStream(new LoggingOutputStream(LogManager.getLogger("libs.libCore.libs"), Level.ERROR)));
+        System.setOut(new PrintStream(new LoggingOutputStream(LogManager.getLogger("libs.libCore.libs"), Level.DEBUG)));
 
         //start scenario
         String[] tId = scenario.getId().split(";");
