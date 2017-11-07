@@ -1,1 +1,0 @@
-MsgBox(0, "Test execution paused!", "Press OK to continue", $CMDLINE[1])
