@@ -16,3 +16,18 @@ Feature: ReqResIn
     Then verify that rest response body has
       | key                        | action            | expected        |
       | data.id                    | equalTo           | Expected.userId |
+
+  Scenario: Tigger Put request to modify single user
+
+    Given service is available
+    When json put request modifyUser to modify single user with id 2 is sent
+    Then verify that rest response body has
+      | key                        | action            | expected        |
+      | name                       | equalTo           | Expected.name   |
+      | job                        | equalTo           | janitor         |
+
+  Scenario: Tigger Delete request to remove a single user
+
+    Given service is available
+    When json delete single user request with id 2 is sent
+    Then verify that status code is 204

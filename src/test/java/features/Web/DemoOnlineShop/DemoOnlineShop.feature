@@ -2,6 +2,7 @@
 Feature: DemoOnlineShop
 
   Scenario: Verify sum of 2 items equals total price
+
     Given open browser
     When open main page
       And navigate to all products page

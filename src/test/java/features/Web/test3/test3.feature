@@ -7,4 +7,4 @@ Feature: test3
     When I open seleniumframework website
     Then I validate title and URL
     And open db
-    And simple select is executed
+    And select query TestData.simpleQuery is executed and results stored as sqlSelectQueryResult
