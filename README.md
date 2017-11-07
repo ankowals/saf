@@ -67,6 +67,7 @@ Where are we now?
 			
 	(in progress) a way to execute any command on remote host over ssh/winRM
 		(done) ssh/scp/sftp support => sshj library integrated and expectit-core library integrated
+		(to do) winRM support => winRm4j library integrated and winRS can be called via ExecutorCore
 	
 	----------------------------------	
 		
@@ -133,19 +134,14 @@ Installation instructions
 
 	1 install java jdk
 	2 set an environment variable, for example JDK_HOME=C:\Program Files\Java\jdk1.8.0_144
-	3 verify java installation; in cmd issue java -version
+	3 to verify java installation in cmd issue java -version
 	4 download and extract maven binary
 	5 set an environment variable, for example M2_HOME=C:\apache-maven-3.5.0
 	6 append %M2_HOME%\bin to PATH variable
-	7 verify maven installation; in cmd issue mvn -version
+	7 to verify maven installation in cmd issue mvn -version
 	8 install intlliJ community edition -> this is our IDE in which tests can be written
-	9 install git
-	10 clone the repo for example to C:\Documents\Projects\SAF	
-	11 download Selenium Chrome driver and other drivers if needed and put it in <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
-	12 download JDBC oracle driver and other drivers if needed and put it in  <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
-	13 in intelliJ go to Files->Settings->Plugins->Browse repositories and install Cucumber for Java plugin
-	14 restart or log out and log in so changes done to Path variable will be visible
-	15 in case of issues with JDK not found fix its path in pom.xml file under <executable> tag
+	9 in intelliJ go to Files->Settings->Plugins->Browse repositories and install Cucumber for Java plugin
+	10 configure path to JDK for maven-compiler-plugin plugin in pom.xml file under <executable> tag
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -157,10 +153,8 @@ Installation instructions
                     <executable>C:\Program Files\Java\jdk1.8.0_144\bin\javac</executable>
                 </configuration>
             </plugin>
-
-	16 Fix relative path (relative to project dir) to web drivers in \src\test\java\config\framework\framework.config
-	17 Fix relative path (relative to project dir) path to jdbc drivers in \src\test\java\config\framework\framework.config
-	18 Change the port number in pom.xml file if needed (default is 8082) for jetty to see allure report after test execution
+	    
+	11 Change port number in pom.xml file (default is 8082) for jetty-maven-plugin to see allure report after test execution
 	
 	     <plugin>
                 <groupId>org.eclipse.jetty</groupId>
@@ -174,9 +168,20 @@ Installation instructions
 					<stopKey>stop</stopKey>
                     <stopPort>1234</stopPort>
                 </configuration>
-            </plugin>
+            </plugin>	    
+	       
+	12 install git
+	13 clone the repo for example to C:\Documents\Projects\SAF	
+	14 download Selenium Chrome driver and other drivers if needed and put it in <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
+	15 download JDBC oracle driver and other drivers if needed and put it in  <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
+	16 Fix relative path (relative to project dir) to web drivers in \src\test\java\config\framework\framework.config
+	17 Fix relative path (relative to project dir) path to jdbc drivers in \src\test\java\config\framework\framework.config
+	18 Install autoIt
+	19 restart or log out and log in so changes done to the system will be visible 
+	
+Please note that points 14 to 19 are optional and required only in case web automation or jdbc or windows native apps automation is going to be used.
 
-	19 Install autoIt
+
 ----------------------------------
 
 
