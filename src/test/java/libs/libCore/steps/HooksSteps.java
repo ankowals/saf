@@ -66,7 +66,7 @@ public class HooksSteps {
         addAppender(out,scenario.getName()+logging_start);
 
         //redirect StdOut and StdErr to the logger so we can catch logs written by other tools
-        System.setErr(new PrintStream(new LoggingOutputStream(LogManager.getLogger("libs.libCore.libs"), Level.ERROR)));
+        System.setErr(new PrintStream(new LoggingOutputStream(LogManager.getLogger("libs.libCore.libs"), Level.WARN)));
         System.setOut(new PrintStream(new LoggingOutputStream(LogManager.getLogger("libs.libCore.libs"), Level.DEBUG)));
 
         //start scenario
@@ -156,13 +156,8 @@ public class HooksSteps {
             }
         }
 
-        Log.info("<- configuring logger for rest operations ->");
+        //configuring logger for rest operations
         ToLoggerPrintStream loggerPrintStream = new ToLoggerPrintStream();
-
-        RestAssured.config = RestAssured.config().logConfig(
-                new LogConfig( loggerPrintStream.getPrintStream(), true )
-        );
-
         Log.info("Finished resources initialisation");
 
         /* Local resources load */
@@ -274,6 +269,10 @@ public class HooksSteps {
                     httpClientConfig().reuseHttpClientInstance()
             );
         }
+
+        RestAssured.config = RestAssured.config().logConfig(
+                new LogConfig( loggerPrintStream.getPrintStream(), true )
+        );
 
         //check if macro evaluation shall be done in hooks
         Boolean doMacroEval = Storage.get("Environment.Active.MacroEval");

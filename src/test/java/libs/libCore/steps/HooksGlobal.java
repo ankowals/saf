@@ -44,17 +44,17 @@ public class HooksGlobal {
                         }
                     }
 
-                    Log.info("Global after all hook executed");
+                    Log.info("Global afterAll hook executed");
                     Log.info("Test Suite execution ENDED!");
                 }
             });
 
             //before All hook
             // do the beforeAll stuff...
+            Log.info("Test Suite execution STARTED!");
             Log.info("Executing global beforeAll hook");
             PropertyReader.readSystemProperties();
-            Log.info("Global before all hook executed");
-            Log.info("Test Suite execution STARTED!");
+            Log.info("Global beforeAll hook executed");
 
             //
             dunit = true;
