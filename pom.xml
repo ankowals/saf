@@ -15,6 +15,7 @@
         <rest-assured.version>3.0.3</rest-assured.version>
 		<aspectj.version>1.8.10</aspectj.version>
 		<version.allure>1.5.4</version.allure>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
 	<dependencies>
@@ -135,7 +136,7 @@
 		<dependency>
 			<groupId>io.cloudsoft.windows</groupId>
 			<artifactId>winrm4j</artifactId>
-			<version>0.5.0</version> <!-- WINRM4J_VERSION -->
+			<version>0.5.0</version>
 		</dependency>
 
     </dependencies>
@@ -151,6 +152,7 @@
 					<argLine>
 						-javaagent:${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar
 					</argLine>
+                    <!--<argLine>-Dfile.encoding=UTF-8</argLine>-->
 				</configuration>
 				<dependencies>
 					<dependency>
@@ -165,6 +167,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+				<version>3.7.0</version>
                 <configuration>
 					<source>1.${java.version}</source>
 					<target>1.${java.version}</target>
