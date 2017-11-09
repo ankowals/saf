@@ -181,7 +181,7 @@ public class SshCore {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                Log.error("", e);
+                //don't do anything
             }
             return waitForFile(nodeName, pathToFile, timeout - 1);
         }
@@ -237,7 +237,7 @@ public class SshCore {
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
-            Log.error("", e);
+            //don't do anything
         }
 
         return new File(pathToLocalDir + File.separator + fileName);

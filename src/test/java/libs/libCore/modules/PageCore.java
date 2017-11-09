@@ -79,7 +79,7 @@ public class PageCore {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                Log.error( "", e );
+                //don't do anything
             }
             if (js.executeScript(jsCommand).toString().equals("complete")) {
                 break;
@@ -416,7 +416,7 @@ public class PageCore {
         try {
             Thread.sleep(200);
         } catch (InterruptedException e) {
-            Log.error( "", e );
+            //don't do anything
         }
     }
 

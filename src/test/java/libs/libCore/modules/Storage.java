@@ -47,7 +47,6 @@ public class Storage {
 
         for(idx = 1; idx < t_textKey.length; idx++) {
             String key = t_textKey[idx].split("\\[")[0];
-            Log.debug("Key is " + key);
             if ( Storage.get(key) == null ) {
                 Log.error("Can't set " + textKey + " to " + value + ". Key does not exists or null!");
             }
@@ -55,6 +54,7 @@ public class Storage {
             Storage = parseMap(Storage, t_textKey[idx], value);
 
         }
+        Log.debug(textKey + " was set to " + value);
     }
 
 

@@ -36,7 +36,7 @@ public class StepCore {
             Log.debug("Waiting for " + seconds + " seconds");
             Thread.sleep(seconds*1000);
         } catch (InterruptedException e) {
-            Log.error("", e);
+            // don't do anything
         }
     }
 

@@ -34,6 +34,7 @@ public class CoreDbSteps extends BaseSteps {
         Log.info("* Step started data_from_csv_file_is_loaded_to_table");
 
         File input = new File(FileCore.getCurrentFeatureDirPath() + "/input/" + fileName + ".csv");
+        StepCore.attachFileToReport(fileName+".csv", "text/csv", input.getAbsolutePath());
         Log.debug("Path to csv input file is " + input.getAbsolutePath());
         SqlCore.insertFromFile(input,tableName,true, "TestData." + fileName + "TypeMapping");
     }
