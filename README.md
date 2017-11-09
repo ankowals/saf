@@ -141,34 +141,19 @@ Installation instructions
 	7 to verify maven installation in cmd issue mvn -version
 	8 install intlliJ community edition -> this is our IDE in which tests can be written
 	9 in intelliJ go to Files->Settings->Plugins->Browse repositories and install Cucumber for Java plugin
-	10 configure path to JDK for maven-compiler-plugin plugin in pom.xml file under <executable> tag
+	10 configure path to JDK for maven-compiler-plugin plugin in pom.xml file under <jdk.path> tag
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-					<source>1.${java.version}</source>
-					<target>1.${java.version}</target>
-                    <fork>true</fork>
-                    <executable>C:\Program Files\Java\jdk1.8.0_144\bin\javac</executable>
-                </configuration>
-            </plugin>
+		<properties>
+			<jdk.path>C:/Program Files/Java/jdk1.8.0_144/bin/javac</jdk.path>
+			...
+		</properties>	
 	    
-	11 Change port number in pom.xml file (default is 8082) for jetty-maven-plugin to see allure report after test execution
+	11 Change port number in pom.xml file (default is 8082) for jetty-maven-plugin to see allure report after test execution under <jetty.port> tag
 	
-	     <plugin>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-maven-plugin</artifactId>
-                <version>9.2.10.v20150310</version>
-                <configuration>
-                    <webAppSourceDirectory>${project.build.directory}/site/allure-maven-plugin</webAppSourceDirectory>
-					<httpConnector>
-						<port>8082</port>
-					</httpConnector>
-					<stopKey>stop</stopKey>
-                    <stopPort>1234</stopPort>
-                </configuration>
-            </plugin>	    
+		<properties>
+			<jetty.port>8082</jetty.port>
+			...
+		</properties>	    
 	       
 	12 install git
 	13 clone the repo for example to C:\Documents\Projects\SAF	
