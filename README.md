@@ -132,18 +132,18 @@ How can we use test automation framework?
 Installation instructions
 
 
-	1 install java jdk
+	1 install java jdk ( download from https://java.com/en/download/ )
 	2 set an environment variable, for example JDK_HOME=C:\Program Files\Java\jdk1.8.0_144
 	
 	 	to verify java installation in cmd issue java -version
 	
-	3 download and extract maven binary
+	3 download and extract maven binary ( download Binary Zip archive from https://maven.apache.org/download.cgi )
 	4 set an environment variable, for example M2_HOME=C:\apache-maven-3.5.0
 	5 append %M2_HOME%\bin to PATH variable
 	
 	 	to verify maven installation in cmd issue mvn -version
 	
-	6 install intlliJ community edition -> this is our IDE in which tests can be written
+	6 install IDE intlliJ Community Edition ( download from https://www.jetbrains.com/idea/download/#section=windows )
 	7 in intelliJ go to Files->Settings->Plugins->Browse repositories and install Cucumber for Java plugin
 	8 configure path to JDK in pom.xml file under <jdk.path> tag
 
@@ -161,14 +161,16 @@ Installation instructions
 	   
 Optionally user can execute steps below. Especially for web automation case or jdbc/windows native apps automation.	   
 	   
-	10 install git
+	10 install git ( download from https://git-scm.com/download/win )
 	11 clone the repo for example to C:\Documents\Projects\SAF	
-	12 download Selenium Chrome driver and other drivers if needed and put it in <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
-	13 download JDBC oracle driver and other drivers if needed and put it in  <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
-	14 Fix relative path (relative to project dir) to web drivers in \src\test\java\config\framework\framework.config
-	15 Fix relative path (relative to project dir) path to jdbc drivers in \src\test\java\config\framework\framework.config
-	16 Install autoIt
-	17 restart or log out and log in so changes done to the system will be visible 
+	12 download Selenium Chrome driver and other drivers if needed ( download from https://sites.google.com/a/chromium.org/chromedriver/downloads )
+	13 put web drivers in <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
+	14 download JDBC oracle driver and other drivers if needed ( download from http://www.oracle.com/technetwork/apps-tech/jdbc-112010-090769.html ) 
+	15 put odbc drivers in <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
+	16 Fix relative path (relative to project dir) to web drivers in \src\test\java\config\framework\framework.config
+	17 Fix relative path (relative to project dir) path to jdbc drivers in \src\test\java\config\framework\framework.config
+	18 Install autoIt ( download from https://www.autoitscript.com/site/autoit/downloads/ )
+	19 restart or log out and log in so changes done to the system will be visible 
 
 
 ----------------------------------
