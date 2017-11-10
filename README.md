@@ -56,18 +56,17 @@ Where are we now?
 	
 	(in progress) a way to execute tests related to  
 		(done) - rest json/xml (soap) => RestAssured integrated 
-		(done) - gui (web/native) => Selenium WebDriver integrated for chrome, ff and ie
+		(done) - gui (web/native) => Selenium WebDriver integrated for chrome, ff and ie, autoIT can be called via ExecutorCore
 		(done) - sql => jdbc integrated for oracle
 		(done) - pdf validation => pdfbox2 integrated 
 		(to do) - mobile => Appium integration
 		
 		further enhancements:
-			- enhance logging to log more exceptions
+			- cleanUp and add more examples for winRM/winRS via ExecutorCore, pdf writing, update documentation for winRM
+			- display environment information in test report		
 			- add more helper functions
-			
-	(in progress) a way to execute any command on remote host over ssh/winRM
-		(done) ssh/scp/sftp support => sshj library integrated and expectit-core library integrated
-		(to do) winRM support => winRm4j library integrated and winRS can be called via ExecutorCore
+			- consider tight autoIT integration?
+
 	
 	----------------------------------	
 		
@@ -100,7 +99,10 @@ Where are we now?
 	(done) a way to integrate with test/requirement management tool (like for example jira, so we can have links to tests/epic/stories in the test report) => via allure integration
 	(done) a way to intgrate with incident management tool (like for example jira, so we can have at least links to defects that affect particular test in the report and maybe their status etc.) => via allure integration
 	(done) a way to pause test execution and allow for manual intervention => via autoIt script executed from a step def
-	(done) a way to manage resources (make sure that open connections will be closed when test is over) => via RestAssured config and closing of ssh, jdbc, web driver in scenario hooks
+	(done) a way to manage resources (make sure that open connections will be closed when test is over) => via RestAssured config and closing of ssh, winrm, jdbc, web driver in scenario hooks
+	(done) a way to execute any command on remote host over ssh/winRM
+		(done) ssh/scp/sftp support => sshj library integrated and expectit-core library integrated
+		(done) winRM support => winRm4j library integrated and winRS can be called via ExecutorCore	
 	
 ----------------------------------
 
