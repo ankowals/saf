@@ -170,8 +170,6 @@ Optionally user can execute steps below. Especially for web automation case or j
 	16 Fix relative path (relative to project dir) to web drivers in \src\test\java\config\framework\framework.config
 	17 Fix relative path (relative to project dir) path to jdbc drivers in \src\test\java\config\framework\framework.config
 	18 Install autoIt ( download from https://www.autoitscript.com/site/autoit/downloads/ )
-	19 restart or log out and log in so changes done to the system will be visible 
-
 
 ----------------------------------
 
