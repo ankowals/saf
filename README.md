@@ -240,11 +240,9 @@ Dir src/test/java/config contains configuration files (*.config)
 
 Dir src/test/java/features contains features files (cotntainers for tests).
 
-
-
 Dir traget/ will be used to store results of test execution like for example test report.
 
- 
+File pom.xml contains project properties and dependencies. 
 
 --------------------------------
 
