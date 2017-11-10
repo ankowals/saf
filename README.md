@@ -348,38 +348,21 @@ It will automatically download all needed libraries so there is no need to hunt 
 Maven configuration is available in so called pom.xml file. It contains not just dependencies but also plugins.
 Thanks to this maven can be used to start our tests from command line. For this purpose so called surefire plugin is used.
 
-For logging purposes log4j2 library is used.
-For BDD cucumber-jvm and junit libraries are used.
-For reporting purposes allure library is used.
+For logging purposes log4j2 library is used. For BDD cucumber-jvm and junit libraries are used. For reporting purposes allure library is used. 
 
+Configuration files are in json format. We need to parse the data available inside. For json parsing gson library is used.
 
+When steps are executed we need to pass the same instance of a class to them, for example webdriver instance, test data storage, output of step def execution etc. To make it possible we are using so called dependency injection. Without it for example each step will open a new browser window. For dependency injection pico-container library is used.
 
-Configuration files are in json format. We need to parse the data available inside.
+For web automation Selenium WebDriver library is used. For api automation RestAssured library is used. To read Csv files openCSV library is used. 
 
+To better handle command execution and sql execution Commons-exec and commons-dBUtils libraries from Appache are used. Same for better handling of files and string manipulations (Commons-io and Commons-lang). 
 
+To read/write pdf files pdfBox2 library is used. 
 
-For json parsing gson library is used.
+To have possibility to pause test execution autoIt scirpt is used. 
 
-
-
-When steps are executed we need to pass the same instance of a class to them, for example webdriver instance, test data storage, output of step def execution etc.
-
-To make it possible we are using so called dependency injection. Without it for example each step will open a new browser window.
-
-
-
-For dependency injection pico-container library is used.
-For web automation Selenium WebDriver library is used.
-For api automation RestAssured library is used.
-To read Csv files openCSV library is used.
-
-To better handle command execution and sql execution Commons-exec and commons-dBUtils libraries from Appache are used. Same for better handling of files and string manipulations (Commons-io and Commons-lang).
-
-To read/write pdf files pdfBox2 library is used.
-
-To have possibility to pause test execution autoIt scirpt is used.
-
-To manage remote hosts via ssh and transfer files via scp/sftp sshj and expectit-core libraries are used.
+To manage remote hosts via ssh and transfer files via scp/sftp sshj and expectit-core libraries are used. To mangae windows remotes winrm4j library is used.
 
 On top of that macro support, test data management, configuration files support, Page Object Model support and more was added.
 Project and test structure is also enforced to keep things consistent.
