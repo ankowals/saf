@@ -141,21 +141,21 @@ Installation instructions
 	7 to verify maven installation in cmd issue mvn -version
 	8 install intlliJ community edition -> this is our IDE in which tests can be written
 	9 in intelliJ go to Files->Settings->Plugins->Browse repositories and install Cucumber for Java plugin
-	10 configure path to JDK for maven-compiler-plugin plugin in pom.xml file under <jdk.path> tag
+	10 configure path to JDK in pom.xml file under <jdk.path> tag
 
 		<properties>
 			<jdk.path>C:/Program Files/Java/jdk1.8.0_144/bin/javac</jdk.path>
 			...
 		</properties>	
 	    
-	11 Change port number in pom.xml file (default is 8082) for jetty-maven-plugin to see allure report after test execution under <jetty.port> tag
+	11 configure port number in pom.xml file under <jetty.port> tag
 	
 		<properties>
 			<jetty.port>8082</jetty.port>
 			...
 		</properties>	    
 	   
-Optionally user can execute steps below. Especially in case web automation or jdbc or windows native apps automation is going to be used.	   
+Optionally user can execute steps below. Especially for web automation or jdbc or windows native apps automation.	   
 	   
 	12 install git
 	13 clone the repo for example to C:\Documents\Projects\SAF	
