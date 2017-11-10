@@ -134,37 +134,41 @@ Installation instructions
 
 	1 install java jdk
 	2 set an environment variable, for example JDK_HOME=C:\Program Files\Java\jdk1.8.0_144
-	3 to verify java installation in cmd issue java -version
-	4 download and extract maven binary
-	5 set an environment variable, for example M2_HOME=C:\apache-maven-3.5.0
-	6 append %M2_HOME%\bin to PATH variable
-	7 to verify maven installation in cmd issue mvn -version
-	8 install intlliJ community edition -> this is our IDE in which tests can be written
-	9 in intelliJ go to Files->Settings->Plugins->Browse repositories and install Cucumber for Java plugin
-	10 configure path to JDK in pom.xml file under <jdk.path> tag
+	
+	 	to verify java installation in cmd issue java -version
+	
+	3 download and extract maven binary
+	4 set an environment variable, for example M2_HOME=C:\apache-maven-3.5.0
+	5 append %M2_HOME%\bin to PATH variable
+	
+	 	to verify maven installation in cmd issue mvn -version
+	
+	6 install intlliJ community edition -> this is our IDE in which tests can be written
+	7 in intelliJ go to Files->Settings->Plugins->Browse repositories and install Cucumber for Java plugin
+	8 configure path to JDK in pom.xml file under <jdk.path> tag
 
 		<properties>
 			<jdk.path>C:/Program Files/Java/jdk1.8.0_144/bin/javac</jdk.path>
 			...
 		</properties>	
 	    
-	11 configure port number in pom.xml file under <jetty.port> tag
+	9 configure port number in pom.xml file under <jetty.port> tag
 	
 		<properties>
 			<jetty.port>8082</jetty.port>
 			...
 		</properties>	    
 	   
-Optionally user can execute steps below. Especially for web automation or jdbc or windows native apps automation.	   
+Optionally user can execute steps below. Especially for web automation case or jdbc/windows native apps automation.	   
 	   
-	12 install git
-	13 clone the repo for example to C:\Documents\Projects\SAF	
-	14 download Selenium Chrome driver and other drivers if needed and put it in <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
-	15 download JDBC oracle driver and other drivers if needed and put it in  <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
-	16 Fix relative path (relative to project dir) to web drivers in \src\test\java\config\framework\framework.config
-	17 Fix relative path (relative to project dir) path to jdbc drivers in \src\test\java\config\framework\framework.config
-	18 Install autoIt
-	19 restart or log out and log in so changes done to the system will be visible 
+	10 install git
+	11 clone the repo for example to C:\Documents\Projects\SAF	
+	12 download Selenium Chrome driver and other drivers if needed and put it in <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
+	13 download JDBC oracle driver and other drivers if needed and put it in  <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
+	14 Fix relative path (relative to project dir) to web drivers in \src\test\java\config\framework\framework.config
+	15 Fix relative path (relative to project dir) path to jdbc drivers in \src\test\java\config\framework\framework.config
+	16 Install autoIt
+	17 restart or log out and log in so changes done to the system will be visible 
 
 
 ----------------------------------
