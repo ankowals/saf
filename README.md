@@ -154,7 +154,9 @@ Installation instructions
 			<jetty.port>8082</jetty.port>
 			...
 		</properties>	    
-	       
+	   
+Optionally user can execute steps below. Especially in case web automation or jdbc or windows native apps automation is going to be used.	   
+	   
 	12 install git
 	13 clone the repo for example to C:\Documents\Projects\SAF	
 	14 download Selenium Chrome driver and other drivers if needed and put it in <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
@@ -163,8 +165,6 @@ Installation instructions
 	17 Fix relative path (relative to project dir) path to jdbc drivers in \src\test\java\config\framework\framework.config
 	18 Install autoIt
 	19 restart or log out and log in so changes done to the system will be visible 
-	
-Please note that points 14 to 19 are optional and required only in case web automation or jdbc or windows native apps automation is going to be used.
 
 
 ----------------------------------
