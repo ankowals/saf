@@ -71,7 +71,7 @@ Where are we now?
 	----------------------------------	
 		
 		
-	(to do) a way to downlaod any 3rd party symptoms from SUT like logs, trace files
+	(to do) a way to downlaod any 3rd party symptoms from SUT like logs, trace files (create step def to run tcpdump on unix hosts or tshark/rawCap on windows hosts)
 	(to do) a way to monitor and indicate quality of commited tests (see SonarQube for example )
 	(to do) a way to schedule test execution (see Jenkins/TeamCity)
 	(to do) a way to generate test documentation automatically => add new logging categories (like atmn(category, message)), use scenrio outline with path to feature and log file after test execution		
@@ -80,7 +80,7 @@ Where are we now?
 	----------------------------------	
 	
 	(done) a way to execute e2e test using Gherkin language (BDD) => cucumber-jvm integrated
-	(done) a way to manage and configure test environment => via global and local property files
+	(done) a way to manage and configure test environment => via json configuration files
 	(done) a way to manage and configure test data	=> via json configuration files
 	(done) a way to prepare/calculate test data at runtime (macros) => macros implemented
 	(done) a way to manage and code a set of common modules/step/functions to be used for testing purposes => via core modules and steps
@@ -146,7 +146,7 @@ Installation instructions
 	 	to verify maven installation in cmd issue mvn -version
 	
 	6 install IDE intlliJ Community Edition ( download from https://www.jetbrains.com/idea/download/#section=windows )
-	7 in intelliJ go to Files->Settings->Plugins->Browse repositories and install Cucumber for Java plugin
+	7 in intelliJ go to Files -> Settings -> Plugins -> Browse repositories and install Cucumber for Java plugin
 	8 configure path to JDK in pom.xml file under <jdk.path> tag
 
 		<properties>
@@ -211,8 +211,10 @@ Dir structure shall be like this
 						...
 					- libs
 						- libCore
+							- config
 							- modules
 							- steps
+							- resources
 						- libProject1
 						- libProject2
 						...
@@ -254,7 +256,7 @@ General concepts
 
 
 
-We follow BDD apporach. Reason is very simple. It is usually much easier for testers to write automated tests (following Gherking principles). In large projects (with large and separate teams of testers, analysts, devs) BDD main adventage (so called common language to describe sytsem behaviours) can be rarely implemented but BDD is still giving testers the benefit of simpler tests creation. They can use step defs to write tests in plain english language.
+We follow BDD apporach. Reason is very simple. It is usually much easier for testers to write automated tests following Gherking principles. In large projects (with large and separate teams of testers, analysts, devs) BDD main adventage (so called common language to describe system behaviours) can be rarely implemented but BDD is still giving testers the benefit of simpler tests creation. They can use step defs to write tests in plain english language.
 
 Tests are called Scenarios. They are grouped in Features. They are build using step defs.
 
@@ -317,7 +319,7 @@ Test report will be created.
 TestData/ExpectedData can be passed to the steps directly in a feature file or can be taken from a *.config file.
 
 Global configuration is available but it can be overwritten/updated by local config.
-Config files will be loaded automatically as long as feature file name is same as feature name defined inside the feature file file!
+Config files will be loaded automatically as long as feature file name is same as feature name defined inside the feature file!
 For example file myTestFeature.feature shall contain
 	
 	Feature: myTestFeature
@@ -344,7 +346,7 @@ How the framework is build?
 Java is used for learning purposes.
 
 To make installation and deployment easy so called project build and dependency management tool is used. It is called maven.
-It will automatically download all needed libraries so there is no need to hunt them down on your own.
+It will automatically download all needed libraries so there is no need to find them manually.
 Maven configuration is available in so called pom.xml file. It contains not just dependencies but also plugins.
 Thanks to this maven can be used to start our tests from command line. For this purpose so called surefire plugin is used.
 
@@ -388,14 +390,14 @@ To run a test from windows cmd please execute
 	go to http://localhost:8082
 
 
-Please note that usage of clean keywords ensures that artifacts from previous test execution are removed first.
+Please note that usage of clean keyword ensures that artifacts from previous test execution are removed first.
 
 One can also use IntelliJ to run a feature file. In that case only log file will be created.
 To run a test from IntelliJ a cucumber plugin is used. Please click with right mouse button on the feature file name and choose 'Run'.
-In case of an exception indicating that step defs were not found please double check plugin configuration. To do so go to Run menu in the toolbar and choose Edit configurations. Select cucumber java and make sure that glue points to the correct directory or package.
-If test run fine via mvn test command but not using IntelliJ this indicates missconfigruation of cucumber-jvm plugin.
+In case of an exception indicating that step defs were not found please double check plugin configuration. To do so go to Run menu in the toolbar and choose Edit configurations. Select cucumber java and make sure that glue points to the correct directory or package (shall be 'libs').
+If test runs fine via mvn test command but not using IntelliJ this indicates missconfigruation of cucumber-jvm plugin.
 
-To generate a report from test please execute mvn site, mvn jetty:run to run jetty and check the report in the browser under http://localhost:port.
+To generate a report from test please execute mvn site. After this command execute mvn jetty:run to run jetty. Check the report in the browser under http://localhost:port (default port is 8082).
 
 It is possible to overwrite active_env property from the command line. In that case project specific config as specified by the CMD argument will be used during test execution. To do so please execute a test for example like below
 
@@ -431,7 +433,7 @@ An example of a feature file
 		| items.volumeInfo.pageCount 				| 630			|
 
 
-Feature files can be tagged as well as scenarios. Use tags and cucumber options to execute a particular tests
+Feature files or scenarios can be tagged. Use tags ("@tagName") and cucumber options to execute a set particular tests, for example
 
 
 
@@ -512,11 +514,11 @@ Details of what is happening during test execution
 
 
 
-Cucmber runner is available in src/test/java/libs/libCore/steps/TestRunner.class
+Cucmber runner is available in src/test/java/libs/libCore/modules/TestRunner.class
 It contains cucumber options like glue path (path to steps definitions), features path and allure report plugin.
 There shall be no need to change it parameters.
 
-	package libs.libCore.steps;
+	package libs.libCore.modules;
 
 	import cucumber.api.junit.Cucumber;
 	import org.junit.runner.RunWith;
@@ -532,11 +534,11 @@ There shall be no need to change it parameters.
 
 
 Before each scenario execution so called @Before and @After hooks are run.
-In @Before hook we create context, read framework and SUT configurtion, create test data storage, evaluate macros and initialize helper modules (Core modules).
-It will also find local configuration files and load them for usage in steps.There is no need to do that in seperate steps or Background scenario.
+In scenario @Before hook we create context, read framework and SUT configurtion, create test data storage, evaluate macros and initialize helper modules (Core modules).
+We will also find local configuration files and load them for usage in steps. There is no need to do that in seperate steps or Background scenario.
 In an @After hook we try to close the resources like for example web driver, Sql connection or take a screenshot if test failed.
 As a last step we are attaching log from the scenario to the test report.
-Hooks implementation can be found under src/test/java/libs/libCore/steps/HooksSteps.class
+Hooks implementation can be found under src/test/java/libs/libCore/modules/HooksScenario.class.
 
 
 
@@ -545,6 +547,8 @@ After @Before method execution cucumber-jvm will execute each step.
 Steps shall be implemented under src/test/java/libs/<lib name>/steps directory. Please use seperete package for your project steps and group them to make files management easier when project grows.
 
 There is also possibility to execute some actions before the whole test suite (a set of feature files) will be executed. There are 2 additional global hooks available. So called beforeAll and afterAll hook. They can be used to initialize logger, print system properties or try to close the resources like web drivers etc.
+Global hooks implementation can be found under src/test/java/libs/libCore/modules/HooksGlobal.class.
+
 
 Each new scenario start will be indicated in the log as follows
 
@@ -572,7 +576,7 @@ Environment
 
 
 
-During this phase a files available in /src/test/java/config will be checked for framework and SUT configuration.
+During this phase files available in /src/test/java/config will be checked for framework and SUT configuration.
 They contain global environment configuration as well as global test data configuration. Each setting can be overwritten later on during test execution by local test configuration.
 Recommendation is to use project specific file to keep there System Under Test settings and framework settings shall stay in separate file.
 
@@ -738,9 +742,11 @@ In addition there are flags available that can be used to indicate
 		CloseBrowserAfterScenario : true
 	- pause duration in case manual intervention during test execution is needed
 		PauseDuration
+		
+		and others (see below for details)
 
 Entity scripts.path can be use to indicate a path relative to project directory where some autoIT or shell scripts can be found for example.
-Entity apps can be used to group together any 3rd party apps that can be called by the step defs like for example autoIt, wireshark, mergecap etc.
+Entity apps can be used to group together any 3rd party apps that can be called by the step defs like for example autoIt, tshark, mergecap etc.
 
 In this way multiple systems under test can be configured.
 
@@ -794,7 +800,7 @@ An example of test data configuration is below (content of src/test/java/config/
 	    }
 
 
-An example of log is below
+An example of a log is below
 
 
 
@@ -848,7 +854,7 @@ Macros
 
 
 
-Simialr for macros. They are read from *.config file and stored for future usage.
+Simialr for macros. They are read from *.config files and stored for future usage.
 
 Macro can be used to calculate some values at run time and place them in a test data or template. For example to trigger a request with particular timestamp, to enter random/unique value into the web form or to check that log contains a particular date.
 
@@ -882,7 +888,7 @@ Macro definitions are kept in a *.config file under Macro object. For example
 
 File /src/test/java/libs/libCore/modules/Macro.class contains methods to calculate macros based on their definitions and evaluate test storage.
 
-Global test data and macro configuration can be overwritten by local configuration files available under the same directory as feature file.
+Global test data and macro configuration can be overwritten by local configuration files available under the same directory as a feature file.
 
 
 
@@ -1107,7 +1113,7 @@ To grant access to it please make sure that your Steps class extends BaseStep cl
 Where DemoOnlineSteps is a class that contains project specific steps to handle web automation for particular page.
 In this way we can pass same instance of ctx between steps and modules. With this approach we can use methods defined for objects available in ctx variable.
 BaseSteps class define a set of helpers modules to make writing new step defs much easier. They are called as below
-Macro, StepCore, PageCore, SqlCore, Storage, FileCore, ExecutorCore, PdfCore. They contain a set of methods that can be used to do common things in steps like creating files, evaluating macros, reading environment configuration, evaluating templates, attaching files to the report etc.
+Macro, StepCore, PageCore, SqlCore, Storage, FileCore, ExecutorCore, PdfCore, SshCore, WinRMCore. They contain a set of methods that can be used to do common things in steps like creating files, evaluating macros, reading environment configuration, evaluating templates, attaching files to the report etc.
 
 For example lets have a look at 2 steps below
 
@@ -1153,15 +1159,14 @@ There is also one more method that can be used to check if step input is a varia
     public void verify_status_code(String input){
         Log.info("* Step started verify_status_code");
 
-        Long statusCode = StepCore.checkIfInputIsVariable(input);
-        Integer code = statusCode.intValue();
+        Integer code = StepCore.checkIfInputIsVariable(input);
 
         Response response = ctx.Object.get("response",Response.class);
         ValidatableResponse json = response.then().statusCode(code);
         ctx.Object.put("json",ValidatableResponse.class, json);
     }
 
-In the feture file one can write
+In the feature file one can write
 
 	Then the status code is TestData.statusOK
 
@@ -1187,7 +1192,13 @@ If there is a need to read any environment property one can use in a step Storag
             Log.error("Environment.Active.MacroEval null or empty!");
         }
 	
-Similar for macro evaluation. It is enough to just call Macro.eval(input) method. Where input is the name of storage (of type HashMap).
+Similar for macro evaluation. It is enough to just call Macro.eval(input) method. Where input is the name of storage (of type HashMap), for example
+
+        if( doMacroEval ){
+            Log.info("Evaluating macros in TestData and Expected objects");
+            Macro.eval("TestData");
+            Macro.eval("Expected");
+        }
 
 In case a step shall handle multiple input parameters please use tables in a feature file. In the step input will be provided as a Map.
 
@@ -1274,8 +1285,9 @@ Please use Storage to read/write new values to the storage.
 Please use ctx.Object to pass objects between step defs.
 Please use PdfCore module for pdf manipulation.
 Please use SshCore module for ssh/scp/sftp execution.
+Please use winRmCore module for winrm execution.
 
-It is also possible to write test data into a file. In this way it can be read later on and used during other test. Even though this created dependecies between tests it maybe useful some times. Please consider following example we run a long lasting test. Action that has to be trigger takes 10 minutes to execute. In this case there is no point to wait for its results. Instead it maybe desired to divide the test into 2 parts (feature files). One will be called to trigger the action. Second one can contain validation steps.
+It is also possible to write test data into a file. In this way it can be read later on and used during other test execution. Even though this creates dependecies between tests it maybe useful some times. Please consider following example we run a long lasting test. Action that has to be trigger takes 10 minutes to execute. In this case there is no point to wait for its results. Instead it maybe desired to divide the test into 2 parts (feature files). One will be called to trigger the action. Second one can contain validation steps.
 Second feture can be executed few minutes later and in the meantime other test can run.
 In such case we have to extract test data that was used in the first part of the test (first feature file).
 
@@ -1291,13 +1303,13 @@ See an example below to understand how to write test data storage (or any other 
 	      And read storage TestData with id ReqRestInScenario1 from file
 	      ....
 
-Steps that are involved will create a file that can contains the storage with identifier, like
+Steps that are involved will create a file that can contain the storage with identifier, like
 
 	id1={key1:"value1", ...}
 	id2={key2:"value2", ...}
 
 Later on such storage can be retrived using the identifier and used during scenario execution.
-File will be created in system temporary directory. Usually C:\Users\<user name>\AppData\Local\Temp\FK_Prototype_Persistent_Storage_File.json
+File will be created in temporary directory on a file system. Usually it is C:\Users\<user name>\AppData\Local\Temp\FK_Prototype_Persistent_Storage_File.json
 
 Users also have a possibility to pass data between scenarios and features using so called execution context. This is not recommended and usually there exists a better way to write the test than using such feature, for example add Background scenario or enhance Given steps. 
 To use this capability please see an example below.
@@ -1382,7 +1394,7 @@ It can be retrieved later on in the next Scenario or different Feature. See an e
                 .with()
                 .contentType("application/json");
 
-        //trigger request and log it (it will be added as attachment to the report)
+        //trigger request and log it (it will be added as an attachment to the report)
         Response response = request
                 .when()
                 .log()
@@ -1400,7 +1412,7 @@ It can be retrieved later on in the next Scenario or different Feature. See an e
         Class clazz = ExecutionContext.executionContextObject().setType("java.lang." + type);
         String userId = ExecutionContext.executionContextObject().get(id,clazz);
  
-Please keep in mind that it is not recommended to use this feautre as it created dependencies between tests (Scenarios) that shall be avoided as much as possible. 
+Please keep in mind that it is not recommended to use this feautre as it creates dependencies between tests (Scenarios) that shall be avoided as much as possible. 
  
 --------------------------------
 
@@ -2044,7 +2056,7 @@ User can change it if needed for a particular project. To do so please edit foll
 		    Rest: {
 		    closeIdleConnectionsAfterEachResponseAfter: true,
 		    closeIdleConnectionsAfterEachResponseAfter_idleTime: 10,
-		    reuseHttpClientInstance: true,
+		    reuseHttpClientInstance: false,
 		    http_maxConnections: 100
 		}
 		...
@@ -2221,7 +2233,7 @@ How to use executor to run system commands or 3rd party apps?
 
 
 
-It is often needed and desired to have a possibility to execute any system command on a local host. Usually this can be used to trigger powershell commands or batch scripts on windows host but it maybe used to integrate any 3rd party application as well like wireshark to catch network traces or autoIT to have a possibility to automate application under windows etc.
+It is often needed and desired to have a possibility to execute any system command on a local host. Usually this can be used to trigger powershell commands or batch scripts on windows host but it maybe used to integrate any 3rd party application as well like wireshark/tshark/rawcap to catch network traces or autoIT to have a possibility to automate application under windows etc.
 
 Such possibility is available by means of ExecutorCore module. It contains functions that allows us to call any command or app.
 Lets have a look at very simple step def that checks which java version is installed on the system.
@@ -2359,6 +2371,32 @@ Step def can be implemented like below.
     }
 
 
+Another possibility is to use ExecutorCore to trigger winRS, a command line winRM client from Microsoft. Let us have a look at an example step def that shows how this can be done.
+
+    @Given("^execute via WinRS on node (.+)$")
+    public void execute_via_WinRS_on_node(String node) throws Throwable {
+        Log.info("* Step started execute_via_WinRS_on_node");
+
+        File workingDir = FileCore.createTempDir();
+
+        String address = Storage.get("Environment.Active.WinRM." + node + ".host");
+        Integer port = Storage.get("Environment.Active.WinRM." + node + ".port");
+        String user = Storage.get("Environment.Active.WinRM." + node + ".user");
+        String passwd = Storage.get("Environment.Active.WinRM." + node + ".password");
+
+        String cmd = "'Hostname'";
+        String invocation = "winrs -r:http://" + address + ":" + port + " -u:" + user + " -p:" + passwd;
+        cmd =  invocation + " " + cmd;
+
+        ByteArrayOutputStream out = ExecutorCore.execute(cmd, workingDir, 20, true);
+        Log.debug("Output is ");
+        Log.debug(new String(out.toByteArray(), Charset.defaultCharset()));
+
+    }
+
+This step will try to connect to a remote windows host and execute a command Hostname. Result will be name of the remote host.
+For connectivity it uses configuration that shall be defined for winRM. Please read below for more details.
+
 --------------------------------
 
 
@@ -2415,30 +2453,25 @@ Usage of ssh/scp/sftp
 
 
 User can use ssh to execute commands on remote unix hosts. Scp can be used to transfer files between tester's workstation and sytsem under test as well as sftp/ftp.
-To use this feature we have to define ssh nodes in the configruation. Configuration is falt. This means that for each node we shall have a seperate entry in the config file. See an excerpt from /src/test/java/config/environment/default.config below.
+To use this feature we have to define ssh nodes in the configruation. Configuration is flat. This means that for each node we shall have a seperate entry in the config file. See an excerpt from /src/test/java/config/environment/ssh.config below.
 
-	Environment:{
+	Ssh: {
+	    node1: {
+		host: "127.0.0.1",
+		port: 4567,
+		user: "vagrant",
+		password: "vagrant"
+	    }
+	}
 
-	    Default: {
-
-		    Ssh: {
-		    node1: {
-			host: "127.0.0.1",
-			port: 4567,
-			user: "vagrant",
-			password: "vagrant"
-		    }
-		}
-		...
-
-Where node1 is an identifier of an ssh node. We can configure multiple nodes in this way. By default port number 22 is going to be used.
+Where node1 is an identifier of a ssh node. We can configure multiple nodes in this way. By default port number 22 is going to be used.
 
 User can have 2 options to interact with a node via ssh. It can execute a command in a session. After each command execution session is closed. For the next command new session is created. This is useful in case there are simple commands to be executed or user is interested in the stdout or exit status code. Alternatively user can open a shell and execute multiple commands in an interactive shell session. This is useful when user wants to for example switch to superuser account, run tcpdump, await for command execution etc.
 In this case it is possible to define a timeout and expected output in the console. In case command does not return any output to the console user can append echo to make sure that something will be printed or await for a prompt symbol.
 
 SshCore module is provided and contains a set of methods that can be use to manage ssh sessions as well as execute common tasks like for example check that node is accessible, wait for a file to be present on remote host or simply check that file exists.
 
-See some example below how to start simple session or shell session.
+See some examples below how to start simple session or shell session.
 
 Feature file is
 
@@ -2545,3 +2578,94 @@ First it checks that node is alive. Then it checks if file is available and uses
 
 Please note that SshCore contains methods to download/upload files via scp and sftp.
  
+
+
+--------------------------------
+
+
+
+Usage of winRM
+
+
+
+
+To manage windows hosts one can use capabiliteis of winRM. From the end use point of view it works similar to ssh on unix. It allows to execute command on remote hosts and transfer files.
+
+
+To use this feature we have to define winRM nodes in the configruation. Configuration is flat. This means that for each node we shall have a seperate entry in the config file. See an excerpt from /src/test/java/config/environment/winrm.config below.
+
+	WinRM: {
+	    node1: {
+		host: "127.0.0.1",
+		port: 55985,
+		user: "Vagrant",
+		domain: "UserDomain",
+		password: "vagrant",
+		useHttps: false,
+		workingDirectory: "%TEMP%",
+		AuthenticationScheme: "NTLM"
+	    }
+	}
+
+Where node1 is an identifier of a winRM node. We can configure multiple nodes in this way. By default port number 5985 is going to be used.
+Currently winRMCore supports just few authentication methods like NTLM, Basic and Kerberos. Default is NTLM with negotiate. Please not that to make connection available winRM needs to be configured on the remote host. winrm/config/service AllowUnencrypted property shall be set to true. Reason is that winrm uses an application level encryption which is currently not supported. In case this is needed and unencrypted communication is not allowed please use ExecutorCore and trigger winrs. An example is available above. 
+
+Let us have a look how we can implement a simple step def that uses winRM capabilities.
+
+    @Given("^windows host (.+) is alive$")
+    public void windows_host_is_alive(String hostName) throws Throwable {
+        Log.info("* Step started windows_host_is_alive");
+
+        String cmd = "Write-Host " + hostName + " is alive";
+
+        Log.debug("Create new winRM session");
+        WinRMCore.createClient(hostName);
+        WinRmToolResponse result = WinRMCore.executePs(cmd, 3);
+
+        Log.debug("Result is " + result.getStdOut());
+        Log.debug("Exit code is " + result.getStatusCode());
+        Log.debug("Error is " + result.getStdErr());
+        WinRMCore.closeClient();
+
+        String output = result.getStdOut().replaceAll("(\\r|\\n)", "");
+        output = output.trim();
+        Log.debug("Result is " + output);
+
+        if ( ! output.equalsIgnoreCase(cmd.substring(11)) ) {
+            Log.error("host " + hostName + " is not accessible");
+        }
+    }
+    
+As can be seen user first needs to create a new winRM client by calling WinRMCore.createClient() method. After that we can call one of the execute commands. There are seperate commands for powershell and windows cmd execution. There are also methods that accepts List of commands as an input. They can execute multiple commands instead of just one. When execution is done client shall be closed by calling of WinRMCore.closeClient() method. 
+
+User can access stdOut, stdErr and status code for further verification. 
+
+Please note that there are methods available that can create a script from a string on a remote host and execute it immediately. 
+See an example below to better understand how to mount a network share and copy a file from it.
+
+    @Given("^mount path (.+) as network drive (.+) via WinRS on remote node (.+)$")
+    public void mount_path_as_network_drive_via_WinRS_on_remote_node(String path, String drive, String host) throws Throwable {
+        Log.info("* Step started mount_path_as_network_drive_via_WinRS_on_remote_node");
+
+        path = "\\\\localhost\\c$\\Users\\vagrant\\Music";
+
+        String cmd = Joiner.on("\n").join(
+                "net use " + drive + ": " + path + " /persistent:no",
+                "copy z:\\toJestPlikTekstowy.txt C:\\Users\\vagrant\\Documents");
+
+        WinRMCore.createClient(host);
+        WinRmToolResponse result = WinRMCore.executeBatchScriptFromString(cmd, "mount.bat","");
+
+        Log.debug("Result is " + result.getStdOut());
+        Log.debug("Exit code is " + result.getStatusCode());
+        Log.debug("Error is " + result.getStdErr());
+
+        WinRMCore.closeClient();
+
+        String output = result.getStdOut().replaceAll("(\\r|\\n)", "");
+        output = output.trim();
+        Log.debug("Result is " + output);
+
+    }
+
+Step above will use net use to mount a network share (in this particular case path is hardcode to be a local folder). When this will be done we want to copy a file called toJestPlikTekstowy.txt to Documents directory of a user. To make this possible we will create a script called mount.bat on a remote host and execute its content immediately via winRM.
