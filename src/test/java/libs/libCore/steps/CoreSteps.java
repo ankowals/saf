@@ -119,7 +119,7 @@ public class CoreSteps extends BaseSteps {
      * @param storageName, String, name of the storage
      * @param value, String, value to be set
      */
-    @And("^set (.+) in storage (.+)$")
+    @And("^set (.+) in storage to (.+)$")
     public void set_in_storage(String storageName, String value) throws Throwable {
         Log.info("* Step started set_in_storage");
         Storage.set(storageName, value);
@@ -168,7 +168,7 @@ public class CoreSteps extends BaseSteps {
         String scriptsPath = Storage.get("Environment.Active.libCoreScripts.path");
         Integer timeout = Storage.get("Environment.Active.PauseDuration");
 
-        String cmd = autoItPath + " " + FileCore.getProjectPath() + "\\" + scriptsPath + "\\pause.exe" + " " + Integer.toString(timeout);
+        String cmd = autoItPath + " " + FileCore.getProjectPath() + File.separator + scriptsPath + File.separator + "pause.exe" + " " + Integer.toString(timeout);
 
         Log.debug("Calling autoIt pause script with timeout " + timeout + " seconds");
 

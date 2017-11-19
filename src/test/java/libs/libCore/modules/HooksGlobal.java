@@ -1,7 +1,14 @@
 package libs.libCore.modules;
 
 import cucumber.api.java.Before;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.io.IoBuilder;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public class HooksGlobal {
 
@@ -40,6 +47,8 @@ public class HooksGlobal {
                         }
                     }
 
+
+
                     Log.info("Test Suite execution ENDED!");
                 }
             });
@@ -49,8 +58,30 @@ public class HooksGlobal {
             Log.info("Test Suite execution STARTED!");
             PropertyReader.readSystemProperties();
             Log.info("*** Running features *** ");
-            Log.info("");
-            Log.info("");
+            Log.info("*************************");
+
+            //redirect StdOut and StdErr to the logger so we can catch logs written by other tools
+            System.setOut(
+                    IoBuilder.forLogger(LogManager.getLogger("libs.libCore.modules"))
+                            .setLevel(Level.DEBUG).setBuffered(false)
+                            .buildPrintStream()
+            );
+            System.setErr(
+                    IoBuilder.forLogger(LogManager.getLogger("libs.libCore.modules"))
+                            .setLevel(Level.WARN).setBuffered(false)
+                            .buildPrintStream()
+            );
+
+            Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+                public void uncaughtException(Thread t, Throwable e) {
+                    StringWriter sw = new StringWriter();
+                    e.printStackTrace(new PrintWriter(sw));
+                    String stacktrace = sw.toString();
+                    //WA to not use Log.error and do not throw fail in addition
+                    Logger logger = LogManager.getLogger("libs.libCore.modules");
+                    logger.error(stacktrace);
+                }
+            });
 
             //
             dunit = true;

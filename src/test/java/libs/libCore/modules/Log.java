@@ -40,7 +40,7 @@ public class Log {
 				.setConfiguration(config)
 				.withName("File-Appender")
 				.withLayout(layout)
-				.withFileName("target/"+pattern+"_FK_Prototype.log")
+				.withFileName("target/"+pattern+"_SAF.log")
 				.build();
 
 		Appender appender2 = ConsoleAppender.newBuilder()
@@ -60,15 +60,15 @@ public class Log {
 		AppenderRef[] refs = new AppenderRef[] { ref, ref2 };
 
 		LoggerConfig loggerConfig = LoggerConfig
-				.createLogger(false, Level.ALL, "libs.libCore.libs", "true", refs, null, config, null);
+				.createLogger(false, Level.ALL, "libs.libCore.modules", "true", refs, null, config, null);
 		loggerConfig.addAppender(appender, null, null);
 		loggerConfig.addAppender(appender2, null, null);
-		config.addLogger("libs.libCore.libs", loggerConfig);
+		config.addLogger("libs.libCore.modules", loggerConfig);
 		context.updateLoggers();
 	}
 
     //assign logger to global variable Log
-    private static Logger Log = LogManager.getLogger("libs.libCore.libs");
+    private static Logger Log = LogManager.getLogger("libs.libCore.modules");
 
 
     /**

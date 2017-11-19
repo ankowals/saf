@@ -36,6 +36,7 @@ public class FileCore {
             String tmp = Paths.get(ClassLoader.getSystemResource("").toURI()).getParent().toString();
             int idx = tmp.lastIndexOf(File.separator);
             path = tmp.substring(0,idx);
+            path = path + File.separator +"src" + File.separator + "test" + File.separator + "java";
             Log.debug("Project path is " + path);
         } catch (URISyntaxException e) {
             Log.error( "Project path not found!", e );
@@ -50,7 +51,7 @@ public class FileCore {
      * @return path String, path to global configuration directory
      */
     public String getGlobalConfigPath() {
-        return getProjectPath() + "//src//test//java//config";
+        return getProjectPath() + File.separator +"config";
     }
 
 
@@ -60,7 +61,7 @@ public class FileCore {
      * @return path String, path to features directory
      */
     public String getFeaturesPath() {
-        return getProjectPath() + "//src//test//java//features";
+        return getProjectPath() + File.separator + "features";
     }
 
 
@@ -81,7 +82,8 @@ public class FileCore {
                         .forEach(x -> result.add(x));
             }
         } catch (IOException e) {
-            Log.error( "Can't access " + sDir, e);
+            Log.warn( "Can't access " + sDir );
+            //Log.error( "Can't access " + sDir, e);
         }
 
         Collections.sort(result, String.CASE_INSENSITIVE_ORDER);
@@ -295,6 +297,19 @@ public class FileCore {
 
         String sPathToTempDir = pathToTempDir.toAbsolutePath().toString();
         File result = new File(sPathToTempDir);
+
+        return result;
+    }
+
+
+    /**
+     * returns system's temporary directory
+     *
+     * @return File
+     */
+    public File getTempDir () {
+        String systemTmpDirPath = FileUtils.getTempDirectoryPath();
+        File result = new File(systemTmpDirPath);
 
         return result;
     }

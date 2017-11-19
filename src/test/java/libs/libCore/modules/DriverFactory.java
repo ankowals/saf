@@ -10,6 +10,7 @@ import org.openqa.selenium.internal.BuildInfo;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
 
+import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 public class DriverFactory {
@@ -35,16 +36,19 @@ public class DriverFactory {
      */
     public EventFiringWebDriver create(String browser){
         Log.debug("Going to create new driver");
+
         if ( browser == null ) {
             Log.error("Browser type null or empty!");
         }
+
         if (browser.equalsIgnoreCase("chrome")) {
             String path = Storage.get("Environment.Active.WebDrivers.Chrome.path");
-            System.setProperty("webdriver.chrome.driver", FileCore.getProjectPath() + "/" + path);
+            System.setProperty("webdriver.chrome.driver", FileCore.getProjectPath() + File.separator + path);
+            System.setProperty("webdriver.chrome.verboseLogging", "false");
             dr = new ChromeDriver();
         } else if (browser.equalsIgnoreCase("firefox")) {
             String path = Storage.get("Environment.Active.WebDrivers.FireFox.path");
-            System.setProperty("webdriver.gecko.driver", FileCore.getProjectPath() + "/" + path);
+            System.setProperty("webdriver.gecko.driver", FileCore.getProjectPath() + File.separator + path);
 
             DesiredCapabilities capabilities = DesiredCapabilities.firefox();
             capabilities.setCapability("marionette", true);
@@ -52,7 +56,7 @@ public class DriverFactory {
             dr = new FirefoxDriver(capabilities);
         } else if (browser.equalsIgnoreCase("ie")) {
             String path = Storage.get("Environment.Active.WebDrivers.InternetExplorer.path");
-            System.setProperty("webdriver.ie.driver", FileCore.getProjectPath() + "/" + path);
+            System.setProperty("webdriver.ie.driver", FileCore.getProjectPath() + File.separator + path);
             dr = new InternetExplorerDriver();
         } else {
             Log.error( "Can't read browser type or wrong name provided." +
@@ -60,7 +64,7 @@ public class DriverFactory {
         }
 
         EventFiringWebDriver driver = EventFiringWebDriver(dr);
-        //ctx.Object.put("Page", EventFiringWebDriver.class, driver);
+
         return driver;
     }
 
@@ -86,6 +90,10 @@ public class DriverFactory {
         EventFiringWebDriver driver = new EventFiringWebDriver(dr);
         EventHandler handler = new EventHandler();
         driver.register(handler);
+
+        //we have to put it here because if something goes not ok
+        //during browser manipulation driver won't be closed
+        ctx.Object.put("Page", EventFiringWebDriver.class, driver);
 
         Log.debug("Removing all cookies");
         driver.manage().deleteAllCookies();

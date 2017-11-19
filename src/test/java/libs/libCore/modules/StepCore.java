@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.Connection;
 import java.text.NumberFormat;
 import java.util.*;
 
@@ -137,7 +136,6 @@ public class StepCore {
      */
     public void compareWithTemplate(String templateName, String pathToResults) {
         Log.debug("Template comparison started");
-        Boolean result = false;
 
         String templatePath = searchForTemplate(templateName);
 
@@ -197,6 +195,34 @@ public class StepCore {
 
 
     /**
+     * Checks if ${ctx.storageName.storageKey} kind of variables exist in the template
+     * If so executes variables substitution
+     * Template file after evaluation is attached to the report
+     *
+     * @param templateName String, name of the template without .template extension
+     * @param templateDirPath String, path to the directory where template is present
+     *
+     * @return File
+     */
+    public File evaluateTemplate(String templateName, String templateDirPath){
+        File template = new File(templateDirPath + File.separator + templateName + ".template");
+        String sFile = FileCore.readToString(template);
+
+        //evaluate the template
+        String templateAfterEval = replaceInTemplate(sFile);
+
+        //attach template after evaluation to the report
+        File temp = FileCore.createTempFile(templateName,"template");
+        FileCore.appendToFile(temp, templateAfterEval);
+        String tempPath = temp.getAbsolutePath();
+        attachFileToReport(templateName + ".template","text/plain",tempPath);
+
+        return temp;
+    }
+
+
+
+    /**
      * helper function used in evaluateTemplate method
      * replaces variables with values from storage
      *
@@ -206,14 +232,14 @@ public class StepCore {
      */
     private String replaceInTemplate (String input) {
         Integer beignIdx = input.indexOf("${");
-        Integer endIx = input.indexOf("}", beignIdx);
+        Integer endIdx = input.indexOf("}", beignIdx);
 
         if (beignIdx != -1) {
-            if ( endIx == -1 ){
+            if ( endIdx == -1 ){
                 Log.error("Typo in template! Missing closing bracket }. Can't do variable substitution!");
             }
 
-            String toReplace = input.substring(beignIdx+2, endIx);
+            String toReplace = input.substring(beignIdx+2, endIdx);
             String toCheck = toReplace;
             if ( toReplace.startsWith("ctx.") ){
                 toCheck = toReplace.substring(4);
@@ -245,6 +271,9 @@ public class StepCore {
         String localDir = ctx.Object.get("FeatureFileDir", String.class);
         String localTemplateDir = localDir + File.separator + "template";
 
+        //find default template dir
+        String defaultTemplateDir = projectDir + File.separator + "libs";
+
         //search for template first in local dir
         Log.debug("Looking for template " + templateName + " in " + localTemplateDir);
         ArrayList<String> templates = FileCore.searchForFile(localTemplateDir,templateName + ".template");
@@ -253,6 +282,12 @@ public class StepCore {
         if ( templates.size() < 1 ) {
             Log.debug("Looking for template " + templateName + " in " + globalTemplateDir);
             templates = FileCore.searchForFile(globalTemplateDir,templateName + ".template");
+        }
+
+        //if global template not found search for it in default dir
+        if ( templates.size() < 1 ) {
+            Log.debug("Looking for template " + templateName + " in " + defaultTemplateDir);
+            templates = FileCore.searchForFile(defaultTemplateDir,templateName + ".template");
         }
 
         if ( templates.size() < 1 ) {

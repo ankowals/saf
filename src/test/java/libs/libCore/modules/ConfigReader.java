@@ -48,7 +48,7 @@ public class ConfigReader {
                 tLine = StringUtils.remove(tLine,"'");
                 if ( tLine.startsWith("#include") && tLine.endsWith(".config")) {
                     String pathToIncludedConfigFile = tLine.substring(9);
-                    pathToIncludedConfigFile = FileCore.getProjectPath() + "/src/test/java/" + pathToIncludedConfigFile.trim();
+                    pathToIncludedConfigFile = FileCore.getProjectPath() + File.separator + pathToIncludedConfigFile.trim();
                     Log.debug("Found included configuration file");
                     create(pathToIncludedConfigFile);
                 } else {

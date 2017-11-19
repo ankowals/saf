@@ -1,14 +1,14 @@
 package libs.libCore.modules;
 
-import io.restassured.config.ConnectionConfig;
 import cucumber.api.Scenario;
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import io.restassured.RestAssured;
+import io.restassured.config.DecoderConfig;
 import io.restassured.config.LogConfig;
 import org.apache.commons.lang.StringUtils;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.OutputStreamAppender;
@@ -18,9 +18,8 @@ import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.openqa.selenium.logging.LogEntry;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
 import ru.yandex.qatools.allure.annotations.Attachment;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +27,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import static io.restassured.config.ConnectionConfig.connectionConfig;
 import static io.restassured.config.HttpClientConfig.httpClientConfig;
+import static io.restassured.config.RedirectConfig.redirectConfig;
+import static io.restassured.config.SSLConfig.sslConfig;
 
 public class HooksScenario {
 
@@ -61,10 +63,6 @@ public class HooksScenario {
 
         //add appender to attach log for particular scenario to the report
         addAppender(out,scenario.getName()+logging_start);
-
-        //redirect StdOut and StdErr to the logger so we can catch logs written by other tools
-        System.setErr(new PrintStream(new LoggingOutputStream(LogManager.getLogger("libs.libCore.libs"), Level.WARN)));
-        System.setOut(new PrintStream(new LoggingOutputStream(LogManager.getLogger("libs.libCore.libs"), Level.DEBUG)));
 
         //start scenario
         String[] tId = scenario.getId().split(";");
@@ -124,15 +122,11 @@ public class HooksScenario {
         Storage = ctx.Object.get("Storage", Storage.class);
 
         Log.info("<- reading default configuration ->");
-        String defaultConfigDir = FileCore.getProjectPath() + "//src//test//java//libs//libCore//config";
+        String defaultConfigDir = FileCore.getProjectPath() + File.separator + "libs" + File.separator + "libCore" + File.separator + "config";
         Log.debug("Default configuration directory is " + defaultConfigDir);
 
         ArrayList<String> defaultConfigFiles = FileCore.searchForFile(defaultConfigDir,".config");
         if(defaultConfigFiles.size()!=0) {
-            //Log.debug("Following config files were found inside ");
-            //for (String globalConfigFile : defaultConfigFiles) {
-            //    Log.debug(globalConfigFile);
-            //}
             for (String globalConfigFile : defaultConfigFiles) {
                 Config.create(globalConfigFile);
             }
@@ -144,10 +138,6 @@ public class HooksScenario {
 
         ArrayList<String> globalConfigFiles = FileCore.searchForFile(globalConfigDir,".config");
         if(globalConfigFiles.size()!=0) {
-            //Log.debug("Following config files were found inside ");
-            //for (String globalConfigFile : globalConfigFiles) {
-            //    Log.debug(globalConfigFile);
-            //}
             for (String globalConfigFile : globalConfigFiles) {
                 Config.create(globalConfigFile);
             }
@@ -166,10 +156,6 @@ public class HooksScenario {
 
             ArrayList<String> localConfigFiles = FileCore.searchForFile(featureDir,".config");
             if(localConfigFiles.size()!=0) {
-                //Log.debug("Following config files were found inside ");
-                //for (String localConfigFile : localConfigFiles) {
-                //    Log.debug(localConfigFile);
-                //}
                 for (String localConfigFile : localConfigFiles) {
                     Config.create(localConfigFile);
                 }
@@ -218,8 +204,7 @@ public class HooksScenario {
             //check if config with such name exists else fallback to default
             HashMap<String, Object> activeEnvConfig = Storage.get("Environment." + actEnvName);
             if ( activeEnvConfig == null || activeEnvConfig.size() == 0 ){
-                Log.debug("Environment config with name " + actEnvName + " not found or empty. "
-                        + "Fallback to Environment.Default");
+                Log.error("Environment config with name " + actEnvName + " not found or empty");
             }
             //merge default and active
             deepMerge(defaultEnvConfig, activeEnvConfig);
@@ -254,7 +239,7 @@ public class HooksScenario {
             int idleTime = Storage.get("Environment.Active.Rest.closeIdleConnectionsAfterEachResponseAfter_idleTime");
             Log.debug("Setting closeIdleConnectionsAfterEachResponseAfter=true with idleTime " + idleTime);
             RestAssured.config = RestAssured.config().connectionConfig(
-                    new ConnectionConfig().closeIdleConnectionsAfterEachResponseAfter(
+                    connectionConfig().closeIdleConnectionsAfterEachResponseAfter(
                             idleTime,
                             TimeUnit.SECONDS)
             );
@@ -267,6 +252,25 @@ public class HooksScenario {
                     httpClientConfig().reuseHttpClientInstance()
             );
         }
+
+        Boolean relaxedHTTPSValidation = Storage.get("Environment.Active.Rest.relaxedHTTPSValidation");
+        if ( relaxedHTTPSValidation ) {
+            Log.debug("Setting relaxedHTTPSValidation=true");
+            RestAssured.config = RestAssured.config().sslConfig(
+                    sslConfig().relaxedHTTPSValidation()
+            );
+        }
+
+        Boolean followRedirects = Storage.get("Environment.Active.Rest.followRedirects");
+        if ( followRedirects != null ) {
+            Log.debug("Setting followRedirects=" + followRedirects);
+            RestAssured.config = RestAssured.config().redirect(
+                    redirectConfig().followRedirects(followRedirects)
+            );
+        }
+
+        RestAssured.config = RestAssured.config().decoderConfig(
+                DecoderConfig.decoderConfig().defaultContentCharset("UTF-8"));
 
         RestAssured.config = RestAssured.config().logConfig(
                 new LogConfig( loggerPrintStream.getPrintStream(), true )
@@ -296,6 +300,7 @@ public class HooksScenario {
 
     /**
      * Embed a screenshot in test report if test is marked as failed
+     * log 3rd party exceptions
      * Get browser/driver logs if any
      * Attach scenario log to the report
      * Close web driver and jdbc connection
@@ -303,38 +308,56 @@ public class HooksScenario {
     @After
     public void tearDown(Scenario scenario) {
 
+        //if present log an exception caught by junit and throw by 3rd party lib like selenium or rest assured
+        String stacktrace = JunitListenerWithLogger.getStacktrace();
+        if ( ! stacktrace.equals("") ) {
+            //WA to not use Log.error and do not throw fail in addition
+            Logger logger = LogManager.getLogger("libs.libCore.modules");
+            logger.error(stacktrace);
+        }
+
         Log.info("*** Scenario with name: " + scenario.getName() + " ended! ***");
 
         //get web driver
         EventFiringWebDriver Page = ctx.Object.get("Page", EventFiringWebDriver.class);
         if (Page != null) {
-            Log.debug("Browser console logs are available below");
-            for (LogEntry logEntry : Page.manage().logs().get("browser").getAll()) {
-                Log.debug("" + logEntry);
+            if ( Page.manage().logs().get("browser").getAll().size() > 0 ) {
+                Log.debug("Browser console logs are available below");
+                for (LogEntry logEntry : Page.manage().logs().get("browser").getAll()) {
+                    Log.debug("" + logEntry);
+                }
             }
-            Log.debug("Driver logs are available below");
-            for (LogEntry logEntry : Page.manage().logs().get("driver").getAll()) {
-                Log.debug("" + logEntry);
+            if ( Page.manage().logs().get("driver").getAll().size() > 0 ) {
+                Log.debug("Driver logs are available below");
+                for (LogEntry logEntry : Page.manage().logs().get("driver").getAll()) {
+                    Log.debug("" + logEntry);
+                }
             }
         }
 
         //take screenshot if scenario fails
         if (Page != null) {
-            if (scenario.isFailed()) {
+            if ( scenario.isFailed() ) {
                 Log.debug("Try to take a screenshot");
                 //reload page core
-                PageCore = ctx.Object.get("PageCore", PageCore.class);
-                byte[] screenshot = PageCore.takeScreenshot();
-                String name = StringUtils.remove(scenario.getName(), "-");
-                if (name.length() > 256) {
-                    name = name.substring(0, 255);
+                try {
+                    PageCore = ctx.Object.get("PageCore", PageCore.class);
+                    byte[] screenshot = PageCore.takeScreenshot();
+                    String name = StringUtils.remove(scenario.getName(), "-");
+                    if (name.length() > 256) {
+                        name = name.substring(0, 255);
+                    }
+                    StepCore.attachScreenshotToReport(name, screenshot);
+                } catch (NullPointerException e){
+                    Log.warn("Driver not usable. Can't take screenshot");
+                    StringWriter sw = new StringWriter();
+                    e.printStackTrace(new PrintWriter(sw));
+                    Log.warn(sw.toString());
                 }
-                StepCore.attachScreenshotToReport(name, screenshot);
             }
         }
 
         Log.info("Started resources clean up");
-
         // Close web driver connection
         Boolean closeWebDriver = Storage.get("Environment.Active.WebDrivers.CloseBrowserAfterScenario");
         if ( closeWebDriver ) {
@@ -347,10 +370,8 @@ public class HooksScenario {
         }
 
         // Close DB connection
-        Log.debug("Db connection cleanup started");
         SqlCore SqlCore = ctx.Object.get("SqlCore", SqlCore.class);
         SqlCore.close();
-        Log.debug("Db connection cleanup done");
 
         //Close ssh connection
         SshCore SshCore = ctx.Object.get("SshCore", SshCore.class);

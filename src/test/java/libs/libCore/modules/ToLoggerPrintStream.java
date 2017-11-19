@@ -68,7 +68,7 @@ public class ToLoggerPrintStream {
      */
     public ToLoggerPrintStream() {
         super();
-        myLog = LogManager.getLogger("libs.libCore.libs");
+        myLog = LogManager.getLogger("libs.libCore.modules");
     }
 
     /**

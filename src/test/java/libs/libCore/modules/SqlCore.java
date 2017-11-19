@@ -48,7 +48,9 @@ public class SqlCore {
     public void close() {
         if (Sql != null) {
             try {
+                Log.debug("Db connection cleanup started");
                 Sql.close();
+                Log.debug("Db connection cleanup done");
             } catch (SQLException e) {
                 Log.error("", e);
             }

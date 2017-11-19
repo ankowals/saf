@@ -1,11 +1,9 @@
 package libs.libCore.modules;
 
 import com.google.common.io.BaseEncoding;
-import io.cloudsoft.winrm4j.client.WinRmClient;
 import io.cloudsoft.winrm4j.client.WinRmClientContext;
 import io.cloudsoft.winrm4j.winrm.WinRmTool;
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
-import io.restassured.filter.log.LogDetail;
 import org.apache.http.client.config.AuthSchemes;
 
 import java.io.ByteArrayInputStream;
@@ -19,7 +17,6 @@ public class WinRMCore {
     private Storage Storage;
     private WinRmClientContext context;
     private WinRmTool tool;
-    private WinRmClient client;
 
     // PicoContainer injects class SharedContext
     public WinRMCore(SharedContext ctx) {
@@ -117,9 +114,14 @@ public class WinRMCore {
      * Executes single windows native command
      *
      * @param cmd, String, command to be executed in windows cmd
+     * @param timeout, Integer, timeout in seconds
+     *
+     * @return WinRmToolResponse
      */
     public WinRmToolResponse executeCommand(String cmd, Integer timeout){
         WinRmToolResponse result = null;
+
+        Log.debug("Command to execute is " + cmd);
 
         try {
             Long lTimeout = timeout.longValue();
@@ -134,12 +136,28 @@ public class WinRMCore {
 
 
     /**
-     * Executes a list of windows native commands concatenated with &
+     * Execute a list of Windows Native commands as one command concatenated with &.
+     * The method translates the list of commands to a single String command with a <code>" & "</code>
+     * delimiter and a terminating one.
      *
      * @param cmd, List, commands list to be executed in windows cmd
+     * @param timeout, Integer, timeout in seconds
+     *
+     * @return WinRmToolResponse
      */
     public WinRmToolResponse executeCommand(List<String> cmd, Integer timeout){
         WinRmToolResponse result = null;
+
+        if ( cmd.size() < 1 ) {
+            Log.error("Empty command list provided");
+        }
+
+        String message = "";
+        for (int i = 0; i < cmd.size(); i++) {
+            message = message + cmd.get(i) + " & ";
+        }
+        message = removeLastDelimiter(message, " & ");
+        Log.debug("Command to execute is " + message);
 
         try {
             Long lTimeout = timeout.longValue();
@@ -152,14 +170,26 @@ public class WinRMCore {
         return result;
     }
 
+    private String removeLastDelimiter(String str, String delimiter) {
+        if (str != null && str.length() > delimiter.length() && str.substring(str.length() - delimiter.length()).equals(delimiter)) {
+            str = str.substring(0, str.length() - delimiter.length());
+        }
+
+        return str;
+    }
 
     /**
-     * Executes a PowerShell command with the native windows command
+     * Executes a PowerShell command
      *
      * @param cmd, String, command to be executed in windows powershell
+     * @param timeout, Integer, timeout in seconds
+     *
+     * @return WinRmToolResponse
      */
     public WinRmToolResponse executePs(String cmd, Integer timeout){
         WinRmToolResponse result = null;
+
+        Log.debug("Command to execute is " + cmd);
 
         try {
             Long lTimeout = timeout.longValue();
@@ -174,12 +204,30 @@ public class WinRMCore {
 
 
     /**
-     * Executes a list of PowerShell commands
+     * Execute a list of Power Shell commands as one command.
+     * The method translates the list of commands to a single String command with a
+     * <code>"\r\n"</code> delimiter and a terminating one.
+     *
+     * Consider instead uploading a script file, and then executing that as a one-line command.
      *
      * @param cmd, List, command list to be executed in windows powershell
+     * @param timeout, Integer, timeout in seconds
+     *
+     * @return WinRmToolResponse
      */
     public WinRmToolResponse executePs(List<String> cmd, Integer timeout){
         WinRmToolResponse result = null;
+
+        if ( cmd.size() < 1 ) {
+            Log.error("Empty command list provided");
+        }
+
+        String message = "";
+        for (int i = 0; i < cmd.size(); i++) {
+            message = message + cmd.get(i) + " \r\n ";
+        }
+        message = removeLastDelimiter(message, " \r\n ");
+        Log.debug("Command to execute is " + message);
 
         try {
             Long lTimeout = timeout.longValue();
@@ -205,7 +253,7 @@ public class WinRMCore {
 
 
     /**
-     * Creates powershell script under provided path and executes it
+     * Creates powershell script from string under provided path and executes it
      *
      * @param script, String, script content
      * @param scriptPath, String, path where script file shall be created, for example "C:\\myscript-example.ps1";
@@ -220,14 +268,17 @@ public class WinRMCore {
             Log.error("", e);
         }
 
+        String invocation = "PowerShell -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File ";
+        Log.debug("Command to execute is " + invocation + scriptPath + args);
+
         //return tool.executePs("PowerShell -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -Command " + scriptPath + args);
-        return tool.executePs("PowerShell -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File " + scriptPath + args);
+        return tool.executePs( invocation + scriptPath + args);
 
     }
 
 
     /**
-     * Creates batch script under provided path and executes it
+     * Creates batch script from string under provided path and executes it
      *
      * @param script, String, script content
      * @param scriptPath, String, path where script file shall be created, for example "C:\\myscript-example.bat";
@@ -242,6 +293,8 @@ public class WinRMCore {
             Log.error("", e);
         }
 
+
+        Log.debug("Command to execute is " + scriptPath + args);
         return tool.executeCommand(scriptPath + args);
 
     }
@@ -249,7 +302,7 @@ public class WinRMCore {
 
     /**
      * creates file from InputStream
-     * helper function
+     * helper function used to copy script content to a remote host
      *
      * @param source, InputStream, file string content
      * @param destination, String, path to output file
