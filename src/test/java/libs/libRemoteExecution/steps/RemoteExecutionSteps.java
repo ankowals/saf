@@ -40,7 +40,7 @@ public class RemoteExecutionSteps extends BaseSteps {
 
         Log.debug("Create new client and connect to node1");
         SshCore.createClient("node1");
-        SshCore.startShell(10);
+        SshCore.startShell(20);
         SshCore.executeInShell("", "$");
         Log.debug("Command to execute vis ssh is " + userChangeCmd);
         SshCore.executeInShell(userChangeCmd, "Password");
