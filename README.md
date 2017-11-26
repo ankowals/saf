@@ -178,7 +178,7 @@ Optionally user can execute steps below. Especially for web automation case or j
 
 How to import project in IntelliJ?
 
-	1 open the IDE and click "Import Project"
+	1 open the IDE and click "Import Project" (or access it via File->New->Project from Existing Sources)
 	2 point it to the location where your project is
 	3 select "Import project from external model", select "Maven" and hit Next
 	4 go with default options and click Next
@@ -264,7 +264,7 @@ Features act as containers for Scenarios.
 
 Please keep 1 Feature per 1 file.
 
-Feature file name shall be same like Feature name.
+Feature file name shall be same like Feature name. Feature name has to be unique.
 
 Scenario names shall be unique per feature.
 
@@ -514,7 +514,7 @@ Details of what is happening during test execution
 
 
 
-Cucmber runner is available in src/test/java/libs/libCore/modules/TestRunner.class
+Cucumber runner is available in src/test/java/libs/libCore/modules/TestRunner.class
 It contains cucumber options like glue path (path to steps definitions), features path and allure report plugin.
 There shall be no need to change it parameters.
 
@@ -1288,7 +1288,7 @@ Please use SshCore module for ssh/scp/sftp execution.
 Please use winRmCore module for winrm execution.
 
 It is also possible to write test data into a file. In this way it can be read later on and used during other test execution. Even though this creates dependecies between tests it maybe useful some times. Please consider following example we run a long lasting test. Action that has to be trigger takes 10 minutes to execute. In this case there is no point to wait for its results. Instead it maybe desired to divide the test into 2 parts (feature files). One will be called to trigger the action. Second one can contain validation steps.
-Second feture can be executed few minutes later and in the meantime other test can run.
+Second feature can be executed few minutes later and in the meantime other test can run.
 In such case we have to extract test data that was used in the first part of the test (first feature file).
 
 See an example below to understand how to write test data storage (or any other storage) to a text file.
@@ -2589,7 +2589,7 @@ Usage of winRM
 
 
 
-To manage windows hosts one can use capabiliteis of winRM. From the end use point of view it works similar to ssh on unix. It allows to execute command on remote hosts and transfer files.
+To manage windows hosts one can use capabiliteis of winRM. From the end user point of view it works similar to ssh on unix. It allows to execute command on remote hosts and transfer files.
 
 
 To use this feature we have to define winRM nodes in the configruation. Configuration is flat. This means that for each node we shall have a seperate entry in the config file. See an excerpt from /src/test/java/config/environment/winrm.config below.
