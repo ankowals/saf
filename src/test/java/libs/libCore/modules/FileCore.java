@@ -1,17 +1,20 @@
 package libs.libCore.modules;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import cucumber.api.Scenario;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static org.apache.commons.io.FileUtils.readFileToString;
@@ -92,11 +95,81 @@ public class FileCore {
     }
 
 
+    public String getCurrentFeatureDirPath(Scenario scenario){
+        Log.debug("Looking for a path to the current feature file");
+
+        String path = "";
+        String[] tmp = scenario.getId().split(";");
+
+        //with regexp
+        String scenarioName = scenario.getName().trim().replaceAll("\\s+","").toLowerCase();
+        String featureName = tmp[0].replaceAll("-","").trim();
+        //Boolean isFound = false;
+        //to detect duplicates
+        HashMap<String, String> features = new HashMap<>();
+        ArrayList<String> fileList = searchForFile(getFeaturesPath(), ".feature");
+        for (String file : fileList) {
+            Boolean suspected = false;
+            String fileContent = readToString(new File(file)).trim()
+                    .replaceAll("\\p{Blank}","")
+                    .replaceAll("(?m)^#.*$","")
+                    .replaceAll("-","")
+                    .toLowerCase();
+
+            Pattern pattern = Pattern.compile("(?im)^feature:(.*?)$");
+            Matcher matcher = pattern.matcher(fileContent);
+            while (matcher.find())
+            {
+                String featureNameFromFile = matcher.group(1);
+                //duplicate detection
+                if ( features.containsKey(featureNameFromFile) ){
+                    Log.warn("FATAL ERROR! Duplicated feature name " + featureNameFromFile +
+                            " detected in " + new File(file).getAbsolutePath() +
+                            " and " + features.get(featureNameFromFile) +
+                            " Aborting execution!");
+                    System.exit(1);
+                }
+                features.put(featureNameFromFile, new File(file).getAbsolutePath());
+
+                if ( featureNameFromFile.equals(featureName) ) {
+                    suspected = true;
+                }
+            }
+
+            if ( suspected ) {
+                pattern = Pattern.compile("(?im)^scenario:(.*?)$|(?im)^scenariooutline:(.*?)$|(?im)^background:(.*?)$");
+                matcher = pattern.matcher(fileContent);
+                while ( matcher.find() ){
+                    String scenarioNameFromFile = matcher.group(1);
+
+                    if ( scenarioName.equals(scenarioNameFromFile) ) {
+                        Log.debug("Feature file path is " + new File(file).getAbsolutePath());
+                        //isFound = true;
+                        path = FilenameUtils.getFullPathNoEndSeparator(new File(file).getAbsolutePath());
+                    }
+                }
+            }
+
+            //if ( isFound ){
+            //    break;
+            //}
+        }
+
+        if ( path.equals("") ){
+            Log.error("Feature file path not found! Aborting execution!");
+        }
+
+        return path;
+    }
+
+
+
     /**
      * Returns path to the feature file directory that is currently executed
      *
      * @return result String, path to the feature file directory
      */
+    /*
     public String getCurrentFeatureDirPath(){
 
         ArrayList<String> featurePaths = new ArrayList();
@@ -153,7 +226,7 @@ public class FileCore {
 
         return featureDir;
    }
-
+    */
 
     /**
      * searches for feature files

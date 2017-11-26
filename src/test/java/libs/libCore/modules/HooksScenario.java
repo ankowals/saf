@@ -20,10 +20,7 @@ import org.openqa.selenium.support.events.EventFiringWebDriver;
 import ru.yandex.qatools.allure.annotations.Attachment;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -149,10 +146,11 @@ public class HooksScenario {
 
         /* Local resources load */
         Log.info("<- Started local config load ->");
-        String featureDir = FileCore.getCurrentFeatureDirPath();
+        //String featureDir = FileCore.getCurrentFeatureDirPath();
+        String featureDir = FileCore.getCurrentFeatureDirPath(scenario);
         Log.debug("Feature dir is " + featureDir);
         if( featureDir != null ){
-            ctx.Object.put("FeatureFileDir",String.class,featureDir);
+            ctx.Object.put("FeatureFileDir", String.class, featureDir);
 
             ArrayList<String> localConfigFiles = FileCore.searchForFile(featureDir,".config");
             if(localConfigFiles.size()!=0) {

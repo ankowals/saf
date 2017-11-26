@@ -120,8 +120,8 @@ public class CoreSteps extends BaseSteps {
      * @param value, String, value to be set
      */
     @And("^set (.+) in storage to (.+)$")
-    public void set_in_storage(String storageName, String value) throws Throwable {
-        Log.info("* Step started set_in_storage");
+    public void set_in_storage_to(String storageName, String value) throws Throwable {
+        Log.info("* Step started set_in_storage_to");
         Storage.set(storageName, value);
         Storage.get(storageName);
     }
@@ -175,6 +175,21 @@ public class CoreSteps extends BaseSteps {
         ExecutorCore.execute(cmd, workingDir, timeout+3, true);
 
         Log.debug("Pause canceled or timeout. Resuming execution");
+    }
+
+
+
+    /**
+     * waits for defined time duration
+     * @param seconds Integer, timeout
+     *
+     */
+    @And("^wait for (d+)$")
+    public void wait_for(Integer seconds) throws Throwable {
+        Log.info("* Step started wait_for");
+
+        StepCore.sleep(seconds);
+
     }
 
 }

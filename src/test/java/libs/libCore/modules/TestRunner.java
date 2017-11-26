@@ -8,6 +8,7 @@ import cucumber.api.CucumberOptions;
 @CucumberOptions(
         plugin = {"ru.yandex.qatools.allure.cucumberjvm.AllureReporter"},
         features = "src/test/java/features",
+        //format = "libs.libCore.modules.JunitPrintingFormatter",
         glue = "libs")
 
 public class TestRunner {}
