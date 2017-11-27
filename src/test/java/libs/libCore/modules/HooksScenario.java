@@ -74,7 +74,8 @@ public class HooksScenario {
         Log.info("Started resources initialisation");
         Log.info("<- creating shared context ->");
         ctx.Object = new Context();
-        ctx.Object.put("FeatureId",String.class, tId[0]);
+        ctx.Object.put("FeatureId", String.class, tId[0]);
+        ctx.Object.put("ScenarioId", String.class, scenario.getName());
 
         FileCore fileCore = new FileCore(ctx);
         ctx.Object.put("FileCore", FileCore.class, fileCore);
@@ -146,8 +147,8 @@ public class HooksScenario {
 
         /* Local resources load */
         Log.info("<- Started local config load ->");
-        //String featureDir = FileCore.getCurrentFeatureDirPath();
-        String featureDir = FileCore.getCurrentFeatureDirPath(scenario);
+        String featureDir = FileCore.getCurrentFeatureDirPath();
+
         Log.debug("Feature dir is " + featureDir);
         if( featureDir != null ){
             ctx.Object.put("FeatureFileDir", String.class, featureDir);

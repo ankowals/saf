@@ -95,15 +95,17 @@ public class FileCore {
     }
 
 
-    public String getCurrentFeatureDirPath(Scenario scenario){
+    public String getCurrentFeatureDirPath(){
         Log.debug("Looking for a path to the current feature file");
 
         String path = "";
-        String[] tmp = scenario.getId().split(";");
+
+        String sc = ctx.Object.get("ScenarioId", String.class);
+        String fc = ctx.Object.get("FeatureId", String.class);
 
         //with regexp
-        String scenarioName = scenario.getName().trim().replaceAll("\\s+","").toLowerCase();
-        String featureName = tmp[0].replaceAll("-","").trim();
+        String scenarioName = sc.trim().replaceAll("\\s+","").toLowerCase();
+        String featureName = fc.replaceAll("-","").trim();
         //Boolean isFound = false;
         //to detect duplicates
         HashMap<String, String> features = new HashMap<>();
