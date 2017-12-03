@@ -8,7 +8,6 @@ simple automation framework for learning purposes
 What do we want from a test automation framework?
 
 
-
 	a way to execute e2e test using Gherkin language (BDD)
 	a way to execute tests related to  
 		- rest json/xml (soap)
@@ -52,33 +51,59 @@ What do we want from a test automation framework?
 
 ----------------------------------
 
-Where are we now?
+Where are we?
+	
+	Currently working on
 	
 	(in progress) a way to execute tests related to  
 		(done) - rest json/xml (soap) => RestAssured integrated 
 		(done) - gui (web/native) => Selenium WebDriver integrated for chrome, ff and ie, autoIT can be called via ExecutorCore
-		(done) - sql => jdbc integrated for oracle
+		(done) - sql => jdbc integrated for oracle/mssql
 		(done) - pdf validation => pdfbox2 integrated 
 		(to do) - mobile => Appium integration
-		
-		further enhancements:
-			- cleanUp and add more examples for winRM/winRS via ExecutorCore, pdf writing, update documentation for winRM
-			- display environment information in test report		
-			- add more helper functions
-			- consider tight autoIT integration?
 
+
+		further enhancements:
+			- display environment information in test report
+			- consider tight autoIT integration or better use appium/winium for native win apps automation?
+
+
+		(to do) a way to downlaod any 3rd party symptoms from SUT like logs, trace files (create step def to run tcpdump on unix hosts or tshark/rawCap on windows hosts)
+		(to do) a way to monitor and indicate quality of commited tests (see SonarQube for example )
+		(to do) a way to generate test documentation automatically => add new logging categories (like atmn(category, message)), use scenrio outline with path to feature and log file after test execution		
+		(to do) add more tests examples
+	
 	
 	----------------------------------	
 		
-		
-	(to do) a way to downlaod any 3rd party symptoms from SUT like logs, trace files (create step def to run tcpdump on unix hosts or tshark/rawCap on windows hosts)
-	(to do) a way to monitor and indicate quality of commited tests (see SonarQube for example )
-	(to do) a way to schedule test execution (see Jenkins/TeamCity)
-	(to do) a way to generate test documentation automatically => add new logging categories (like atmn(category, message)), use scenrio outline with path to feature and log file after test execution		
-	(to do) add more tests examples
-	
+
+	ToDo before 1.0:
+		0) create BaseModel.class to make it easier to implement new models			
+		1) integrate Appium
+		2) prepare a step to write to pdf and read pdf from online resource
+		3) add Xml parser? or better add link to GPath/XmlPath description used with RestAssured?		   
+		4) prepare step to start and stop tcpdump on a unix host on define interface with define filter and downlaod trace files			   
+		5) prepare step to trigger IE via autoIT script to handle windows authentication with Selenium (autoIT script available)	
+		6) move documentation to pdf file and wiki, add screenshots of test executed in cmd as well as in IDE, add screenshots of tests reports as well as tests logs
+		7) make sure that all steps/methods from libCore are documented
+		8) generate libCore documnetation and add it to the repo
+		9) change the names from execution ctx, ctx object to global/scenario variables?
+		10) add git usage documentation (documnetation almost complete) and xpath creation documentation (documentation available)
+		11) move winRS steps to libCore, move cloudDirector steps to libCore
+
+	ToDo for 2.0:
+		0) supervise appiumDriver/restClient/webDriver/JdbcDriver/sshClient resources and make sure that all open will be closed in scenario or global hooks	-> in other words implement pool design pattern for web/appium/db drivers and ssh/winRM resources
+		1) migrate to cucumber-jvm 2.x
+		2) migrate to allure 2.x
+		3) modify directory structure to get rid of src/main or src/test and use it with maven
+		4) protocol simulators integration can be a nice add on => via seagull?	
+		5) add support for web driver capabilities?
+
+
 	----------------------------------	
-	
+
+What is done?
+
 	(done) a way to execute e2e test using Gherkin language (BDD) => cucumber-jvm integrated
 	(done) a way to manage and configure test environment => via json configuration files
 	(done) a way to manage and configure test data	=> via json configuration files
@@ -103,8 +128,11 @@ Where are we now?
 	(done) a way to execute any command on remote host over ssh/winRM
 		(done) ssh/scp/sftp support => sshj library integrated and expectit-core library integrated
 		(done) winRM support => winRm4j library integrated and winRS can be called via ExecutorCore	
+	(done) a way to schedule test execution (see Jenkins/TeamCity) => Jenkins integration description available in the readme file
+	
 	
 ----------------------------------
+
 
 How can we use test automation framework?
 
@@ -115,21 +143,25 @@ How can we use test automation framework?
 	to execute sanity chcecks (smoke tests) and make sure that SUT configuration is correct (like all urls are reachable, ports open, interfaces are up & apps are running, login is possible for each user etc.)
 	to gether symptoms like traces/logs/tickets/events from multiple components of a system under test
 	to execute test system bringup and feed it with configruation data before test starts
-	to setup test environment using configuration management system before test suite execution
+	to setup test environment (infrastructure/configuration management) before test suite execution
 	to restore the system to the state before test started
 	to move configuration data between test systems
 	to describe system behavior via tests implementation (using Gherkin) - use tests as a living documentation
 	to use automated equipment for any not strictly test related activities like for example automate mobile phones to detect changes in the offer from a telco operator:)
 	
-	load genration/performance checks are out of scope
+	load generation/performance checks are out of scope
 	parallel test execution is out of scope for now
 	
-	For parallel test execution one can use capabilities of framework or use multiple VMs to deploy multiple SUTs, framework instances, scheduler instances etc... 
+	For parallel test execution one can use capabilities of framework or better use multiple VMs to deploy multiple SUTs, framework instances, scheduler instances etc... 
 	in that case it has to be ensured that tests are seperated from each other 
 		- subsequent test does not depend on the result of previous test 
 		- tests are using separate test data/config data (do not operate on the same config data at the same time to avoid concurent modifciation)
 
+
+
 ----------------------------------
+
+
 
 Installation instructions
 
@@ -172,6 +204,7 @@ Optionally user can execute steps below. Especially for web automation case or j
 	16 Fix relative path (relative to project dir) to web drivers in \src\test\java\config\framework\framework.config
 	17 Fix relative path (relative to project dir) path to jdbc drivers in \src\test\java\config\framework\framework.config
 	18 Install autoIt ( download from https://www.autoitscript.com/site/autoit/downloads/ )
+
 
 ----------------------------------
 
@@ -247,6 +280,8 @@ Dir src/test/java/features contains features files (cotntainers for tests).
 Dir traget/ will be used to store results of test execution like for example test report.
 
 File pom.xml contains project properties and dependencies. 
+
+
 
 --------------------------------
 
@@ -411,6 +446,89 @@ It is possible to set browser width and height via command line argument. To do 
 
 Argument -DwidthXheight= will be used to set browser dimensions.
 
+
+
+----------------------------------
+
+
+
+How to run it from Jenkins?
+
+
+
+Goal of this instruction is to setup a Jenknins instance so user can schedule test execution and check the resutls.
+Description below allows to setup a new project with a job that can be started and which results can be viewed in the web browser.
+
+	Steps to setup Jenkins
+
+	1 Download latest Jenkins for Windows from https://jenkins.io/
+	2 Install it
+	3 Go to installation directory by default C:\ProgramFiles (x86)\Jenkins and edit jenkins.xml file
+	
+		search "--httpPort=8080" and replace the "8083" with the new port number that you wish to use
+	
+	4 Restart Jenkins service
+		
+		open command prompt
+		type "services.msc"
+		right click on the "Jenkins" line and select "Restart"
+		type http://localhost:8083/ in your browser to test the change
+
+	5 Proceed according to the instructions on the screen
+	6 Install suggested plugins
+	7 Create user
+	8 Go to Manage Jenkins -> Configure System -> Advanced and change default path to workspace directory if needed
+	9 Go to Manage Jenkins -> Manage Plugins -> Available tab and install BlueOcean plugin to use new UI
+	10 Go back to main view and click Create New Jobs as Freestyle project
+	11 Thick "This project is parametrized" checkbox
+	12 Add String parameter PROJECTDIR with default value pointing to your project directory for example "C:\Users\akowa\Documents\Projects\FK_Prototype"
+	13 Thick trim the string box
+	14 Add String parameter ACTIVEENV with default value empty
+	15 Add String parameter CUCUMBEROPTIONS with default value that you wish to pass to cucumber runner, for example tags that shall be used "--tags @demoOnline"
+	16 Thick trim the string box
+	17 Add build step "Execute Windows batch command"
+		echo STEP 1 PRE BUILD
+		echo Stop jetty server so we can clean target directory
+
+		cd %PROJECTDIR%
+		mvn jetty:stop 
+	18 Add build step "Execute Windows batch command"
+		echo STEP 2 BUILD
+		echo run tests
+
+		cd %PROJECTDIR%
+		mvn clean test -Dactive_env="%ACTIVEENV%" -Dcucumber.options="%CUCUMBEROPTIONS%"
+	19 Add build step "Execute Windows batch command"
+		echo STEP 3 POST BUILD
+		echo generate test report
+
+		cd %PROJECTDIR%
+		mvn site 
+	20 Add build step "Execute Windows batch command"
+		echo STEP 4 POST BUILD
+		echo copy test report to workspace %WORKSPACE% for archiving
+
+		cd %PROJECTDIR%
+		xcopy * "%WORKSPACE%\%JOB_NAME%_%BUILD_NUMBER%" /e /i /h /Y
+	21 Add build step "Execute Windows batch command"
+		echo STEP 5 POST BUILD
+		echo start jetty to display test report
+
+		set BUILD_ID=
+		echo cd %PROJECTDIR% > %TEMP%\startJetty.bat
+		echo mvn jetty:run >> %TEMP%\startJetty.bat
+
+		start /B "" cmd /C %* %TEMP%\startJetty.bat
+	22 Apply and save the changes
+	23 Schedule the job
+	24 Watch it runs
+	25 View results via allure report
+
+
+Please keep in mind that just the results of the latest job will be visible in the report.
+
+
+
 --------------------------------
 
 
@@ -506,6 +624,7 @@ TestData can also be passed to the step silently like below
 In this case step def does not expect any parameters. It will read isbn from the configruation by calling a helper method. See below for more details.
 
 
+
 --------------------------------
 
 
@@ -570,7 +689,11 @@ Each new scenario start will be indicated in the log as follows
 	[INFO ] 2017-09-11 12:32:27.564 [main] Log - Started resources initialisation
 	[INFO ] 2017-09-11 12:32:27.566 [main] Log - <- checking environment configuration ->
 
+
+
 ----------------------------------
+
+
 
 Environment
 
@@ -766,7 +889,11 @@ From now on in case there is a need to access any configuration parameter one ca
 	
 Storage.get("Environment.Active.Rest.url") method returns url value from active configuration. Please note that is is assigned to variable of type String. In case Storage.get() returns other type of data than String we may encounter ClassCastException.
 	
+
+
 ----------------------------------
+
+
 
 TestData
 
@@ -847,7 +974,9 @@ It is also possible to use comments in the configuration files. To do so please 
 	       }
 
 
+
 ----------------------------------
+
 
 
 Macros
@@ -991,7 +1120,10 @@ Data types supported in test data configuration are
 	Boolean
 
 
+
 ----------------------------------
+
+
 
 Templates
 
@@ -1413,8 +1545,11 @@ It can be retrieved later on in the next Scenario or different Feature. See an e
         String userId = ExecutionContext.executionContextObject().get(id,clazz);
  
 Please keep in mind that it is not recommended to use this feautre as it creates dependencies between tests (Scenarios) that shall be avoided as much as possible. 
- 
+
+
+
 --------------------------------
+
 
 
 How to write Page Object Model for web automation purposes?
@@ -1676,10 +1811,15 @@ We have to provide path to a webDriver, browser type that shall be used in test 
 Url that will be open can be defined as Environment.Default.Web.url.
 It is also possible to provide browser width and height. To indicate max dimensions please use keyword "Max" else define them as String with format "width x height", for example "1024 x 960".
 
+
+
 --------------------------------
 
 
+
 How to write steps for rest/soap api?
+
+
 
 What kind of test can/shall be performed for the rest/soap api? Tests that can excercise the most common usecases described as crud (create, read, update, delete). Such operations are executed by different http methods like post, get, put and delete. See table below for more details
 
@@ -2061,10 +2201,15 @@ User can change it if needed for a particular project. To do so please edit foll
 		}
 		...
 
+
+
 --------------------------------
 
 
+
 How to write steps for dB tests?
+
+
 
 dB support maybe be useful in few cases, for example to load test data directly to dB (this approach is not recomended as dB structure can change with product development -> it is better to use exposed api, usually rest or file/bulk/batch interface to load data to dB) or to test that table data after some transformation is correct (like due to the user interaction via web, or rest client, etl process etc). In addition to that there maybe be a need to support procedure/scripts execution. It seems that the best approach to do it is to simply call a cmd client delivered with particular db, for example sqlplus in case of oracle via executor module.
 
@@ -2225,8 +2370,10 @@ After that we can compare content of a table before and after modification using
 
 DB connection will be automatically closed in @After hook.
 
- 
+
+
 --------------------------------
+
 
 
 How to use executor to run system commands or 3rd party apps?
@@ -2397,7 +2544,10 @@ Another possibility is to use ExecutorCore to trigger winRS, a command line winR
 This step will try to connect to a remote windows host and execute a command Hostname. Result will be name of the remote host.
 For connectivity it uses configuration that shall be defined for winRM. Please read below for more details.
 
+
+
 --------------------------------
+
 
 
 Read pdf file
@@ -2441,6 +2591,7 @@ Output of PdfCore.readLines(file) can be used in other step for validation purpo
 	  Scenario: read pdf file content and print it to the log file
 
 	    Given read pdf file from TestData.file
+
 
 
 --------------------------------
