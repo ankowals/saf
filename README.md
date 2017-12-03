@@ -465,7 +465,7 @@ Description below allows to setup a new project with a job that can be started a
 	2 Install it
 	3 Go to installation directory by default C:\ProgramFiles (x86)\Jenkins and edit jenkins.xml file
 	
-		search "--httpPort=8080" and replace the "8083" with the new port number that you wish to use
+		search "--httpPort=8080" and replace the "8080" with the new port number that you wish to use, for example 8083
 	
 	4 Restart Jenkins service
 		
@@ -481,7 +481,7 @@ Description below allows to setup a new project with a job that can be started a
 	9 Go to Manage Jenkins -> Manage Plugins -> Available tab and install BlueOcean plugin to use new UI
 	10 Go back to main view and click Create New Jobs as Freestyle project
 	11 Thick "This project is parametrized" checkbox
-	12 Add String parameter PROJECTDIR with default value pointing to your project directory for example "C:\Users\akowa\Documents\Projects\FK_Prototype"
+	12 Add String parameter PROJECTDIR with default value pointing to your project directory, for example "C:\Users\akowa\Documents\Projects\FK_Prototype"
 	13 Thick trim the string box
 	14 Add String parameter ACTIVEENV with default value empty
 	15 Add String parameter CUCUMBEROPTIONS with default value that you wish to pass to cucumber runner, for example tags that shall be used "--tags @demoOnline"
