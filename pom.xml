@@ -10,7 +10,8 @@
 
 	<!-- Properties that can be changed by the user -->
 	<properties>
-		<jetty.port>8082</jetty.port>
+		<jetty.start_port>8082</jetty.start_port>
+        <jetty.stop_port>8081</jetty.stop_port>
 		<jdk.path>C:/Program Files/Java/jdk1.8.0_144/bin/javac</jdk.path>
 		<java.version>8</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -197,10 +198,10 @@
                 <configuration>
                     <webAppSourceDirectory>${project.build.directory}/site/allure-maven-plugin</webAppSourceDirectory>
 					<httpConnector>
-						<port>${jetty.port}</port>
+						<port>${jetty.start_port}</port>
 					</httpConnector>
 					<stopKey>stop</stopKey>
-                    <stopPort>1234</stopPort>
+                    <stopPort>${jetty.stop_port}</stopPort>
 					<systemProperties>
 						<systemProperty>
 							<name>org.eclipse.jetty.annotations.maxWait</name>
