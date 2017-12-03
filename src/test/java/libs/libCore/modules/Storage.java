@@ -32,12 +32,13 @@ public class Storage {
      *
      */
     public <T> void set (String textKey, T value) {
+        Log.debug("Try to set " + textKey + " to " + value);
 
         Integer idx = 0;
         String[] t_textKey = textKey.split("[.]");
         String StorageName = t_textKey[idx];
 
-        HashMap<String, Object> Storage = ctx.Object.get(StorageName,HashMap.class);
+        HashMap<String, Object> Storage = ctx.Object.get(StorageName, HashMap.class);
 
         if ( Storage == null ) {
             Log.error("Can't set " + textKey + " to " + value + ". Storage does not exists or null!");
@@ -45,8 +46,40 @@ public class Storage {
 
         for(idx = 1; idx < t_textKey.length; idx++) {
             String key = t_textKey[idx].split("\\[")[0];
+            //if key does not exist lets create one
             if ( Storage.get(key) == null ) {
-                Log.error("Can't set " + textKey + " to " + value + ". Key does not exists or null!");
+                if ( idx < t_textKey.length-1 ) {
+                    if ( t_textKey[idx].contains("[") ){
+                        String sIndex = t_textKey[idx].split("\\[")[1].replace("]","");
+                        if ( sIndex.equals("0") ) {
+                            ArrayList<Object> tValue = new ArrayList<>();
+                            HashMap<String, Object> tInnerValue = new HashMap<>();
+                            tValue.add(tInnerValue);
+                            Storage.put(key, tValue);
+                        } else {
+                            Log.error("Can't set " + textKey + " to " + value + ". Key does not exists or null!");
+                        }
+                    } else {
+                        HashMap<String, Object> tValue = new HashMap<>();
+                        Storage.put(key, tValue);
+                    }
+                } else {
+                    if ( t_textKey[idx].contains("[") ) {
+                        String sIndex = t_textKey[idx].split("\\[")[1].replace("]", "");
+                        Integer iIndex = Integer.valueOf(sIndex);
+                        if (iIndex == 0) {
+                            ArrayList<Object> tValue = new ArrayList<>();
+                            tValue.add(null);
+                            Storage.put(key, tValue);
+                        } else {
+                            Log.error("Can't set " + textKey + " to " + value + ". Key does not exists or null!");
+                        }
+                    } else {
+                        Object tValue = null;
+                        Storage.put(key, tValue);
+                    }
+                }
+                //Log.error("Can't set " + textKey + " to " + value + ". Key does not exists or null!");
             }
 
             Storage = parseMap(Storage, t_textKey[idx], value);
@@ -69,10 +102,16 @@ public class Storage {
         String tKey = key.split("\\[")[0];
         if ( Storage.get(tKey) instanceof Map ) {
             Storage = (HashMap<String, Object>) Storage.get(key);
-        } else if (Storage.get(tKey) instanceof List )  {
+        } else if (Storage.get(tKey) instanceof List ) {
             Integer index = Integer.valueOf(key.substring(key.indexOf("[") + 1, key.indexOf("]")));
             ArrayList<Object> t_Array = (ArrayList<Object>) Storage.get(tKey);
-            if (t_Array.get(index) instanceof Map) {
+            if (t_Array.size() - index == 0) {
+                HashMap<String, Object> tMap = new HashMap<>();
+                t_Array.add(tMap);
+                Storage = (HashMap<String, Object>) t_Array.get(index);
+            } else if (t_Array.size() - index < 0) {
+                Log.error("Can't set " + Storage + "." + key + " to " + value + ". Key does not exists or null!");
+            } else if (t_Array.get(index) instanceof Map) {
                 Storage = (HashMap<String, Object>) t_Array.get(index);
             } else {
                 t_Array.set(index, value);
@@ -149,12 +188,14 @@ public class Storage {
     public <T> T get(String path) {
         //do not check if storage exists if we are dealing with a number
         if ( NumberUtils.isNumber(path) ) {
+            Log.warn("Value of " + path + " is null");
             return null;
         } else {
-            //if no dots in the path return just the storage ->
+            // if no dots in the path return just the storage ->
             // for example "TestData" was entered but not "TestData.key1"
-            if ( !path.contains(".") ) {
+            if ( ! path.contains(".") ) {
                 Object value = ctx.Object.get(path, HashMap.class);
+                Log.debug("Value of " + path + " is " + value);
                 return (T) value;
             }
 
@@ -180,15 +221,18 @@ public class Storage {
                                 Integer index = Integer.valueOf(element.substring(element.indexOf("[") + 1, element.indexOf("]")));
                                 value = ((List<Object>) value).get(index);
                             } else {
+                                Log.warn("Value of " + path + " is null");
                                 return null;
                             }
                         }
                     } else {
+                        Log.warn("Value of " + path + " is null");
                         return null;
                     }
                 }
             }
 
+            Log.debug("Value of " + path + " is " + value);
             return (T) value;
 
         }
