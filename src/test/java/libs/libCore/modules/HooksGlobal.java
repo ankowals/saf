@@ -57,6 +57,7 @@ public class HooksGlobal {
             // do the beforeAll stuff...
             Log.info("Test Suite execution STARTED!");
             PropertyReader.readSystemProperties();
+            Log.info("*************************");
             Log.info("*** Running features *** ");
             Log.info("*************************");
 

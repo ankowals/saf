@@ -202,7 +202,8 @@ public class Storage {
             //get hashmap with particular storage if it exists else return null
             String[] tmp = path.split("\\.");
             Object value = ctx.Object.get(tmp[0], HashMap.class);
-            if (value != null) {
+
+            if ( value != null ) {
                 String sTmp = "";
                 for (int i = 1; i < tmp.length; i++) {
                     sTmp = sTmp + "." + tmp[i];
@@ -215,15 +216,23 @@ public class Storage {
 
                     if (AbstractMap.class.isAssignableFrom(value.getClass())) {
                         value = ((AbstractMap<String, Object>) value).get(ename);
-
-                        if (element.contains("[")) {
-                            if (List.class.isAssignableFrom(value.getClass())) {
-                                Integer index = Integer.valueOf(element.substring(element.indexOf("[") + 1, element.indexOf("]")));
-                                value = ((List<Object>) value).get(index);
-                            } else {
-                                Log.warn("Value of " + path + " is null");
-                                return null;
+                        if ( value != null ) {
+                            if (element.contains("[")) {
+                                if (List.class.isAssignableFrom(value.getClass())) {
+                                    Integer index = Integer.valueOf(element.substring(element.indexOf("[") + 1, element.indexOf("]")));
+                                    value = ((List<Object>) value).get(index);
+                                    if ( value == null ){
+                                        Log.warn("Value of " + path + " is null");
+                                        return null;
+                                    }
+                                } else {
+                                    Log.warn("Value of " + path + " is null");
+                                    return null;
+                                }
                             }
+                        } else {
+                            Log.warn("Value of " + path + " is null");
+                            return null;
                         }
                     } else {
                         Log.warn("Value of " + path + " is null");

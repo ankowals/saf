@@ -2,9 +2,7 @@ package libs.libCore.modules;
 
 import org.apache.commons.exec.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 
 public class ExecutorCore {
 
@@ -41,17 +39,21 @@ public class ExecutorCore {
             executor.setWatchdog(watchdog);
         }
 
-          /* No live-streaming needed
-          PipedOutputStream os = new PipedOutputStream();
-          InputStream is = new PipedInputStream(os);
-          executor.setStreamHandler(new PumpStreamHandler(os));
-          */
+        //live-streaming
+        PipedOutputStream os = new PipedOutputStream();
+        InputStream is = null;
+        try {
+            is = new PipedInputStream(os);
+        } catch (IOException e) {
+            Log.error("", e);
+        }
+        executor.setStreamHandler(new PumpStreamHandler(os));
 
         //This is used to end the process when the JVM exits
         ShutdownHookProcessDestroyer processDestroyer = new ShutdownHookProcessDestroyer();
         executor.setProcessDestroyer(processDestroyer);
 
-        ByteArrayOutputStream os = new ByteArrayOutputStream(1024);
+        ByteArrayOutputStream os1 = new ByteArrayOutputStream(1024);
         executor.setStreamHandler(new PumpStreamHandler(os));
 
         executor.setWorkingDirectory(workingDir);
@@ -69,7 +71,24 @@ public class ExecutorCore {
 
         if (blocking)
         {
-            while ( !resultHandler.hasResult() ) {
+            while ( ! resultHandler.hasResult() ) {
+
+                //add live streaming
+                Reader reader = new InputStreamReader(is);
+                BufferedReader r = new BufferedReader(reader);
+                String tmp = null;
+                try {
+                    while ((tmp = r.readLine()) != null)
+                    {
+                        //Do something with tmp line
+                        Log.debug(tmp);
+                        String line = tmp + "\n";
+                        byte[] bytes = line.getBytes();
+                        os1.write(bytes);
+                    }
+                    r.close();
+                } catch (IOException e) { }
+
                 try {
                     resultHandler.waitFor();
                 } catch (InterruptedException e) { }
@@ -84,7 +103,7 @@ public class ExecutorCore {
             Log.debug("Command execution successful");
         }
 
-        return os;
+        return os1;
     }
 
 

@@ -37,6 +37,7 @@ public class Macro {
         for (HashMap.Entry<String, Object> entry : macro.entrySet())
         {
             //Log.debug("Found macro " + entry.getKey());
+
             //set default values for particular macro
             String calculatedValue = null;
             String type = null;
@@ -107,15 +108,15 @@ public class Macro {
             if(!availableTypes.contains(type)){
                 Log.warn("Available macro types are as follows:");
                 for(String item : availableTypes){
-                    Log.info(item);
+                    Log.debug(item);
                 }
                 Log.error("Wrong type defined for macro " + entry.getKey());
             }
 
-            Set<String> availiableZones = ZoneId.getAvailableZoneIds();
-            if(!availiableZones.contains(sZoneId)) {
+            Set<String> availableZones = ZoneId.getAvailableZoneIds();
+            if(!availableZones.contains(sZoneId)) {
                 Log.warn("Available macro zoneIds are as follows:");
-                for (String s : availiableZones) {
+                for (String s : availableZones) {
                     Log.info(s);
                 }
                 Log.error("Wrong zoneId defined for macro " + entry.getKey());
