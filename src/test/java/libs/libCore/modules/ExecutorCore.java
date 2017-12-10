@@ -39,22 +39,25 @@ public class ExecutorCore {
             executor.setWatchdog(watchdog);
         }
 
+        ByteArrayOutputStream os1 = new ByteArrayOutputStream(1024);
+
         //live-streaming
-        PipedOutputStream os = new PipedOutputStream();
         InputStream is = null;
-        try {
-            is = new PipedInputStream(os);
-        } catch (IOException e) {
-            Log.error("", e);
+        if ( blocking ) {
+            PipedOutputStream os = new PipedOutputStream();
+            try {
+                is = new PipedInputStream(os);
+            } catch (IOException e) {
+                Log.error("", e);
+            }
+            executor.setStreamHandler(new PumpStreamHandler(os));
+        } else {
+            executor.setStreamHandler(new PumpStreamHandler(os1));
         }
-        executor.setStreamHandler(new PumpStreamHandler(os));
 
         //This is used to end the process when the JVM exits
         ShutdownHookProcessDestroyer processDestroyer = new ShutdownHookProcessDestroyer();
         executor.setProcessDestroyer(processDestroyer);
-
-        ByteArrayOutputStream os1 = new ByteArrayOutputStream(1024);
-        executor.setStreamHandler(new PumpStreamHandler(os));
 
         executor.setWorkingDirectory(workingDir);
 
@@ -69,14 +72,12 @@ public class ExecutorCore {
             Log.error("", e);
         }
 
-        if (blocking)
-        {
+        if ( blocking ) {
             while ( ! resultHandler.hasResult() ) {
-
                 //add live streaming
                 Reader reader = new InputStreamReader(is);
                 BufferedReader r = new BufferedReader(reader);
-                String tmp = null;
+                String tmp;
                 try {
                     while ((tmp = r.readLine()) != null)
                     {
@@ -87,17 +88,17 @@ public class ExecutorCore {
                         os1.write(bytes);
                     }
                     r.close();
-                } catch (IOException e) { }
-
+                    reader.close();
+                } catch (IOException e) {}
                 try {
                     resultHandler.waitFor();
-                } catch (InterruptedException e) { }
+                } catch (InterruptedException e) {}
             }
         }
 
         int exitValue = resultHandler.getExitValue();
         Log.debug("Command execution exitValue is " + exitValue);
-        if(executor.isFailure(exitValue)){
+        if( executor.isFailure(exitValue) ){
             Log.debug("Command execution failed");
         }else{
             Log.debug("Command execution successful");
