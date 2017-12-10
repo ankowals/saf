@@ -65,7 +65,7 @@ Where are we?
 
 		further enhancements:
 			- display environment information in test report
-			- consider tight autoIT integration or better use appium/winium for native win apps automation?
+			- consider autoIT integration or better use appium/winium for native win apps automation?
 
 
 		(to do) a way to downlaod any 3rd party symptoms from SUT like logs, trace files (create step def to run tcpdump on unix hosts or tshark/rawCap on windows hosts)
@@ -98,6 +98,7 @@ Where are we?
 		3) modify directory structure to get rid of src/main or src/test and use it with maven
 		4) protocol simulators integration can be a nice add on => via seagull?	
 		5) add support for web driver capabilities?
+		6) migrate to latest version of jetty mvn plugin
 
 
 	----------------------------------	
@@ -189,7 +190,9 @@ Installation instructions
 	9 configure port number in pom.xml file under <jetty.port> tag
 	
 		<properties>
-			<jetty.port>8082</jetty.port>
+			
+			<jetty.start_port>8082</jetty.start_port>
+			<jetty.stop_port>8081</jetty.stop_port>
 			...
 		</properties>	    
 	   
