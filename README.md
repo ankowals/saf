@@ -167,7 +167,7 @@ How can we use test automation framework?
 Installation instructions
 
 
-	1 install java jdk ( download from https://java.com/en/download/ )
+	1 install java jdk ( download from http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html )
 	2 set an environment variable, for example JDK_HOME=C:\Program Files\Java\jdk1.8.0_144
 	
 	 	to verify java installation in cmd issue java -version
