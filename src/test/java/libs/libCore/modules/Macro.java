@@ -166,6 +166,9 @@ public class Macro {
             HashMap<String, String> macrosAfterEvaluation = mcr(macros);
 
             //evaluate macros
+            //handling of entries in Lists/Array is missing but it is unlikely that it will be useful
+
+            /*
             for (HashMap.Entry<String, Object> entryToEval : mapToEval.entrySet()) {
                 if (entryToEval.getValue().getClass().getName().contains("String")) {
                     for (HashMap.Entry<String, String> macroEntry : macrosAfterEvaluation.entrySet()) {
@@ -175,8 +178,29 @@ public class Macro {
                     }
                 }
             }
+            */
+
+            handleEvaluation(mapToEval, macrosAfterEvaluation);
             ctx.Object.put(input, HashMap.class, mapToEval);
        }
     }
+
+    private void handleEvaluation (HashMap<String, Object> map, HashMap<String, String> macrosAfterEvaluation) {
+        for (HashMap.Entry<String, Object> entry : map.entrySet()){
+
+            if (entry.getValue() instanceof HashMap ){
+                handleEvaluation((HashMap) entry.getValue(), macrosAfterEvaluation);
+            } else {
+                if (entry.getValue().getClass().getName().contains("String")) {
+                    for (HashMap.Entry<String, String> macroEntry : macrosAfterEvaluation.entrySet()) {
+                        if (entry.getValue().equals("mcr." + macroEntry.getKey())) {
+                            map.put(entry.getKey(), macroEntry.getValue());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 
 }
