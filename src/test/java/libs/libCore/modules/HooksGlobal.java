@@ -19,10 +19,6 @@ public class HooksGlobal {
         this.ctx = ctx;
     }
 
-    //http://automationpanda.com/2017/03/03/cucumber-jvm-global-hook-workarounds/
-    //http://zsoltfabok.com/blog/2012/09/cucumber-jvm-hooks/
-    //http://github.com/cucumber/cucumber-jvm/issues/515
-    //http://github.com/cucumber/cucumber-jvm/tree/master/examples/java-webbit-websockets-selenium/src/test/java/cucumber/examples/java/websockets
     private static boolean dunit = false;
 
     @Before(order=10)

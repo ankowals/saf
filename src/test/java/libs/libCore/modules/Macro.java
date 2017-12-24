@@ -166,30 +166,37 @@ public class Macro {
             HashMap<String, String> macrosAfterEvaluation = mcr(macros);
 
             //evaluate macros
-            //handling of entries in Lists/Array is missing but it is unlikely that it will be useful
-
-            /*
-            for (HashMap.Entry<String, Object> entryToEval : mapToEval.entrySet()) {
-                if (entryToEval.getValue().getClass().getName().contains("String")) {
-                    for (HashMap.Entry<String, String> macroEntry : macrosAfterEvaluation.entrySet()) {
-                        if (entryToEval.getValue().equals("mcr." + macroEntry.getKey())) {
-                            mapToEval.put(entryToEval.getKey(), macroEntry.getValue());
-                        }
-                    }
-                }
-            }
-            */
-
             handleEvaluation(mapToEval, macrosAfterEvaluation);
             ctx.Object.put(input, HashMap.class, mapToEval);
        }
     }
 
+
+    /**
+     * helper method to handle nested macros in maps and lists.
+     * Recursion is used to check every entity of the input map.
+     * Nested lists are not supported
+     *
+     * @param map HashMap, input to be checked for macro presence
+     * @param macrosAfterEvaluation HashMap, contains macros name and calculated value mapping
+     */
     private void handleEvaluation (HashMap<String, Object> map, HashMap<String, String> macrosAfterEvaluation) {
         for (HashMap.Entry<String, Object> entry : map.entrySet()){
 
-            if (entry.getValue() instanceof HashMap ){
+            if ( entry.getValue() instanceof HashMap ) {
                 handleEvaluation((HashMap) entry.getValue(), macrosAfterEvaluation);
+            } else if ( entry.getValue() instanceof ArrayList ) {
+                for (int i=0; i < ((ArrayList) entry.getValue()).size(); i++){
+                    if ( ((ArrayList) entry.getValue()).get(i).getClass().getName().contains("String")) {
+                        for (HashMap.Entry<String, String> macroEntry : macrosAfterEvaluation.entrySet()) {
+                            if (((ArrayList) entry.getValue()).get(i).equals("mcr." + macroEntry.getKey())) {
+                                ((ArrayList) entry.getValue()).set(i,macroEntry.getValue());
+                            }
+                        }
+                    } else if ( ((ArrayList) entry.getValue()).get(i) instanceof HashMap) {
+                        handleEvaluation((HashMap<String, Object>) ((ArrayList) entry.getValue()).get(i), macrosAfterEvaluation);
+                    }
+                }
             } else {
                 if (entry.getValue().getClass().getName().contains("String")) {
                     for (HashMap.Entry<String, String> macroEntry : macrosAfterEvaluation.entrySet()) {

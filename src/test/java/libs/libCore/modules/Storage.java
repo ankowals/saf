@@ -14,7 +14,7 @@ public class Storage {
     private FileCore FileCore;
     private ConfigReader Config;
     private static final String TMP_DIR_PATH = System.getProperty("java.io.tmpdir");
-    private static final File STORAGE_FILE = new File(TMP_DIR_PATH + "//" + "FK_Prototype_Persistent_Storage_File.json");
+    private static final File STORAGE_FILE = new File(TMP_DIR_PATH + "//" + "SAF_Persistent_Storage_File.json");
 
     // PicoContainer injects class SharedContext
     public Storage(SharedContext ctx) {
@@ -326,7 +326,7 @@ public class Storage {
             }
         } else {
             Log.error( "Storage file " + TMP_DIR_PATH + "//"
-                    + "FK_Prototype_Persistent_Storage_File.json"
+                    + "SAF_Persistent_Storage_File.json"
                     + " does not exists!" + " Please make sure that step "
                     + " 'write storage (.+) with id (.+) to file'"
                     + " was executed" );

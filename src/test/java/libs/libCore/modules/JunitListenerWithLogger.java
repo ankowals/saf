@@ -6,6 +6,10 @@ import org.junit.runner.notification.RunListener;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+/**
+ * Used to add log to file support.
+ * We want to log all exceptions throw during cucumber execution via junit runner
+ */
 public class JunitListenerWithLogger extends RunListener {
 
     private static String stacktrace = "";

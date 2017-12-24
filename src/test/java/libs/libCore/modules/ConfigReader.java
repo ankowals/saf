@@ -52,7 +52,7 @@ public class ConfigReader {
                     Log.debug("Found included configuration file");
                     create(pathToIncludedConfigFile);
                 } else {
-                    sFileWithoutIncludes = sFileWithoutIncludes + line;
+                    sFileWithoutIncludes = sFileWithoutIncludes + line + System.getProperty("line.separator");
                 }
             }
             sFileWithoutIncludes = sFileWithoutIncludes.trim();
@@ -202,6 +202,14 @@ public class ConfigReader {
 
     // This is fancier than Map.putAll(Map)
     // https://stackoverflow.com/questions/25773567/recursive-merge-of-n-level-maps
+
+    /**
+     * helper method used to merge maps together. Recursion is used to handle nested maps.
+     *
+     * @param original
+     * @param newMap
+     * @return
+     */
     private Map deepMerge(Map original, Map newMap) {
         for (Object key : newMap.keySet()) {
             if (newMap.get(key) instanceof Map && original.get(key) instanceof Map) {

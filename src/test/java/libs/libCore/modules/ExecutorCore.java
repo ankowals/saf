@@ -19,7 +19,7 @@ public class ExecutorCore {
      * @param workingDir  File, Working directory
      * @param timeout     Integer, Kill process after this time (in sec) (0: no timeout)
      * @param blocking    Boolean,  Synchronous/blocking (true) or asynchronous/background startup (false).
-     * @return  An outputstream that contains the output of the process into stdout/stderr
+     * @return  An outputstream that contains the output of the process written into stdout/stderr
      */
     public ByteArrayOutputStream execute(String cmd, File workingDir, int timeout, boolean blocking)
     {
@@ -83,7 +83,7 @@ public class ExecutorCore {
                     {
                         //Do something with tmp line
                         Log.debug(tmp);
-                        String line = tmp + "\n";
+                        String line = tmp + System.getProperty("line.separator");
                         byte[] bytes = line.getBytes();
                         os1.write(bytes);
                     }

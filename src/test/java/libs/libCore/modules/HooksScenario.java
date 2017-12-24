@@ -422,11 +422,9 @@ public class HooksScenario {
     }
 
 
-    // This is fancier than Map.putAll(Map)
-    // https://stackoverflow.com/questions/25773567/recursive-merge-of-n-level-maps
     /**
-     * helper function used to merge to maps from a configuration files
-     * it adds merges nested maps and tables
+     * helper function used to merge maps from a configuration files
+     * it merges nested maps and tables by doing so called deep merge
      *
      * @param original, Map
      * @param newMap, Map

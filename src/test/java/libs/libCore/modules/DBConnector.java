@@ -22,6 +22,15 @@ public class DBConnector {
         this.FileCore = ctx.Object.get("FileCore",FileCore.class);
     }
 
+
+    /**
+     * Creates connection to a data base using jdbc driver
+     * Connection will be open towards uri defined in the Environment.Active.Jdbc.url
+     * Used driver is chosen based on the path defined in Environment.Active.JdbcDrivers.TYPE.path
+     * Type can be one of Oracle, Mssql
+     *
+     * @return Connection
+     */
     public Connection create() {
         Connection connection = null;
         String JDBC_CONNECTION_URL = Storage.get("Environment.Active.Jdbc.url");

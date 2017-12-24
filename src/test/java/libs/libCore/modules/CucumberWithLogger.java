@@ -22,6 +22,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * Created to override runChild method. In this way we can inject our own junit listener.
+ * This listener is responsible for logging of exceptions when junit runner is used to run cucumber tests
+ * Otherwise exceptions will not be printed to the log.
+ * Junit runner is used when test are triggered via maven surefire plugin
+ *
+ */
 public class CucumberWithLogger extends ParentRunner<FeatureRunner> {
     private final JUnitReporter jUnitReporter;
     private final List<FeatureRunner> children = new ArrayList();

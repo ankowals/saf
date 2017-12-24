@@ -5,6 +5,10 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.events.WebDriverEventListener;
 
+/**
+ * helper class used to enhance logging during web driver actions execution
+ *
+ */
 public class EventHandler implements WebDriverEventListener{
 
     @Override

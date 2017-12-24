@@ -5,6 +5,10 @@ import gherkin.formatter.model.*;
 
 import java.util.List;
 
+/**
+ * Not used currently. Prints path to the feature file when test is executed via cucumber junit runner
+ */
+
 public class JunitPrintingFormatter implements Formatter {
 
     public void feature(Feature feature) {}
