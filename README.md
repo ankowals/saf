@@ -77,19 +77,15 @@ Where are we?
 	----------------------------------	
 		
 
-	ToDo before 1.0:
-		0) create BaseModel.class to make it easier to implement new models			
+	ToDo before 1.0:		
 		1) integrate Appium
-		2) prepare a step to write to pdf and read pdf from online resource
 		3) add Xml parser? or better add link to GPath/XmlPath description used with RestAssured?		   
 		4) prepare step to start and stop tcpdump on a unix host on define interface with define filter and downlaod trace files			   
 		5) prepare step to trigger IE via autoIT script to handle windows authentication with Selenium (autoIT script available)	
 		6) move documentation to pdf file and wiki, add screenshots of test executed in cmd as well as in IDE, add screenshots of tests reports as well as tests logs
-		7) make sure that all steps/methods from libCore are documented
-		8) generate libCore documnetation and add it to the repo
 		9) change the names from execution ctx, ctx object to global/scenario variables?
 		10) add git usage documentation (documnetation almost complete) and xpath creation documentation (documentation available)
-		11) move winRS steps to libCore, move cloudDirector steps to libCore
+		11) add better examples of winRS usage
 
 	ToDo for 2.0:
 		0) supervise appiumDriver/restClient/webDriver/JdbcDriver/sshClient resources and make sure that all open will be closed in scenario or global hooks	-> in other words implement pool design pattern for web/appium/db drivers and ssh/winRM resources
@@ -103,7 +99,7 @@ Where are we?
 
 	----------------------------------	
 
-What is done?
+What has been done?
 
 	(done) a way to execute e2e test using Gherkin language (BDD) => cucumber-jvm integrated
 	(done) a way to manage and configure test environment => via json configuration files
@@ -1232,7 +1228,7 @@ How to write step and share data between steps?
 
 Thanks to dependency injection there is a way to share objects between steps and modules. In SharedContext.class available under /src/test/java/libs/libCore/modules so called Context Object was defined.
 
-To grant access to it please make sure that your Steps class extends BaseStep class and create a constructor like below
+To grant access to it please make sure that your Steps class extends BaseSteps class and create a constructor like below
 
 	public class DemoOnlieSteps extends BaseSteps {
 
@@ -1249,6 +1245,8 @@ Where DemoOnlineSteps is a class that contains project specific steps to handle 
 In this way we can pass same instance of ctx between steps and modules. With this approach we can use methods defined for objects available in ctx variable.
 BaseSteps class define a set of helpers modules to make writing new step defs much easier. They are called as below
 Macro, StepCore, PageCore, SqlCore, Storage, FileCore, ExecutorCore, PdfCore, SshCore, WinRMCore. They contain a set of methods that can be used to do common things in steps like creating files, evaluating macros, reading environment configuration, evaluating templates, attaching files to the report etc.
+
+Please note that BaseSteps class can also be used for new models preparation. 
 
 For example lets have a look at 2 steps below
 
