@@ -78,14 +78,13 @@ Where are we?
 		
 
 	ToDo before 1.0:		
-		1) integrate Appium
-		3) add Xml parser? or better add link to GPath/XmlPath description used with RestAssured?		   
-		4) prepare step to start and stop tcpdump on a unix host on define interface with define filter and downlaod trace files			   
-		5) prepare step to trigger IE via autoIT script to handle windows authentication with Selenium (autoIT script available)	
-		6) move documentation to pdf file and wiki, add screenshots of test executed in cmd as well as in IDE, add screenshots of tests reports as well as tests logs
-		9) change the names from execution ctx, ctx object to global/scenario variables?
-		10) add git usage documentation (documnetation almost complete) and xpath creation documentation (documentation available)
-		11) add better examples of winRS usage
+		1) integrate Appium		   
+		2) prepare step to start and stop tcpdump on a unix host on define interface with define filter and downlaod trace files			   
+		3) prepare step to trigger IE via autoIT script to handle windows authentication with Selenium (autoIT script available)	
+		4) move documentation to pdf file and wiki, add screenshots of test executed in cmd as well as in IDE, add screenshots of tests reports as well as tests logs
+		5) change the names from execution ctx, ctx object to global/scenario variables?
+		6) add git usage documentation (documnetation almost complete) and xpath creation documentation (documentation available)
+		7) add better examples of winRS usage
 
 	ToDo for 2.0:
 		0) supervise appiumDriver/restClient/webDriver/JdbcDriver/sshClient resources and make sure that all open will be closed in scenario or global hooks	-> in other words implement pool design pattern for web/appium/db drivers and ssh/winRM resources
