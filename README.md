@@ -1843,8 +1843,8 @@ What kind of test can/shall be performed for the rest/soap api? Tests that can e
 					delete after delete
 					delete non-existing
 		
-In practice typical rest implementation using http protocol for message transport and json for data transfer.
-In case we are dealing with soap api http is used for message transport and xml for data transfer.
+In practice typical rest implementation use http protocol for message transport and json spec for data transfer.
+In case we are dealing with soap api http protocol is used for message transport and xml for data transfer.
 
 RestAssured is integrated which means we can either build rest/soap requests using method exposed by RestAssured or easier use template files to store message body (either json or xml) and read the message body from such template.
 This method is usually very easy to use because templates can be created using any other tool available like SopaUi or chrome plugins.
@@ -2202,7 +2202,7 @@ User can change it if needed for a particular project. To do so please edit foll
 		}
 		...
 
-
+Please note that for data verification purposes RestAssured is using so called GPath specification. For more details how to extract data from json/xml body please see gpath spec for example here http://groovy-lang.org/processing-xml.html.
 
 --------------------------------
 
