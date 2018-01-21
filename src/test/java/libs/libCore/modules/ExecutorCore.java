@@ -1,8 +1,10 @@
 package libs.libCore.modules;
 
 import org.apache.commons.exec.*;
+//import org.apache.commons.io.IOUtils;
 
 import java.io.*;
+//import java.nio.charset.StandardCharsets;
 
 public class ExecutorCore {
 
@@ -73,12 +75,14 @@ public class ExecutorCore {
         }
 
         if ( blocking ) {
+
+            Reader reader = new InputStreamReader(is);
+            BufferedReader r = new BufferedReader(reader);
+            String tmp;
+
             while ( ! resultHandler.hasResult() ) {
-                //add live streaming
-                Reader reader = new InputStreamReader(is);
-                BufferedReader r = new BufferedReader(reader);
-                String tmp;
                 try {
+                    //add live streaming
                     while ((tmp = r.readLine()) != null)
                     {
                         //Do something with tmp line
@@ -87,13 +91,27 @@ public class ExecutorCore {
                         byte[] bytes = line.getBytes();
                         os1.write(bytes);
                     }
-                    r.close();
-                    reader.close();
-                } catch (IOException e) {}
-                try {
+
+                    //alternative way
+                    //String text = IOUtils.toString(is, StandardCharsets.UTF_8.name());
+                    //Log.debug(text);
+
                     resultHandler.waitFor();
-                } catch (InterruptedException e) {}
+
+                } catch (InterruptedException e) {
+                    //do nothing
+                } catch (IOException e) {
+                    Log.error("", e);
+                }
             }
+
+            try {
+                r.close();
+                reader.close();
+            } catch (IOException e) {
+                Log.error("", e);
+            }
+
         }
 
         int exitValue = resultHandler.getExitValue();

@@ -26,6 +26,11 @@ public class JunitListenerWithLogger extends RunListener {
     }
 
     public static String getStacktrace(){
-        return stacktrace;
+
+        String tmp = stacktrace;
+        stacktrace = "";
+
+        return tmp;
     }
+
 }
