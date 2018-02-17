@@ -4,6 +4,7 @@ import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.internal.BuildInfo;
@@ -11,6 +12,8 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class DriverFactory {
@@ -45,7 +48,26 @@ public class DriverFactory {
             String path = Storage.get("Environment.Active.WebDrivers.Chrome.path");
             System.setProperty("webdriver.chrome.driver", FileCore.getProjectPath() + File.separator + path);
             System.setProperty("webdriver.chrome.verboseLogging", "false");
-            dr = new ChromeDriver();
+
+            ChromeOptions options = new ChromeOptions();
+
+            //Disable extensions and hide infobars
+            options.addArguments("--disable-extnesions");
+            options.addArguments("disbale-infobars");
+
+            Map<String, Object> prefs = new HashMap<>();
+
+            //Enable Flash
+            prefs.put("profile.default_content_setting_values.plugins", 1);
+            prefs.put("profile.content_settings.plugin_whitelist.adobe-flash-player", 1);
+            prefs.put("profile.content_settings.exceptions.plugins.*,*.per_resource.adobe-flash-player", 1);
+
+            //Hide save credentials prompt
+            prefs.put("credentials_enable_service", false);
+            prefs.put("profile.password_mangaer_enabled", false);
+            options.setExperimentalOption("prefs", prefs);
+
+            dr = new ChromeDriver(options);
         } else if (browser.equalsIgnoreCase("firefox")) {
             String path = Storage.get("Environment.Active.WebDrivers.FireFox.path");
             System.setProperty("webdriver.gecko.driver", FileCore.getProjectPath() + File.separator + path);

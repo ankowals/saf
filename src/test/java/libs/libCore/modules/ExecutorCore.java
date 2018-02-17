@@ -1,10 +1,8 @@
 package libs.libCore.modules;
 
 import org.apache.commons.exec.*;
-//import org.apache.commons.io.IOUtils;
 
 import java.io.*;
-//import java.nio.charset.StandardCharsets;
 
 public class ExecutorCore {
 
@@ -83,18 +81,13 @@ public class ExecutorCore {
             while ( ! resultHandler.hasResult() ) {
                 try {
                     //add live streaming
-                    while ((tmp = r.readLine()) != null)
-                    {
+                    while ((tmp = r.readLine()) != null) {
                         //Do something with tmp line
                         Log.debug(tmp);
                         String line = tmp + System.getProperty("line.separator");
                         byte[] bytes = line.getBytes();
                         os1.write(bytes);
                     }
-
-                    //alternative way
-                    //String text = IOUtils.toString(is, StandardCharsets.UTF_8.name());
-                    //Log.debug(text);
 
                     resultHandler.waitFor();
 
@@ -112,14 +105,17 @@ public class ExecutorCore {
                 Log.error("", e);
             }
 
+
         }
 
-        int exitValue = resultHandler.getExitValue();
-        Log.debug("Command execution exitValue is " + exitValue);
-        if( executor.isFailure(exitValue) ){
-            Log.debug("Command execution failed");
-        }else{
-            Log.debug("Command execution successful");
+        if ( blocking ) {
+            int exitValue = resultHandler.getExitValue();
+            Log.debug("Command execution exitValue is " + exitValue);
+            if (executor.isFailure(exitValue)) {
+                Log.debug("Command execution failed");
+            } else {
+                Log.debug("Command execution successful");
+            }
         }
 
         return os1;

@@ -428,7 +428,7 @@ public class PageCore {
      */
     public void switchToIFrame (By locator) {
         WebElement iFrame = Page.findElement(locator);
-        Page.switchTo().defaultContent(); // you are now outside any frame
+        //Page.switchTo().defaultContent(); // you are now outside any frame
         try {
             Page.switchTo().frame(iFrame);
         } catch (NoSuchFrameException e){
