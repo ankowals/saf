@@ -352,7 +352,7 @@ Test report will be created.
 TestData/ExpectedData can be passed to the steps directly in a feature file or can be taken from a *.config file.
 
 Global configuration is available but it can be overwritten/updated by local config.
-Config files will be loaded automatically as long as feature file name is same as feature name defined inside the feature file!
+Config files will be loaded automatically. It is usually convinient to give same name to feature file like name of the feture it contains.
 For example file myTestFeature.feature shall contain
 	
 	Feature: myTestFeature
@@ -376,7 +376,7 @@ How the framework is build?
 
 
 
-Java is used for learning purposes.
+Java is used for learning purposes. IntelliJ is used as an IDE which makes it easier to write tests and from which tests can be executed.
 
 To make installation and deployment easy so called project build and dependency management tool is used. It is called maven.
 It will automatically download all needed libraries so there is no need to find them manually.
@@ -397,7 +397,7 @@ To read/write pdf files pdfBox2 library is used.
 
 To have possibility to pause test execution autoIt scirpt is used. 
 
-To manage remote hosts via ssh and transfer files via scp/sftp sshj and expectit-core libraries are used. To mangae windows remotes winrm4j library is used.
+To manage remote hosts via ssh and transfer files via scp/sftp sshj and expectit-core libraries are used. To manage windows remotes winrm4j library is used.
 
 On top of that macro support, test data management, configuration files support, Page Object Model support and more was added.
 Project and test structure is also enforced to keep things consistent.
@@ -423,7 +423,7 @@ To run a test from windows cmd please execute
 	go to http://localhost:8082
 
 
-Please note that usage of clean keyword ensures that artifacts from previous test execution are removed first.
+Please note that usage of clean keyword ensures that artifacts (like logs, reports, screenshots) from previous test execution are removed first.
 
 One can also use IntelliJ to run a feature file. In that case only log file will be created.
 To run a test from IntelliJ a cucumber plugin is used. Please click with right mouse button on the feature file name and choose 'Run'.
@@ -476,39 +476,44 @@ Description below allows to setup a new project with a job that can be started a
 	6 Install suggested plugins
 	7 Create user
 	8 Go to Manage Jenkins -> Configure System -> Advanced and change default path to workspace directory if needed
-	9 Go to Manage Jenkins -> Manage Plugins -> Available tab and install BlueOcean plugin to use new UI
-	10 Go back to main view and click Create New Jobs as Freestyle project
-	11 Thick "This project is parametrized" checkbox
-	12 Add String parameter PROJECTDIR with default value pointing to your project directory, for example "C:\Users\akowa\Documents\Projects\FK_Prototype"
-	13 Thick trim the string box
-	14 Add String parameter ACTIVEENV with default value empty
-	15 Add String parameter CUCUMBEROPTIONS with default value that you wish to pass to cucumber runner, for example tags that shall be used "--tags @demoOnline"
-	16 Thick trim the string box
-	17 Add build step "Execute Windows batch command"
+	9 Go to Manage Jenkins -> Configure System and adjust number of executors to decide how many jobs can be run in parallel
+	10 Optionally install new modern UI. To do so go to Manage Jenkins -> Manage Plugins -> Available tab and install BlueOcean plugin
+	11 Go to Manage Jenkins -> Mangae Plugins -> Available and install PostBuildScript plugin to run tasks when the job execution is over
+	12 Go back to main view and click Create New Jobs as Freestyle project
+	13 Thick "This project is parametrized" checkbox
+	14 Add String parameter PROJECTDIR with default value pointing to your project directory, for example "C:\Users\akowa\Documents\Projects\FK_Prototype"
+	15 Thick trim the string box
+	16 Add String parameter ACTIVEENV with default value empty
+	17 Add String parameter CUCUMBEROPTIONS with default value that you wish to pass to cucumber runner, for example tags that shall be used "--tags @demoOnline"
+	18 Thick trim the string box
+	19 Add build step "Execute Windows batch command"
 		echo STEP 1 PRE BUILD
 		echo Stop jetty server so we can clean target directory
 
 		cd %PROJECTDIR%
 		mvn jetty:stop 
-	18 Add build step "Execute Windows batch command"
+	20 Add build step "Execute Windows batch command"
 		echo STEP 2 BUILD
 		echo run tests
 
 		cd %PROJECTDIR%
 		mvn clean test -Dactive_env="%ACTIVEENV%" -Dcucumber.options="%CUCUMBEROPTIONS%"
-	19 Add build step "Execute Windows batch command"
+	21 Add PostBuild action "Execute Script"
+	22 In new PostBuld action add new build step "Execute Windows batch command" and mark if build was success, failure or unstable
+		Script content shall be 
+		
 		echo STEP 3 POST BUILD
 		echo generate test report
 
 		cd %PROJECTDIR%
 		mvn site 
-	20 Add build step "Execute Windows batch command"
+	23 Add build step "Execute Windows batch command" as a part of PostBuild step
 		echo STEP 4 POST BUILD
 		echo copy test report to workspace %WORKSPACE% for archiving
 
 		cd %PROJECTDIR%
 		xcopy * "%WORKSPACE%\%JOB_NAME%_%BUILD_NUMBER%" /e /i /h /Y
-	21 Add build step "Execute Windows batch command"
+	24 Add build step "Execute Windows batch command" as a part of PostBuild step
 		echo STEP 5 POST BUILD
 		echo start jetty to display test report
 
@@ -517,14 +522,15 @@ Description below allows to setup a new project with a job that can be started a
 		echo mvn jetty:run >> %TEMP%\startJetty.bat
 
 		start /B "" cmd /C %* %TEMP%\startJetty.bat
-	22 Apply and save the changes
-	23 Schedule the job
-	24 Watch it runs
-	25 View results via allure report
+	25 To schedule new job add Build Triggers and select Build Periodically. To start execution every working day at approx 1 enter into the box
+	H 01 ** 1-5
+	26 Apply and save the changes
+	27 Watch it runs
+	28 View results via allure report in the web browser under localhost:jetty_start_port
 
 
 Please keep in mind that just the results of the latest job will be visible in the report.
-
+It is possible to run multiple jobs in parallel. To do so just create few projects and confgure separate job for each project. Rememebr to adjust jetty ports in pom.xml for each projects to view the reports when the job is over.
 
 
 --------------------------------
@@ -633,7 +639,7 @@ Details of what is happening during test execution
 
 Cucumber runner is available in src/test/java/libs/libCore/modules/TestRunner.class
 It contains cucumber options like glue path (path to steps definitions), features path and allure report plugin.
-There shall be no need to change it parameters.
+There shall be no need to change its parameters.
 
 	package libs.libCore.modules;
 
@@ -1209,13 +1215,13 @@ it shall match test result like below
 	30, SALES, CHICAGO
 	40, OPERATIONS, BOSTON
 
-Each step execution is marked in a log with a "* Step started" string to make it easier to find it. For example
+Each step execution shall be marked in a log with a "* Step started" string to make it easier to find it. For example
 
 
 
 	[DEBUG] 2017-09-11 12:32:28.208 [main] Log - * Step started a_user_retrieves_the_book_by_isbn
 
-
+Please make sure that step developers will start their implementation with method call of Log.Info("* Step started ...") where "..." is the name of the step.
 
 --------------------------------
 
@@ -1279,7 +1285,7 @@ ctx.Object is a bucket to which we can throw anything and later on we can retrie
 
 	ctx.Object.put("request",RequestSpecification.class, request);
 
-This metohd puts an object of type RequestSpecification to ctx.Object bucket with name "request". Later on another step can retrieve it like below
+This metohd puts an object request of type RequestSpecification to ctx.Object bucket with name "request". Later on another step can retrieve it like below
 
 	RequestSpecification request = ctx.Object.get("request",RequestSpecification.class);
 
@@ -1419,8 +1425,8 @@ Please use PdfCore module for pdf manipulation.
 Please use SshCore module for ssh/scp/sftp execution.
 Please use winRmCore module for winrm execution.
 
-It is also possible to write test data into a file. In this way it can be read later on and used during other test execution. Even though this creates dependecies between tests it maybe useful some times. Please consider following example we run a long lasting test. Action that has to be trigger takes 10 minutes to execute. In this case there is no point to wait for its results. Instead it maybe desired to divide the test into 2 parts (feature files). One will be called to trigger the action. Second one can contain validation steps.
-Second feature can be executed few minutes later and in the meantime other test can run.
+It is also possible to write test data into a file. In this way it can be read later on and used during other test execution. Even though this creates dependecies between tests it maybe useful some times. Please consider following example we run a long lasting test. Action that has to be trigger takes 10 minutes to execute. In this case there is no point to wait for its results. Instead it maybe desired to divide the test into 2 parts (2 feature files). One will be called to trigger the action. Second one can contain validation steps.
+Second feature can be executed few minutes later and in the meantime other tests can run.
 In such case we have to extract test data that was used in the first part of the test (first feature file).
 
 See an example below to understand how to write test data storage (or any other storage) to a text file.
@@ -1546,7 +1552,9 @@ It can be retrieved later on in the next Scenario or different Feature. See an e
  
 Please keep in mind that it is not recommended to use this feautre as it creates dependencies between tests (Scenarios) that shall be avoided as much as possible. 
 
+One last remark it is not recommended to use try/catch blocks is step defs implementation. If there is a need to use it please try to do it in a model and not step def itself. This approach greatly increases readability of steps implementation.
 
+To force stop step execution use Log.error() method.
 
 --------------------------------
 
@@ -1998,17 +2006,14 @@ In case we would like to trigger any other request like get we have to change th
         String url = Storage.get("Environment.Active.Rest.url");
         Long statusCode = Storage.get("Expected.statusOK");
         Integer expectedCode = statusCode.intValue();
-        try {
-            given()
-                .when()
-                .log()
-                .all()
-                .get(url)
-                    .then()
-                    .statusCode(expectedCode);
-        } catch (AssertionError e) {
-            Log.error("", e);
-        }
+	
+        given()
+            .when()
+            .log()
+            .all()
+            .get(url)
+                .then()
+                .statusCode(expectedCode);
     }
 
 
@@ -2354,7 +2359,7 @@ Becuase our data set is very small we will use template compariosn
         StepCore.compareWithTemplate(templateName, path);
     }
     
-It maybe a better idea for a huge data set to compare 2 tables in sql. For example by executing query like below
+It maybe a better idea for a huge data set to compare 2 tables in sql. For example by executing query like below if ms sql db is in use
  
  	select from table a
 	except
@@ -2366,7 +2371,7 @@ In case table a was modified by some ETL we can backup it by executing
 
 	select * into a_backup from a
 	
-After that we can compare content of a table before and after modification using previously privide query. Of course it is also possible to use select column1, column2... instead of select * if all we want to do is to compare just selected columns.
+After that we can compare content of a table before and after modification using previously privided query. Of course it is also possible to use select column1, column2... instead of select * if all we want to do is to compare just selected columns. Sql queries shall be adjusted for other db types like oracle etc.
 
 DB connection will be automatically closed in @After hook.
 
