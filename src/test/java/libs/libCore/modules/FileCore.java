@@ -7,10 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import cucumber.api.Scenario;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -148,8 +146,20 @@ public class FileCore {
                 matcher = pattern.matcher(fileContent);
                 while ( matcher.find() ){
                     String scenarioNameFromFile = matcher.group(1);
+                    String scenarioOutlineNameFromFile = matcher.group(2);
+                    String backgroundNameFromFile = matcher.group(3);
 
                     if ( scenarioName.equals(scenarioNameFromFile) ) {
+                        Log.debug("Feature file path is " + new File(file).getAbsolutePath());
+                        //isFound = true;
+                        path = FilenameUtils.getFullPathNoEndSeparator(new File(file).getAbsolutePath());
+                    }
+                    if ( scenarioName.equals(scenarioOutlineNameFromFile) ) {
+                        Log.debug("Feature file path is " + new File(file).getAbsolutePath());
+                        //isFound = true;
+                        path = FilenameUtils.getFullPathNoEndSeparator(new File(file).getAbsolutePath());
+                    }
+                    if ( scenarioName.equals(backgroundNameFromFile) ) {
                         Log.debug("Feature file path is " + new File(file).getAbsolutePath());
                         //isFound = true;
                         path = FilenameUtils.getFullPathNoEndSeparator(new File(file).getAbsolutePath());
