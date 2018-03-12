@@ -20,6 +20,7 @@ import org.openqa.selenium.support.events.EventFiringWebDriver;
 import ru.yandex.qatools.allure.annotations.Attachment;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -154,8 +155,8 @@ public class HooksScenario {
             ctx.Object.put("FeatureFileDir", String.class, featureDir);
 
             ArrayList<String> localConfigFiles = FileCore.searchForFile(featureDir,".config");
-            if(localConfigFiles.size()!=0) {
-                for (String localConfigFile : localConfigFiles) {
+            if( localConfigFiles.size()!= 0 ) {
+                for ( String localConfigFile : localConfigFiles ) {
                     Config.create(localConfigFile);
                 }
             }else{
@@ -164,7 +165,7 @@ public class HooksScenario {
         }
 
         //all global and local configuration loaded.
-        //show default config
+        //prepare environment config
         Log.debug("Checking default environment configuration");
         HashMap<String, Object> defaultEnvConfig = Storage.get("Environment.Default");
         HashMap<String, Object> sshConfig = Storage.get("Ssh");
@@ -286,14 +287,45 @@ public class HooksScenario {
             Macro.eval("Expected");
         }
 
-        Log.info("Test data storage is");
+        Log.info("Adding environment information to the report");
+        //allow to use config entities concatenation in storage, evaluate them and change to final value
+        evaluateConfigEntities (Storage.get("Environment.Active.WriteToReport"));
+
+        //create properties list from a hashmap
+        List<String> lines = new ArrayList<>();
+        HashMap<String, String> HashMapenvPropMap = Storage.get("Environment.Active.WriteToReport");
+        for (Map.Entry<String, String> entry : HashMapenvPropMap.entrySet()) {
+            lines.add(entry.getKey() + "=" + entry.getValue());
+        }
+
+        String targetDirPath = FileCore.getProjectPath().substring(0, FileCore.getProjectPath().length() - 14) + File.separator + "target";
+        File allureResults = new File(targetDirPath + File.separator + "allure-results" + File.separator + "environment.properties");
+        File allureResultsDir = new File(targetDirPath + File.separator + "allure-results");
+
+        //create allure-results directory if not exists yet
+        if ( ! Files.exists(allureResultsDir.toPath()) ){
+            try {
+                Files.createDirectory(allureResultsDir.toPath());
+            } catch (IOException e) {
+                Log.error("", e);
+            }
+        }
+
+        //write lines into environment.properties file
+        try {
+            Files.write(allureResults.toPath(), lines);
+        } catch (IOException e) {
+            Log.error("", e);
+        }
+
+
+        //Log.info("Test data storage is");
         Storage.print("TestData");
 
         Log.info("<- Finished local config load ->");
         Log.info("***");
         Log.info("*** Running steps for scenario: " + scenario.getName());
         Log.info("***");
-
     }
 
 
@@ -451,5 +483,63 @@ public class HooksScenario {
         }
         return original;
     }
+
+
+    private void evaluateConfigEntities (HashMap<String, Object> map) {
+        for (HashMap.Entry<String, Object> entry : map.entrySet()){
+
+            if ( entry.getValue() instanceof HashMap ) {
+                evaluateConfigEntities((HashMap) entry.getValue());
+            } else if ( entry.getValue() instanceof ArrayList ) {
+                for (int i=0; i < ((ArrayList) entry.getValue()).size(); i++) {
+                    if ( ((ArrayList) entry.getValue()).get(i).getClass().getName().contains("String") ) {
+                        String tmp = (String) ((ArrayList) entry.getValue()).get(i);
+                        if ( tmp.contains("${ctx.") ) {
+                            String newVal = replaceInString (tmp);
+                            ((ArrayList) entry.getValue()).set(i, newVal);
+                        }
+                    } else if (((ArrayList) entry.getValue()).get(i) instanceof HashMap) {
+                        evaluateConfigEntities( (HashMap<String, Object>) ((ArrayList) entry.getValue()).get(i) );
+                    }
+                }
+            } else {
+                if (entry.getValue().getClass().getName().contains("String")) {
+                    String tmp = (String) entry.getValue();
+                    if ( tmp.contains("${ctx.") ) {
+                        String newVal = replaceInString (tmp);
+                        map.put(entry.getKey(), newVal);
+                    }
+                }
+            }
+        }
+    }
+
+
+
+    private String replaceInString (String input) {
+        Log.debug("Input is " + input);
+        Integer beignIdx = input.indexOf("${");
+        Integer endIdx = input.indexOf("}", beignIdx);
+
+        if (beignIdx != -1) {
+            if ( endIdx == -1 ){
+                Log.error("Typo in config value " + input + "! Missing closing bracket }. Can't do variable substitution!");
+            }
+
+            String toReplace = input.substring(beignIdx+2, endIdx);
+            String toCheck = toReplace;
+            if ( toReplace.startsWith("ctx.") ){
+                toCheck = toReplace.substring(4);
+            }
+            String result = StepCore.checkIfInputIsVariable(toCheck).toString();
+
+            if (  ! toReplace.equals("ctx." + result) ) {
+                return replaceInString(input.replace("${" + toReplace + "}", result));
+            }
+        }
+
+        return input;
+    }
+
 
 }
