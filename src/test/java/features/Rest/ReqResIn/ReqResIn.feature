@@ -1,5 +1,5 @@
 @reqResIn
-Feature: ReqResIn
+Feature: Req Res-In
 
   Scenario: Tigger Post request to create single user
 

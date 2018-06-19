@@ -1,4 +1,4 @@
-@Web
+@Web @02_etl
 Feature: test4
   Next Search for a specific sentence using google
 

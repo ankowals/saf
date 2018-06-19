@@ -1,3 +1,4 @@
+@01_installation
 Feature: test5
 
   @storageTest
@@ -16,6 +17,6 @@ Feature: test5
 
     And set TestData.nieMaMnie4[5] to TOJESTTEST9
 
-  Scenario: test for set
+  Scenario: test for set3
 
     And set TestData.nieMaMnie4[5].klucz1 to TOJESTTEST9

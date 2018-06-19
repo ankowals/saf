@@ -1,4 +1,6 @@
 @bookByIsbn
+@issue=<ISSUE-NUMBER>
+@tmsLink=<TEST-CASE-ID>
 Feature: Get book by ISBN
   Scenario: User calls web service to get a book by its ISBN
     Given a book exists with an isbn
