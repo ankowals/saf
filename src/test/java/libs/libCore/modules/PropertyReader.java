@@ -1,9 +1,5 @@
 package libs.libCore.modules;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Enumeration;
 import java.util.Properties;
 
 public class PropertyReader {
@@ -11,16 +7,10 @@ public class PropertyReader {
     private SharedContext ctx;
     private FileCore FileCore;
 
-    private Properties properties = new Properties();
-    private InputStream inputStream = null;
-    private String configDir;
-    private String default_env = "default";
-
     // PicoContainer injects class SharedContext
     public PropertyReader (SharedContext ctx) {
         this.ctx = ctx;
         this.FileCore = ctx.Object.get("FileCore",FileCore.class);
-        this.configDir = FileCore.getGlobalConfigPath() + "//" + "environment";
     }
 
 

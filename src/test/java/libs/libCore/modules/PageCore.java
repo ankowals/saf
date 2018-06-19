@@ -1,5 +1,6 @@
 package libs.libCore.modules;
 
+import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Action;
 import org.openqa.selenium.interactions.Actions;
@@ -34,7 +35,7 @@ public class PageCore {
      * @return boolean
      */
     public Boolean titleContains(String pageTitle){
-        if(Page.getTitle().contains(pageTitle)){
+        if(StringUtils.containsIgnoreCase(Page.getTitle(),pageTitle)){
             return true;
         }else{
             return false;
@@ -63,7 +64,7 @@ public class PageCore {
 
     /**
      * Executes js to check if page is loaded.
-     * Does this in a loop and check document.readState every 1 second.
+     * Does this in a loop and checks document.readState every 1 second.
      */
     public void waitForPageToLoad() {
         Log.debug("Going to wait for page load");
@@ -198,11 +199,14 @@ public class PageCore {
         if (Page == null) {
             Log.error("Web Driver not started or null!");
         }
+
         FluentWait<EventFiringWebDriver> wait = new FluentWait<>(Page).withTimeout(maxWaitTime, TimeUnit.SECONDS)
                 .pollingEvery(200, TimeUnit.MILLISECONDS);
         try {
             return wait.until((EventFiringWebDriver webDriver) -> {
+                turnOffImplicitWaits();
                 List<WebElement> elems = Page.findElements(byLocator);
+                turnOnImplicitWaits();
                 if (elems.size() > 0) {
                     return elems.get(0);
                 } else {
@@ -440,6 +444,15 @@ public class PageCore {
 
 
     /**
+     * switches focus to default content
+     */
+    public void switchFromIFrameToDefaultContent () {
+        Page.switchTo().defaultContent(); // you are now outside any frame
+        Log.debug("Switched to default content");
+    }
+
+
+    /**
      * switches focus to particular browser window identified by numeric id
      *
      * @param id Integer, window identifier
@@ -528,6 +541,60 @@ public class PageCore {
         }
 
         return screenshot;
+    }
+
+
+    /**
+     * awaits for a page refresh
+     */
+    public void awaitForAnElementToBeRefreshed(WebElement element){
+
+        Log.debug("Awaiting for page refresh");
+        Integer timeout = Storage.get("Environment.Active.Web.timeout");
+        WebDriverWait wait = new WebDriverWait(Page, timeout);
+        try {
+            wait.until(ExpectedConditions.stalenessOf(element));
+        } catch (AssertionError | StaleElementReferenceException e){
+            Log.warn("Refresh was done, element is no longer attached to the dom");
+        }
+
+    }
+
+
+    /**
+     * Attempts to click on an element multiple times (to avoid stale element
+     * exceptions caused by rapid DOM refreshes)
+     *
+     * @param by By, element locator
+     */
+    public void dependableClick(By by)
+    {
+        final int MAXIMUM_WAIT_TIME = 10;
+        final int MAX_STALE_ELEMENT_RETRIES = 5;
+
+        WebDriverWait wait = new WebDriverWait(Page, MAXIMUM_WAIT_TIME);
+        int retries = 0;
+        while (true)
+        {
+            try
+            {
+                wait.until(ExpectedConditions.elementToBeClickable(by)).click();
+
+                return;
+            }
+            catch (StaleElementReferenceException e)
+            {
+                if (retries < MAX_STALE_ELEMENT_RETRIES)
+                {
+                    retries++;
+                    continue;
+                }
+                else
+                {
+                    Log.error("", e);
+                }
+            }
+        }
     }
 
 }

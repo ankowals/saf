@@ -107,8 +107,13 @@ public class FileCore {
         String fc = ctx.Object.get("FeatureId", String.class);
 
         //with regexp
-        String scenarioName = sc.trim().replaceAll("\\s+","").toLowerCase();
+        String scenarioName = sc.trim()
+                                .replaceAll("\\s+","")
+                                .toLowerCase()
+                                .replaceAll("_","")
+                                .replaceAll("-","").trim();
         String featureName = fc.replaceAll("-","").trim();
+
         //Boolean isFound = false;
         //to detect duplicates
         HashMap<String, String> features = new HashMap<>();
@@ -119,6 +124,7 @@ public class FileCore {
                     .replaceAll("\\p{Blank}","")
                     .replaceAll("(?m)^#.*$","")
                     .replaceAll("-","")
+                    .replaceAll("_","")
                     .toLowerCase();
 
             Pattern pattern = Pattern.compile("(?im)^feature:(.*?)$");

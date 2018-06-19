@@ -78,7 +78,7 @@ public class StepCore {
      * Checks if string provided as an input to the step def is actually a key in the storage
      * Returns input value or value extracted from storage.
      * Please note that in this case type of input is String but returned value can be one of
-     * String, Double, Long, Boolean
+     * String, Double, Long, Int, Boolean
      *
      * @param input key in the storage or value
      *
@@ -265,11 +265,11 @@ public class StepCore {
     public String searchForTemplate(String templateName) {
         //find global template dir
         String projectDir = FileCore.getProjectPath();
-        String globalTemplateDir = projectDir + File.separator + "template";
+        String globalTemplateDir = projectDir + File.separator + "templates";
 
         //find local template dir
         String localDir = ctx.Object.get("FeatureFileDir", String.class);
-        String localTemplateDir = localDir + File.separator + "template";
+        String localTemplateDir = localDir + File.separator + "templates";
 
         //find default template dir
         String defaultTemplateDir = projectDir + File.separator + "libs";
@@ -513,6 +513,38 @@ public class StepCore {
     public String attachMessageToReport(String name, String message){
         Log.debug("Message with name " + name + " attached to report");
         return message;
+    }
+
+
+    /**
+     * Replaces variable place holders in String with values from Storage
+     *
+     * @param input, String
+     *
+     */
+    public String replaceInString(String input) {
+        Log.debug("Input is " + input);
+        Integer beignIdx = input.indexOf("${");
+        Integer endIdx = input.indexOf("}", beignIdx);
+
+        if (beignIdx != -1) {
+            if ( endIdx == -1 ){
+                Log.error("Typo in config value " + input + "! Missing closing bracket }. Can't do variable substitution!");
+            }
+
+            String toReplace = input.substring(beignIdx+2, endIdx);
+            String toCheck = toReplace;
+            if ( toReplace.startsWith("ctx.") ){
+                toCheck = toReplace.substring(4);
+            }
+            String result = checkIfInputIsVariable(toCheck).toString();
+
+            if (  ! toReplace.equals("ctx." + result) ) {
+                return replaceInString(input.replace("${" + toReplace + "}", result));
+            }
+        }
+
+        return input;
     }
 
 }

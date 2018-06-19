@@ -316,6 +316,11 @@ public class Storage {
                 }
             }
 
+            if ( content == null ){
+                Log.error("Content of Storage with identifier " + identifier + " was not found! " +
+                    "Please make sure that step 'write storage (.+) with id (.+) to file' was executed!");
+            }
+
             String sJson = name + " : " + content.substring(identifier.length()+1);
             File file = FileCore.createTempFile(name + "_" + identifier + "_","config");
             FileCore.appendToFile(file, sJson);

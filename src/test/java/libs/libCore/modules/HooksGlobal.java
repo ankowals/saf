@@ -7,8 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.io.IoBuilder;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 
 public class HooksGlobal {
 
@@ -51,6 +50,8 @@ public class HooksGlobal {
 
             //beforeAll hook
             // do the beforeAll stuff...
+
+
             Log.info("Test Suite execution STARTED!");
             PropertyReader.readSystemProperties();
             Log.info("*************************");
@@ -60,13 +61,10 @@ public class HooksGlobal {
             //redirect StdOut and StdErr to the logger so we can catch logs written by other tools
             System.setOut(
                     IoBuilder.forLogger(LogManager.getLogger("libs.libCore.modules"))
-                            .setLevel(Level.DEBUG).setBuffered(false)
-                            .buildPrintStream()
+                            .setLevel(Level.DEBUG).buildPrintStream()
             );
-            System.setErr(
-                    IoBuilder.forLogger(LogManager.getLogger("libs.libCore.modules"))
-                            .setLevel(Level.WARN).setBuffered(false)
-                            .buildPrintStream()
+            System.setErr(IoBuilder.forLogger(LogManager.getLogger("libs.libCore.modules"))
+                            .setLevel(Level.WARN).buildPrintStream()
             );
 
             Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {

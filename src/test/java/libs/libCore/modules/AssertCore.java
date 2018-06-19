@@ -9,10 +9,12 @@ import static org.hamcrest.Matchers.lessThan;
 public class AssertCore {
 
     private SharedContext ctx;
+    private Storage Storage;
 
     // PicoContainer injects class SharedContext
     public AssertCore(SharedContext ctx) {
         this.ctx = ctx;
+        this.Storage = ctx.Object.get("Storage", Storage.class);
     }
 
 
@@ -46,77 +48,33 @@ public class AssertCore {
         Log.debug("Its type is " + type);
 
         if (action.equalsIgnoreCase("equalTo")){
-            try {
-                vResp.body(key, equalTo(expectedValue));
-            } catch (AssertionError e) {
-                Log.error("", e);
-            }
+            vResp.body(key, equalTo(expectedValue));
         } else if (action.equalsIgnoreCase("containsString")){
-            try {
-                vResp.body(key, containsString(expectedValue.toString()));
-            } catch (AssertionError e) {
-                Log.error("", e);
-            }
+            vResp.body(key, containsString(expectedValue.toString()));
         } else if (action.equalsIgnoreCase("containsInAnyOrder")){
-            try {
-                vResp.body(key, containsInAnyOrder(expectedValue));
-            } catch (AssertionError e) {
-                Log.error("", e);
-            }
+            vResp.body(key, containsInAnyOrder(expectedValue));
         } else if (action.equalsIgnoreCase("greaterThan")){
             if (cType.contains("Int")) {
-                try {
-                    vResp.body(key, greaterThan((int) expectedValue));
-                } catch (AssertionError e) {
-                    Log.error("", e);
-                }
+                vResp.body(key, greaterThan((int) expectedValue));
             } else if (cType.contains("Long")) {
-                try {
-                    vResp.body(key, greaterThan((Long) expectedValue));
-                } catch (AssertionError e) {
-                    Log.error("", e);
-                }
+                vResp.body(key, greaterThan((Long) expectedValue));
             } else if (cType.contains("Double")) {
-                try {
-                    vResp.body(key, greaterThan((Double) expectedValue));
-                } catch (AssertionError e) {
-                    Log.error("", e);
-                }
+                vResp.body(key, greaterThan((Double) expectedValue));
             } else if (cType.contains("Float")) {
-                try {
-                    vResp.body(key, greaterThan((Float) expectedValue));
-                } catch (AssertionError e) {
-                    Log.error("", e);
-                }
+                vResp.body(key, greaterThan((Float) expectedValue));
             } else {
                 Log.error("Type not supported for greaterThen comparison. " +
                         "Please use one of Int, Long, Double, Float");
             }
         } else if (action.equalsIgnoreCase("lessThan")){
             if (cType.contains("Int")) {
-                try {
-                    vResp.body(key, lessThan((int) expectedValue));
-                } catch (AssertionError e) {
-                    Log.error("", e);
-                }
+                vResp.body(key, lessThan((int) expectedValue));
             } else if (cType.contains("Long")) {
-                try {
-                    vResp.body(key, lessThan((Long) expectedValue));
-                } catch (AssertionError e) {
-                    Log.error("", e);
-                }
+                vResp.body(key, lessThan((Long) expectedValue));
             } else if (cType.contains("Double")) {
-                try {
-                    vResp.body(key, lessThan((Double) expectedValue));
-                } catch (AssertionError e) {
-                    Log.error("", e);
-                }
+                vResp.body(key, lessThan((Double) expectedValue));
             } else if (cType.contains("Float")) {
-                try {
-                    vResp.body(key, lessThan((Float) expectedValue));
-                } catch (AssertionError e) {
-                    Log.error("", e);
-                }
+                vResp.body(key, lessThan((Float) expectedValue));
             } else {
                 Log.error("Type not supported for lessThan comparison. " +
                         "Please use one of Int, Long, Double, Float");
@@ -125,6 +83,25 @@ public class AssertCore {
             Log.error("Action " + action + " not supported. Please use one of " +
                     "equalTo, containsInAnyOrder, containsString, greaterThan, lessThan");
         }
+    }
+
+    public void extractValueFromBodyAndStoreItInStorage(ValidatableResponse vResp, String key, String pathInStorage){
+
+        String cType = null;
+
+        //log null pointer exception in case message body is empty
+        try {
+            cType = vResp.extract().path(key).getClass().getName();
+        } catch (NullPointerException e) {
+            Log.error("Key " + key + " not found in the message body", e );
+        }
+
+        Log.debug("Key " + key + " value is");
+        Log.debug(vResp.extract().path(key));
+        Log.debug("Its type is " + cType);
+
+        Storage.set(pathInStorage, vResp.extract().path(key));
+
     }
 
 }

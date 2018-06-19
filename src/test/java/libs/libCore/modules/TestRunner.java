@@ -4,11 +4,10 @@ import cucumber.api.junit.Cucumber;
 import org.junit.runner.RunWith;
 import cucumber.api.CucumberOptions;
 
-@RunWith(CucumberWithLogger.class)
+@RunWith(Cucumber.class)
 @CucumberOptions(
-        plugin = {"ru.yandex.qatools.allure.cucumberjvm.AllureReporter"},
+        plugin = {"ru.yandex.qatools.allure.cucumberjvm.AllureReporter", "libs.libCore.modules.CustomFormatter"},
         features = "src/test/java/features",
-        //format = "libs.libCore.modules.JunitPrintingFormatter",
         glue = "libs")
 
 public class TestRunner {}

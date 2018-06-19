@@ -56,12 +56,15 @@ public class DBConnector {
             } catch (MalformedURLException e) {
                 Log.error("", e);
             }
-        } else if ( JDBC_CONNECTION_URL.contains("jdbc:sqlserver") ) {
+        } else if ( JDBC_CONNECTION_URL.contains("jdbc:sqlserver") || JDBC_CONNECTION_URL.contains("jdbc:jtds:sqlserver") ) {
             try {
                 Log.debug("Try to load MsSql driver");
                 String pathToDriver = Storage.get("Environment.Active.JdbcDrivers.Mssql.path");
                 URL u = new URL("jar:file:" + FileCore.getProjectPath() + File.separator + pathToDriver + "!/");
                 String classname = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+                if ( JDBC_CONNECTION_URL.contains("jdbc:jtds:sqlserver") ) {
+                    classname = "net.sourceforge.jtds.jdbc.Driver";
+                }
                 URLClassLoader ucl = new URLClassLoader(new URL[]{u});
                 Driver d = (Driver) Class.forName(classname, true, ucl).newInstance();
                 DriverManager.registerDriver(new DriverShim(d));

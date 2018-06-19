@@ -14,6 +14,9 @@ public class BaseSteps {
     protected PdfCore PdfCore;
     protected SshCore SshCore;
     protected WinRMCore WinRMCore;
+    protected WinRSCore WinRSCore;
+    protected CloudDirectorCore CloudDirectorCore;
+    protected WiniumCore WiniumCore;
 
     // PicoContainer injects class SharedContext
     public BaseSteps (SharedContext ctx) {
@@ -29,6 +32,9 @@ public class BaseSteps {
         this.PdfCore = ctx.Object.get("PdfCore", PdfCore.class);
         this.SshCore = ctx.Object.get("SshCore", SshCore.class);
         this.WinRMCore = ctx.Object.get("WinRMCore", WinRMCore.class);
+        this.WinRSCore = ctx.Object.get("WinRSCore", WinRSCore.class);
+        this.CloudDirectorCore = ctx.Object.get("CloudDirectorCore", CloudDirectorCore.class);
+        this.WiniumCore = ctx.Object.get("WiniumCore", WiniumCore.class);
     }
 
 }

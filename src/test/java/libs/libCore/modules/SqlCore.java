@@ -89,7 +89,7 @@ public class SqlCore {
      * @param list List<Map<String, Object>>, list as returned by method selectList
      */
     public void printList(List<Map<String, Object>> list) {
-
+        Log.debug("Query result is");
         if ( list.size() > 0 ) {
             //print header
             Map<String, Object> firstRow = list.get(0);
@@ -119,7 +119,7 @@ public class SqlCore {
      */
     public String listToString(List<Map<String, Object>> list) {
 
-        String result = null;
+        String result = "";
         String n = System.lineSeparator();
 
         if ( list.size() > 0 ) {

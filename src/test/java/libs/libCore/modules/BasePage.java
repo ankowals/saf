@@ -21,6 +21,7 @@ public class BasePage {
         this.AssertCore = ctx.Object.get("AssertCore", AssertCore.class);
 
         PageCore.waitForPageToLoad();
+
     }
 
     /**

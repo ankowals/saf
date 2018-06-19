@@ -7,8 +7,6 @@ import io.restassured.RestAssured;
 import io.restassured.config.DecoderConfig;
 import io.restassured.config.LogConfig;
 import org.apache.commons.lang.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.OutputStreamAppender;
@@ -17,6 +15,7 @@ import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.openqa.selenium.logging.LogEntry;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
+import org.openqa.selenium.winium.WiniumDriver;
 import ru.yandex.qatools.allure.annotations.Attachment;
 
 import java.io.*;
@@ -35,6 +34,7 @@ public class HooksScenario {
     private SharedContext ctx;
     private StepCore StepCore;
     private PageCore PageCore;
+    private WiniumCore WiniumCore;
     private Storage Storage;
     private ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -114,6 +114,15 @@ public class HooksScenario {
         StepCore step = new StepCore(ctx);
         ctx.Object.put("StepCore", StepCore.class, step);
 
+        WinRSCore winRSCore = new WinRSCore(ctx);
+        ctx.Object.put("WinRSCore", WinRSCore.class, winRSCore);
+
+        CloudDirectorCore cloudDirectorCore = new CloudDirectorCore(ctx);
+        ctx.Object.put("CloudDirectorCore", CloudDirectorCore.class, cloudDirectorCore);
+
+        WiniumCore winiumCore = new WiniumCore(ctx);
+        ctx.Object.put("WiniumCore", WiniumCore.class, winiumCore);
+
         //get resources from ctx object
         FileCore FileCore = ctx.Object.get("FileCore", FileCore.class);
         Macro Macro = ctx.Object.get("Macro", Macro.class);
@@ -126,8 +135,8 @@ public class HooksScenario {
 
         ArrayList<String> defaultConfigFiles = FileCore.searchForFile(defaultConfigDir,".config");
         if(defaultConfigFiles.size()!=0) {
-            for (String globalConfigFile : defaultConfigFiles) {
-                Config.create(globalConfigFile);
+            for (String configFile : defaultConfigFiles) {
+                Config.create(configFile);
             }
         }
 
@@ -135,10 +144,24 @@ public class HooksScenario {
         String globalConfigDir = FileCore.getGlobalConfigPath();
         Log.debug("Global configuration directory is " + globalConfigDir);
 
-        ArrayList<String> globalConfigFiles = FileCore.searchForFile(globalConfigDir,".config");
-        if(globalConfigFiles.size()!=0) {
-            for (String globalConfigFile : globalConfigFiles) {
-                Config.create(globalConfigFile);
+        Boolean useProjectConfig = Storage.get("Environment.Default.UseProjectConfig");
+        if ( useProjectConfig ){
+            Log.debug("Looking for a project.config file");
+            String projFilePath = globalConfigDir + File.separator + "project.config";
+            File projFile = new File(projFilePath);
+            if (projFile.exists() && !projFile.isDirectory()) {
+                Log.debug("Reading project global configuration from " + projFilePath);
+                Config.create(projFilePath);
+            } else {
+                Log.error(projFilePath + " does not exists!");
+            }
+        } else {
+            Log.warn("Project.config usage switched off. Going to read global configuration in alphabetical order");
+            ArrayList<String> globalConfigFiles = FileCore.searchForFile(globalConfigDir, ".config");
+            if (globalConfigFiles.size() != 0) {
+                for (String configFile : globalConfigFiles) {
+                    Config.create(configFile);
+                }
             }
         }
 
@@ -156,8 +179,8 @@ public class HooksScenario {
 
             ArrayList<String> localConfigFiles = FileCore.searchForFile(featureDir,".config");
             if( localConfigFiles.size()!= 0 ) {
-                for ( String localConfigFile : localConfigFiles ) {
-                    Config.create(localConfigFile);
+                for ( String configFile : localConfigFiles ) {
+                    Config.create(configFile);
                 }
             }else{
                 Log.warn("No local config files found!");
@@ -189,6 +212,7 @@ public class HooksScenario {
         defaultEnvConfig.put("Ssh", sshConfig);
         //merge winRM with default
         defaultEnvConfig.put("WinRM", winRmConfig);
+
         //check if cmd argument active_env was provided to overwrite active_env
         String cmd_arg  = System.getProperty("active_env");
         if ( cmd_arg != null ) {
@@ -219,14 +243,6 @@ public class HooksScenario {
             Log.info("Property Environment.Active.Web.size overwritten by CMD arg -widthXheight=" + cmd_arg2);
             Storage.set("Environment.Active.Web.size", cmd_arg2);
         }
-
-        Log.info("-- Following configuration Environment.Active is going to be used --");
-        for (HashMap.Entry<String, Object> entry : finalEnvConfig.entrySet()) {
-            String[] tmp = entry.getValue().getClass().getName().split(Pattern.quote(".")); // Split on period.
-            String type = tmp[2];
-            Log.info( "(" + type + ")" + entry.getKey() + " = " + entry.getValue() );
-        }
-        Log.info("-- end --");
 
         //adjust default RestAssured config
         Log.debug("adjusting RestAssured config");
@@ -281,43 +297,126 @@ public class HooksScenario {
         if ( doMacroEval == null ){
             Log.error("Environment.Active.MacroEval null or empty!");
         }
+
+        //
+        // Use with caution! inappropriate usage may cause run time exception
+        //
+        Log.debug("Checking provided command line switches");
+        Properties props = System.getProperties();
+        Set<Object> propsSet = props.keySet();
+        Integer nrOfSwitches = 0;
+        for(Object key : propsSet ){
+            if ( key.toString().contains("ctx.TestData.") ||
+                    key.toString().contains("ctx.Environment.") ||
+                    key.toString().contains("ctx.Expected.") ){
+
+                Log.debug("Trying to overwrite value of " + key.toString().substring(4,key.toString().length()) + " due to usage of command line switch -D" + key.toString());
+
+                Object obj = StepCore.checkIfInputIsVariable(props.get(key.toString()).toString());
+                Log.debug("Class of " + key.toString().substring(4,key.toString().length()) + " is " + obj.getClass().getName());
+
+                //Storage.set(key.toString().substring(4,key.toString().length()), props.get(key.toString()));
+                Storage.set(key.toString().substring(4,key.toString().length()), obj);
+                nrOfSwitches++;
+            }
+        }
+        if ( nrOfSwitches == 0 ){
+            Log.warn("No command line switches found");
+        }
+        //
+        //
+        //
+
+        //evaluate macros
         if( doMacroEval ){
             Log.info("Evaluating macros in TestData and Expected objects");
             Macro.eval("TestData");
             Macro.eval("Expected");
         }
 
-        Log.info("Adding environment information to the report");
-        //allow to use config entities concatenation in storage, evaluate them and change to final value
-        evaluateConfigEntities (Storage.get("Environment.Active.WriteToReport"));
+        //allow to use values from one entity in other entities of Storage
+        evaluateConfigEntities(Storage.get("Environment.Active"));
+        evaluateConfigEntities(Storage.get("TestData"));
+        evaluateConfigEntities(Storage.get("Expected"));
 
-        //create properties list from a hashmap
-        List<String> lines = new ArrayList<>();
-        HashMap<String, String> HashMapenvPropMap = Storage.get("Environment.Active.WriteToReport");
-        for (Map.Entry<String, String> entry : HashMapenvPropMap.entrySet()) {
-            lines.add(entry.getKey() + "=" + entry.getValue());
-        }
-
+        //add information about used test environment to the report only if environment.properties file does not exist
         String targetDirPath = FileCore.getProjectPath().substring(0, FileCore.getProjectPath().length() - 14) + File.separator + "target";
-        File allureResults = new File(targetDirPath + File.separator + "allure-results" + File.separator + "environment.properties");
-        File allureResultsDir = new File(targetDirPath + File.separator + "allure-results");
+        File allureEnvironment = new File(targetDirPath + File.separator + "allure-results" + File.separator + "environment.properties");
 
-        //create allure-results directory if not exists yet
-        if ( ! Files.exists(allureResultsDir.toPath()) ){
-            try {
-                Files.createDirectory(allureResultsDir.toPath());
-            } catch (IOException e) {
-                Log.error("", e);
+        if ( ! Files.exists(allureEnvironment.toPath()) ) {
+            Log.info("Adding environment information to the report");
+            //allow to use config entities concatenation in storage, evaluate them and change to final value
+            //evaluateConfigEntities(Storage.get("Environment.Active.WriteToReport"));
+
+            //create properties list from a hashmap
+            //give possibility to write each line of a list as a separate property???
+            List<String> lines = new ArrayList<>();
+            HashMap<String, String> envPropMap = Storage.get("Environment.Active.WriteToReport");
+            for (Map.Entry<String, String> entry : envPropMap.entrySet()) {
+                //do not display keys with empty values in the report
+                if ( ! entry.getValue().equals("") ) {
+                    lines.add(entry.getKey() + "=" + entry.getValue().replace("\\", "\\\\"));
+                }
+            }
+
+            if ( lines.size() > 0 ) {
+                File allureResultsDir = new File(targetDirPath + File.separator + "allure-results");
+                //create allure-results directory if not exists yet
+                if ( ! Files.exists(allureResultsDir.toPath()) ) {
+                    try {
+                        Files.createDirectory(allureResultsDir.toPath());
+                    } catch (IOException e) {
+                        Log.error("", e);
+                    }
+                }
+
+                //write lines into environment.properties file
+                try {
+                    Files.write(allureEnvironment.toPath(), lines);
+                } catch (IOException e) {
+                    Log.error("", e);
+                }
             }
         }
 
-        //write lines into environment.properties file
-        try {
-            Files.write(allureResults.toPath(), lines);
-        } catch (IOException e) {
-            Log.error("", e);
+        //add links to issues and tests into to the report only if allure.properties file does not exist
+        File allureProperties = new File(targetDirPath + File.separator + "allure-results" + File.separator + "allure.properties");
+        if ( ! Files.exists(allureProperties.toPath()) ) {
+            Log.info("Adding issue tracker and test tracker information to the report");
+            List<String> lines = new ArrayList<>();
+            String issueTrackerUrlPattern = Storage.get("Environment.Active.IssueTrackerUrlPattern");
+            String testTrackerUrlPattern = Storage.get("Environment.Active.TestTrackerUrlPattern");
+            lines.add("allure.tests.management.pattern=" + testTrackerUrlPattern.trim() + "/%s");
+            lines.add("allure.issues.tracker.pattern=" + issueTrackerUrlPattern.trim() + "/%s");
+
+            if ( lines.size() > 0 ) {
+                File allureResultsDir = new File(targetDirPath + File.separator + "allure-results");
+                //create allure-results directory if not exists yet
+                if ( ! Files.exists(allureResultsDir.toPath()) ) {
+                    try {
+                        Files.createDirectory(allureResultsDir.toPath());
+                    } catch (IOException e) {
+                        Log.error("", e);
+                    }
+                }
+
+                //write lines into environment.properties file
+                try {
+                    Files.write(allureProperties.toPath(), lines);
+                } catch (IOException e) {
+                    Log.error("", e);
+                }
+            }
         }
 
+        //print storage
+        Log.info("-- Following configuration Environment.Active is going to be used --");
+        for (HashMap.Entry<String, Object> entry : finalEnvConfig.entrySet()) {
+            String[] tmp = entry.getValue().getClass().getName().split(Pattern.quote(".")); // Split on period.
+            String type = tmp[2];
+            Log.info( "(" + type + ")" + entry.getKey() + " = " + entry.getValue() );
+        }
+        Log.info("-- end --");
 
         //Log.info("Test data storage is");
         Storage.print("TestData");
@@ -338,15 +437,6 @@ public class HooksScenario {
      **/
     @After
     public void tearDown(Scenario scenario) {
-
-        //if present log an exception caught by junit and throw by 3rd party lib like selenium or rest assured
-        String stacktrace = JunitListenerWithLogger.getStacktrace();
-        if ( ! stacktrace.equals("") ) {
-            //WA to not use Log.error and do not throw fail in addition
-            Logger logger = LogManager.getLogger("libs.libCore.modules");
-            logger.error(stacktrace);
-        }
-
         Log.info("*** Scenario with name: " + scenario.getName() + " ended! ***");
 
         //get web driver
@@ -388,6 +478,30 @@ public class HooksScenario {
             }
         }
 
+        //get Winium driver
+        WiniumDriver App = ctx.Object.get("App", WiniumDriver.class);
+        //take screenshot if scenario fails
+        if (App != null) {
+            if ( scenario.isFailed() ) {
+                Log.debug("Try to take a screenshot");
+                //reload winium core
+                try {
+                    WiniumCore = ctx.Object.get("WiniumCore", WiniumCore.class);
+                    byte[] screenshot = WiniumCore.takeScreenshot();
+                    String name = StringUtils.remove(scenario.getName(), "-");
+                    if (name.length() > 256) {
+                        name = name.substring(0, 255);
+                    }
+                    StepCore.attachScreenshotToReport(name, screenshot);
+                } catch (NullPointerException e){
+                    Log.warn("Driver not usable. Can't take screenshot");
+                    StringWriter sw = new StringWriter();
+                    e.printStackTrace(new PrintWriter(sw));
+                    Log.warn(sw.toString());
+                }
+            }
+        }
+
         Log.info("Started resources clean up");
         // Close web driver connection
         Boolean closeWebDriver = Storage.get("Environment.Active.WebDrivers.CloseBrowserAfterScenario");
@@ -398,6 +512,15 @@ public class HooksScenario {
                 Page.quit();
                 Log.debug("Driver cleanup done");
             }
+        }
+
+        //close Winium driver connection
+        Boolean closeWiniumAppDriver = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.CloseAppAfterScenario");
+        if ( closeWiniumAppDriver ) {
+            Log.debug("Driver cleanup started");
+            WiniumCore = ctx.Object.get("WiniumCore", WiniumCore.class);
+            WiniumCore.closeWiniumResources();
+            Log.debug("Driver cleanup done");
         }
 
         // Close DB connection
@@ -485,6 +608,13 @@ public class HooksScenario {
     }
 
 
+    /**
+     * helper function used to substitute values in a storage that contains keys to other attributes
+     * Values that contain ${ctx. string will be subject of substitution
+     *
+     * @param map, Map
+     *
+     */
     private void evaluateConfigEntities (HashMap<String, Object> map) {
         for (HashMap.Entry<String, Object> entry : map.entrySet()){
 
@@ -515,9 +645,14 @@ public class HooksScenario {
     }
 
 
-
+    /**
+     * helper function used replace config value in a Storage
+     *
+     * @param input, String
+     *
+     */
     private String replaceInString (String input) {
-        Log.debug("Input is " + input);
+        //Log.debug("Input is " + input);
         Integer beignIdx = input.indexOf("${");
         Integer endIdx = input.indexOf("}", beignIdx);
 
@@ -540,6 +675,5 @@ public class HooksScenario {
 
         return input;
     }
-
 
 }

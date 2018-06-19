@@ -16,6 +16,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Helper class.
+ * Used to start selenium web driver by providing a path to it.
+ */
+
 public class DriverFactory {
 
     private SharedContext ctx;
@@ -34,8 +39,13 @@ public class DriverFactory {
      * Creates web driver based on the browser name defined in configuration
      *
      * Uses following objects:
-     *  env.browser
-     *  env.path_to_browser_driver
+     *  Environment.Active.WebDrivers.Chrome.path
+     *  Environment.Active.WebDrivers.FireFox.path
+     *  Environment.Active.WebDrivers.InternetExplorer.path
+     *
+     *  @param browser String, browser name
+     *
+     *  @return EventFiringWebDriver
      */
     public EventFiringWebDriver create(String browser){
         Log.debug("Going to create new driver");
@@ -64,7 +74,7 @@ public class DriverFactory {
 
             //Hide save credentials prompt
             prefs.put("credentials_enable_service", false);
-            prefs.put("profile.password_mangaer_enabled", false);
+            prefs.put("profile.password_manager_enabled", false);
             options.setExperimentalOption("prefs", prefs);
 
             dr = new ChromeDriver(options);
@@ -97,10 +107,11 @@ public class DriverFactory {
      * Sets implicit web driver timer
      *
      * Uses following objects:
-     *  env.browser_timeout
+     *  Environment.Active.Web.timeout
      *
-     *  @param dr web driver
-     *  @retrun driver
+     *  @param dr WebDriver
+     *
+     *  @retrun EventFiringWebDriver
      */
     private EventFiringWebDriver EventFiringWebDriver(WebDriver dr) {
         Log.info("Driver name used is " + dr.getClass().getName());
