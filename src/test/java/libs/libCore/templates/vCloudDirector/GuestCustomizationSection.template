@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GuestCustomizationSection
+    xmlns="http://www.vmware.com/vcloud/v${ctx.Environment.Active.vCloudDirector.api}"
+    xmlns:ovf="http://schemas.dmtf.org/ovf/envelope/1">
+    <ovf:Info>VM Guest Customization configuration</ovf:Info>
+    <Enabled>true</Enabled>
+    <ChangeSid>true</ChangeSid>
+    <JoinDomainEnabled>true</JoinDomainEnabled>
+    <DomainName>${ctx.Environment.Active.vCloudDirector.GuestCustomizationSection.DomainName}</DomainName>
+    <DomainUserName>${ctx.Environment.Active.vCloudDirector.GuestCustomizationSection.DomainUserName}</DomainUserName>
+    <DomainUserPassword>${ctx.Environment.Active.vCloudDirector.GuestCustomizationSection.DomainUserPassword}</DomainUserPassword>
+    <AdminPasswordEnabled>true</AdminPasswordEnabled>
+    <AdminPassword>${ctx.Environment.Active.vCloudDirector.GuestCustomizationSection.AdminPassword}</AdminPassword>
+    <CustomizationScript></CustomizationScript>
+    <ComputerName>${ctx.TestData.vAppTemplate.Vm_name}</ComputerName>
+</GuestCustomizationSection>
+
