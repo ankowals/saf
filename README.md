@@ -154,44 +154,48 @@ How can we use test automation framework?
 
 Please find below list of libraries/plugins/software used for automation and their current versions. 
 
-Name, Version,  License 
-Java JDK, 1.8, Oracle Binary Code License 
-Maven, 3.5.2, Apache License Version 2.0 
-IntelliJ IDEA CE, 2017.2, Apache License Version 2.0 
-Cucumber for Java Plugin for IntelliJ, 173.3302, Apache License Version 2.0 
-Cucmber-junit, 1.2.5, MIT License 
-Cucumber-picocontainer, 1.2.5, MIT License 
-Selenium-java, 3.5.1, Apache License Version 2.0 
-Log4j-core, 2.8.2, Apache License Version 2.0 
-Log4j-iostreams, 2.8.2, Apache License Version 2.0 
-Slf4j-nop, 1.7.25, MIT License 
-Rest-assured, 3.0.3, Apache License Version 2.0 
-Json-path, 3.0.3, Apache License Version 2.0 
-Xml-path, 3.0.3, Apache License Version 2.0 
-Commons-lang, 2.4, Apache License Version 2.0 
-Commons-io, 2.2, Apache License Version 2.0 
-Commons-dbutils, 1.7, Apache License Version 2.0 
-Commons-exec, 1.3, Apache License Version 2.0 
-Pdfbox, 2.0.7, Apache License Version 2.0 
-Opencsv, 4.0, Apache License Version 2.0 
-Sshj, 0.23.0, Apache License Version 2.0 
-Expectit-core, 0.8.3, Apache License Version 2.0 
-Winrm4j, 0.5.0, Apache License Version 2.0 
-Allure-cucumber-jvm-adaptor, 1.6.2, Apache License Version 2.0 
-Maven-surefire-plugin, 2.20, Apache License Version 2.0 
-aspectjweaver, 1.8.10, Eclipse Public License - v 1.0 
-Maven-compiler-pluign, 3.7.0, Apache License Version 2.0 
-Jetty-maven-pluign, 9.2.10.v20150310, Apache License Version 2.0 
-Allure-maven-plugin, 2.5, Apache License Version 2.0 
-Winium-webdriver, 0.1.0-1, Mozilla Public License 2.0 
-Winium-elements-desktop, 0.2.0-1, Mozilla Public License 2.0 
-SikuliXApi, 1.1.2, MIT License 
-Jtds (jdbcDriver), 1.3.1, GNU LGPL 
-Chrome.Driver, 2.39, BSD 3-Clause "New" or "Revised" License 
-Winium.Desktop.Driver, 1.6.0, Mozilla Public License 2.0 
-7zip, 9.2.0, GNU LGPL + BSD 3-clause 
-Jenkins (standard install plugin set + PostBuildScript, Sidebar Link plugins), 2.109, MIT License 
-Artifactory, 6.0.2, GNU Affero GPL v3 
+	Name, Version,  License
+
+	Java JDK, 1.8, Oracle Binary Code License 
+	Maven, 3.5.2, Apache License Version 2.0 
+	IntelliJ IDEA CE, 2017.2, Apache License Version 2.0 
+	Cucumber for Java Plugin for IntelliJ, 173.3302, Apache License Version 2.0 
+	Cucmber-junit, 1.2.5, MIT License 
+	Cucumber-picocontainer, 1.2.5, MIT License 
+	Selenium-java, 3.5.1, Apache License Version 2.0 
+	Log4j-core, 2.8.2, Apache License Version 2.0 
+	Log4j-iostreams, 2.8.2, Apache License Version 2.0 
+	Slf4j-nop, 1.7.25, MIT License 
+	Rest-assured, 3.0.3, Apache License Version 2.0 
+	Json-path, 3.0.3, Apache License Version 2.0 
+	Xml-path, 3.0.3, Apache License Version 2.0 
+	Commons-lang, 2.4, Apache License Version 2.0 
+	Commons-io, 2.2, Apache License Version 2.0 
+	Commons-dbutils, 1.7, Apache License Version 2.0 
+	Commons-exec, 1.3, Apache License Version 2.0 
+	Pdfbox, 2.0.7, Apache License Version 2.0 
+	Opencsv, 4.0, Apache License Version 2.0 
+	Sshj, 0.23.0, Apache License Version 2.0 
+	Expectit-core, 0.8.3, Apache License Version 2.0 
+	Winrm4j, 0.5.0, Apache License Version 2.0 
+	Allure-cucumber-jvm-adaptor, 1.6.2, Apache License Version 2.0 
+	Maven-surefire-plugin, 2.20, Apache License Version 2.0 
+	aspectjweaver, 1.8.10, Eclipse Public License - v 1.0 
+	Maven-compiler-pluign, 3.7.0, Apache License Version 2.0 
+	Jetty-maven-pluign, 9.2.10.v20150310, Apache License Version 2.0 
+	Allure-maven-plugin, 2.5, Apache License Version 2.0 
+	Winium-webdriver, 0.1.0-1, Mozilla Public License 2.0 
+	Winium-elements-desktop, 0.2.0-1, Mozilla Public License 2.0 
+	SikuliXApi, 1.1.2, MIT License 
+
+optionally
+
+	Jtds (jdbcDriver), 1.3.1, GNU LGPL 
+	Chrome.Driver, 2.39, BSD 3-Clause "New" or "Revised" License 
+	Winium.Desktop.Driver, 1.6.0, Mozilla Public License 2.0 
+	7zip, 9.2.0, GNU LGPL + BSD 3-clause 
+	Jenkins (standard install plugin set + PostBuildScript, Sidebar Link plugins), 2.109, MIT License 
+	Artifactory, 6.0.2, GNU Affero GPL v3 
 
 
 ----------------------------------
@@ -199,10 +203,10 @@ Artifactory, 6.0.2, GNU Affero GPL v3
 
 Minimum requirements
 
-windows 8, 
-Java JDK 8, 
-Maven 3.5, 
-Chrome web browser
+	windows 8, 
+	Java JDK 8, 
+	Maven 3.5, 
+	Chrome web browser
 
 
 -------------------------
@@ -503,6 +507,7 @@ Every times tester’s workstation will ask to download new artifact first jcent
 In addition user can create so called local repositories. This means user has a possibility to upload particular artifacts to such local repository and it can be used in internal network only. Please use Deploy button to add local artifacts/repos. 
  
 To make use of internal repository managed by artifactory we need to re-configure maven settings on tester’s workstation. Pom.xml or setting.xml file can be updated to include following entries. 
+
 	<repositories> 
 		<repository>
 			<snapshots>
@@ -541,6 +546,7 @@ Where <host_name> is the name of the computer where our internal repository is l
 REMARK: jcentral repository can be made offline. This means that only artifacts from its cache are going to be served. In case something is missing an error will be thrown but no connection to maven central repository will be created. Cache will not be removed when Artifactory will be killed! 
  
 To make jcentral repository local only. Please follow steps below. 
+
 	1 Login as admin to Artifactory 
 	2 Open Admin menu and go to Remote Repositories 
 	3 Open jcenter 
@@ -625,7 +631,7 @@ How to run it from Jenkins?
 Goal of this instruction is to setup a Jenknins instance so user can schedule test execution and check the resutls.
 Description below allows to setup a new project with a job that can be started and which results can be viewed in the web browser.
 
-	Steps to setup Jenkins
+Steps to setup Jenkins
 
 	1 Download latest Jenkins for Windows from https://jenkins.io/
 	2 Install it
@@ -1115,7 +1121,7 @@ From now on in case there is a need to access any configuration parameter one ca
 Storage.get("Environment.Active.Rest.url") method returns url value from active configuration. Please note that is is assigned to variable of type String. In case Storage.get() returns other type of data than String we may encounter ClassCastException.
 	
 
-	REMARK: Please note that it is possible to pass variables into the config files. Content of storage is re-evaluated in ScenarioHooks before test runs. Please see an example below.
+REMARK: Please note that it is possible to pass variables into the config files. Content of storage is re-evaluated in ScenarioHooks before test runs. Please see an example below.
 			Having 2 entities like TestData.Entity1.Key1 and Environment.Active.WinRM.VM1.host user can create new third config entity dummyEntity.
 			
 			TestData: {
@@ -1142,14 +1148,14 @@ How to add environment information to test report?
 
 To show anything in Environment section of test report please create following entitiy in Environment configuration.
 
-Environment:{
-    Default: {
-        WriteToReport: {
-            Key1: "This is dummy text",
-            Key2: "${ctx.TestData.This.Is.Dummy.Value.Taken.From.Config}"
+	Environment:{
+	    Default: {
+		WriteToReport: {
+		    Key1: "This is dummy text",
+		    Key2: "${ctx.TestData.This.Is.Dummy.Value.Taken.From.Config}"
+				}
 			}
 		}
-	}
 
 
 
@@ -1177,19 +1183,19 @@ Global project configuration is available under src/test/java/config/project.con
 Files included in it are checked and evaluated. New storage is created based on their content.
 An example of project.config file is below
 
-#include "config/framework/framework.config"
-#include "config/environment/winrm.config"
-#include "config/environment/default.config"
-#include "config/environment/active.config"
-#include "libs/libProject1/config/testdata.config"
-#include "libs/libProject2/config/testdata.config"
-#include "config/testdata/cloud.config"
-#include "config/testdata/database.config"
-#include "config/testdata/release.config"
-#include "config/testdata/testdata.config"
-#include "config/testdata/expected.config"
+	#include "config/framework/framework.config"
+	#include "config/environment/winrm.config"
+	#include "config/environment/default.config"
+	#include "config/environment/active.config"
+	#include "libs/libProject1/config/testdata.config"
+	#include "libs/libProject2/config/testdata.config"
+	#include "config/testdata/cloud.config"
+	#include "config/testdata/database.config"
+	#include "config/testdata/release.config"
+	#include "config/testdata/testdata.config"
+	#include "config/testdata/expected.config"
 
-TestData:{}
+	TestData:{}
 
 Additional configuration files will be read in the order they are mentioned in project.config. In such way default configuration from other libraries can be included.
 
@@ -3287,20 +3293,16 @@ First we need to set a variable which contains path to the images we would like 
 
 Now we can instansiate Screen object like below.
 
-		Screen screen = new Screen();
-
-		Log.debug("About to click into the image Icon1.png");
-	
-		Integer sw = screen.getBounds().width;
-		Integer sh = screen.getBounds().height;
-		Log.debug("Screen size is " + sw + " x " + sh);
-		
-		screen.setRect(sw-sw/3,0,sw/3, sh).highlight().wait(new Pattern(pathToImages + "Icon1.png").similar(0.7f), 5);
-		screen.setRect(sw-sw/3,0,sw/3, sh).highlight().hover(new Pattern(pathToImages + "Icon1.png").similar(0.7f));
-		
-		StepCore.sleep(1);
-		screen.setRect(sw-sw/3,0,sw/3, sh).highlight().doubleClick();
-		StepCore.sleep(1);
+	Screen screen = new Screen();
+	Log.debug("About to click into the image Icon1.png");
+	Integer sw = screen.getBounds().width;
+	Integer sh = screen.getBounds().height;
+	Log.debug("Screen size is " + sw + " x " + sh);
+	screen.setRect(sw-sw/3,0,sw/3, sh).highlight().wait(new Pattern(pathToImages + "Icon1.png").similar(0.7f), 5);
+	screen.setRect(sw-sw/3,0,sw/3, sh).highlight().hover(new Pattern(pathToImages + "Icon1.png").similar(0.7f));	
+	StepCore.sleep(1);
+	screen.setRect(sw-sw/3,0,sw/3, sh).highlight().doubleClick();
+	StepCore.sleep(1);
 
 As can be seen we can extract information about screen size and use it to reduce screen part which shall be checked by sikuli.
 It is nice to indicate that screen part to the user using red border. 
