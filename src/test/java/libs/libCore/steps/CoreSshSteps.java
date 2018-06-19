@@ -16,7 +16,8 @@ public class CoreSshSteps extends BaseSteps {
 
     /**
      * Tests if a host is alive
-     * @param hostName
+     *
+     * @param hostName, String identifier of the host
      */
     @Given("^host (.+) is alive$")
     public void host_is_alive(String hostName) throws Throwable {

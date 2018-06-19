@@ -20,7 +20,8 @@ public class CoreWinRmSteps extends BaseSteps {
 
     /**
      * Tests if a host is alive
-     * @param hostName
+     *
+     * @param hostName String, remote node identifier
      */
     @Given("^windows host (.+) is alive$")
     public void windows_host_is_alive(String hostName) throws Throwable {
@@ -47,6 +48,12 @@ public class CoreWinRmSteps extends BaseSteps {
         }
     }
 
+    /**
+     * Execute command on a remote host via winRS on a remote host
+     *
+     * @param node String, remote node identifier
+     * @throws Throwable
+     */
     @Given("^execute via WinRS on node (.+)$")
     public void execute_via_WinRS_on_node(String node) throws Throwable {
         Log.info("* Step started execute_via_WinRS_on_node");
@@ -72,6 +79,15 @@ public class CoreWinRmSteps extends BaseSteps {
 
     }
 
+    /**
+     * Mounts shared drive on a remote host via winRS
+     *
+     * @param path String, unc path to the shared location
+     * @param drive String, drive letter
+     * @param host String, remote host identifier
+     *
+     * @throws Throwable
+     */
     @Given("^mount path (.+) as network drive (.+) via WinRS on remote node (.+)$")
     public void mount_path_as_network_drive_via_WinRS_on_remote_node(String path, String drive, String host) throws Throwable {
         Log.info("* Step started mount_path_as_network_drive_via_WinRS_on_remote_node");

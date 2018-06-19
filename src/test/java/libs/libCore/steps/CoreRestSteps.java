@@ -28,13 +28,13 @@ public class CoreRestSteps extends BaseSteps {
     }
 
     /**
-     * Verifies that service is available
-     * This is just a sanity check.
-     * It triggers GET request towards defined url
-     * It checks that http response code is 200 (OK)
+     * Verifies that service is available<br>
+     * This is just a sanity check.<br>
+     * It triggers GET request towards defined url<br>
+     * It checks that http response code is 200 (OK)<br><br>
      *
-     * Uses following objects:
-     *  Expected.statusOK
+     * Uses following objects:<br>
+     *  Expected.statusOK<br>
      *  env.REST_url
      *
      */
@@ -52,18 +52,18 @@ public class CoreRestSteps extends BaseSteps {
                     .get(url)
                     .then()
                     .statusCode(expectedCode);
-        } catch (AssertionError e) {
+        } catch (Exception e) {
             Log.error("", e);
         }
     }
 
     /**
-     * Triggers http post request with json body. Content of the body comes from the file.
-     * ValidatableResponse is available as a context Object with name response.
+     * Triggers http post request with json body. Content of the body comes from the file.<br>
+     * ValidatableResponse is available as a context Object with name response.<br><br>
      *
-     * Uses following objects:
-     *  ctx.Object.response
-     *  Environment.REST_url
+     * Uses following objects:<br>
+     *  ctx.Object.response<br>
+     *  Environment.REST_url<br>
      *  Environment.Rest_url_post_path
      *
      * @param name, String, name of the template that contains http body of the request
@@ -100,11 +100,11 @@ public class CoreRestSteps extends BaseSteps {
 
 
     /**
-     * Triggers http post request with xml body (soap). Content of the body comes from the file.
-     * ValidatableResponse is available as a context Object with name response.
+     * Triggers http post request with xml body (soap). Content of the body comes from the file.<br>
+     * ValidatableResponse is available as a context Object with name response.<br><br>
      *
-     * Uses following objects:
-     *  ctx.Object.response
+     * Uses following objects:<br>
+     *  ctx.Object.response<br>
      *  Environment.REST_url
      *
      * @param name, String, name of the template that contains http body of the request
@@ -141,9 +141,9 @@ public class CoreRestSteps extends BaseSteps {
 
 
     /**
-     * Verifies that response status code is {}
+     * Verifies that response status code is {}<br><br>
      *
-     * Uses following objects:
+     * Uses following objects:<br>
      *  ctx.Object.response
      *
      * @param input  status code or value from storage
@@ -166,9 +166,9 @@ public class CoreRestSteps extends BaseSteps {
 
 
     /**
-     * Verifies that particular key xml/json body response contains expected value
-     * Multiple different comparisons can be executed. Following actions are supported
-     * equalTo, containsString, containsInAnyOrder, greaterThan, lessThan
+     * Verifies that particular key xml/json body response contains expected value<br>
+     * Multiple different comparisons can be executed. Following actions are supported<br>
+     * equalTo, containsString, containsInAnyOrder, greaterThan, lessThan<br>
      *
      * @param table, DataTable, it shall contains 3 columns key, action, expected
      */

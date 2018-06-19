@@ -15,6 +15,8 @@ public class CoreSteps extends BaseSteps {
 
     /**
      * Opens browser of particular type as defined in the environment configuration
+     *
+     * @throws Throwable
      */
     @Given("^open browser$")
     public void open_browser() throws Throwable {
@@ -29,6 +31,7 @@ public class CoreSteps extends BaseSteps {
         PageCore = ctx.Object.get("PageCore", PageCore.class);
         Log.debug("Web driver created");
     }
+
 
     /**
      * Opens browser of particular type
@@ -48,6 +51,7 @@ public class CoreSteps extends BaseSteps {
         Log.debug("Web driver created");
     }
 
+
     /**
      * Opens jdbc connection to database
      */
@@ -66,8 +70,12 @@ public class CoreSteps extends BaseSteps {
         Log.debug("Connected to the data base");
     }
 
+
     /**
      * Opens ssh connection to remote host
+     *
+     * @param node String, node identifier from ssh configuration
+     *
      */
     @Given("^open ssh to (.+)$")
     public void open_ssh_to(String node) throws Throwable {
@@ -98,6 +106,7 @@ public class CoreSteps extends BaseSteps {
         Log.debug("Configuration from " + path + " loaded");
     }
 
+
     /**
      * Triggers macro evaluation for TestData storage and Expected data storage
      */
@@ -123,7 +132,10 @@ public class CoreSteps extends BaseSteps {
     @And("^set (.+) to (.+)$")
     public void set_to(String storageName, String value) throws Throwable {
         Log.info("* Step started set_to");
-        Storage.set(storageName, value);
+
+        String val = StepCore.checkIfInputIsVariable(value);
+
+        Storage.set(storageName, val);
         Storage.get(storageName);
     }
 
@@ -155,8 +167,8 @@ public class CoreSteps extends BaseSteps {
 
 
     /**
-     * pauses scenario execution for defined amount of time
-     * Timeout is defined in configuration as Environment.Active.PauseDuration
+     * pauses scenario execution for defined amount of time<br>
+     * Timeout is defined in configuration as Environment.Active.PauseDuration<br>
      * Default is 300 seconds (5 minutes)
      *
      */
@@ -183,14 +195,48 @@ public class CoreSteps extends BaseSteps {
 
     /**
      * waits for defined time duration
+     *
      * @param seconds Integer, timeout
      *
      */
-    @And("^wait for (d+)$")
-    public void wait_for(Integer seconds) throws Throwable {
-        Log.info("* Step started wait_for");
+    @And("^wait for (\\d+) seconds$")
+    public void wait_for_seconds(Integer seconds) throws Throwable {
+        Log.info("* Step started wait_for_seconds");
 
         StepCore.sleep(seconds);
+
+    }
+
+
+    /**
+     * Opens an app on local host without additional arguments
+     *
+     * @param pathToApp String, path to the executable file
+     *
+     * @throws Throwable
+     */
+    @Given("^open an app from (.+)")
+    public void open_an_app_from(String pathToApp) throws Throwable {
+        Log.info("* Step started open_an_app_from");
+
+        WiniumCore.startApp("localhost", pathToApp, "");
+
+    }
+
+
+    /**
+     * Opens an app on remote host without additional arguments
+     *
+     * @param node String,
+     * @param pathToApp String, path to the executable file
+     *
+     * @throws Throwable
+     */
+    @Given("^on remote host (.+) open an app from (.+)")
+    public void on_remote_host_open_an_app_from(String node, String pathToApp) throws Throwable {
+        Log.info("* Step started on_remote_host_open_an_app_from");
+
+        WiniumCore.startApp(node, pathToApp, "");
 
     }
 

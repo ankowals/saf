@@ -19,11 +19,11 @@ public class CoreDbSteps extends BaseSteps {
     }
 
     /**
-     * Loads data from csv file to data base
-     * It uses csv file as an input and TestData.<filename>TypeMapping object
-     * TypeMapping shall contain mapping columns to type for particular csv
-     * Type mapping shall be in the form of a List. For example
-     * inputTypeMapping : ["NUMERIC","VARCHAR","VARCHAR"], where input file name is input.csv
+     * Loads data from csv file to data base<br>
+     * It uses csv file as an input and TestData.{filename}.TypeMapping object<br>
+     * TypeMapping shall contain mapping columns to type for particular csv<br>
+     * Type mapping shall be in the form of a List. For example<br>
+     * inputTypeMapping : ["NUMERIC","VARCHAR","VARCHAR"], where input file name is input.csv<br>
      * Input file shall be located in subdirectory input
      *
      * @param fileName, String, name of the input csv file that contains input data (without .csv extension)
@@ -41,11 +41,11 @@ public class CoreDbSteps extends BaseSteps {
 
 
     /**
-     * Executes sql select query
-     * Results are printed to the log and attached as a file attachment to the report
-     * They are available as a ctx.Object for further processing and validation
+     * Executes sql select query<br>
+     * Results are printed to the log and attached as a file attachment to the report<br>
+     * They are available as a ctx.Object for further processing and validation<br><br>
      *
-     * Uses following objects:
+     * Uses following objects:<br>
      *  ctx.Object.queryResultName
      *
      * @param sQuery, String, query to be executed (can also be defined in test data config, in that case
@@ -58,7 +58,8 @@ public class CoreDbSteps extends BaseSteps {
         Log.info("* Step started select_query_is_executed");
 
         String query = StepCore.checkIfInputIsVariable(sQuery);
-        List<Map<String,Object>> list = SqlCore.selectList(query);
+        String queryAfterReplacement = StepCore.replaceInString(query);
+        List<Map<String,Object>> list = SqlCore.selectList(queryAfterReplacement);
 
         SqlCore.printList(list);
         File results = SqlCore.writeListToFile(list,queryResultName,"txt");
@@ -69,9 +70,9 @@ public class CoreDbSteps extends BaseSteps {
 
 
     /**
-     * Verifies sql select query results by executing template comparison
+     * Verifies sql select query results by executing template comparison<br><br>
      *
-     * Uses following objects:
+     * Uses following objects:<br>
      *  ctx.Object.queryResultName
      *
      * @param queryResultName, String, name of the context Object that stores the query results

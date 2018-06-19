@@ -34,9 +34,9 @@ public class CoreWebSteps extends BaseSteps {
     }
 
     /**
-     * Opens url in the browser. Url is taken from configuration.
+     * Opens url in the browser. Url is taken from configuration.<br><br>
      *
-     * Uses following objects:
+     * Uses following objects:<br>
      * env.WEB_url
      *
      */
