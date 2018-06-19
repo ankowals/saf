@@ -8,26 +8,12 @@
 	<packaging>jar</packaging>
 	<name>FK_prototype template</name>
 
-	<!-- Properties that can be changed by the user -->
-	<properties>
-		<jetty.start_port>8082</jetty.start_port>
-        <jetty.stop_port>8081</jetty.stop_port>
-		<jdk.path>C:/Program Files/Java/jdk1.8.0_144/bin/javac</jdk.path>
-		<java.version>8</java.version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
-	<!-- End -->
+    <!--Project properties located in setting.xml file-->
 
 	<!-- Required libraries -->
-	<!-- Cucumber -->
 	<dependencies>
-<!--
-		<dependency>
-			<groupId>info.cukes</groupId>
-			<artifactId>cucumber-java</artifactId>
-			<version>1.2.5</version>
-		</dependency>
--->
+
+		<!-- Cucumber -->
 		<dependency>
 			<groupId>info.cukes</groupId>
 			<artifactId>cucumber-junit</artifactId>
@@ -151,6 +137,38 @@
             <version>1.6.2</version>
         </dependency>
 
+		<dependency>
+			<groupId>ru.yandex.qatools.allure</groupId>
+			<artifactId>allure-maven-plugin</artifactId>
+			<version>2.5</version>
+		</dependency>
+
+		<!-- Winnium -->
+		<dependency>
+			<groupId>com.github.2gis.winium</groupId>
+			<artifactId>winium-webdriver</artifactId>
+			<version>0.1.0-1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.github.2gis.winium</groupId>
+			<artifactId>winium-elements-desktop</artifactId>
+			<version>0.2.0-1</version>
+		</dependency>
+
+		<!--SikuliX -->
+		<dependency>
+			<groupId>com.sikulix</groupId>
+			<artifactId>sikulixapi</artifactId>
+			<version>1.1.1</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.github.vidstige</groupId>
+					<artifactId>jadb</artifactId><!-- excluded because not used and causing problems with download -->
+				</exclusion>
+			</exclusions>
+		</dependency>
+
     </dependencies>
 
 	<build>
@@ -227,6 +245,9 @@
 				<groupId>ru.yandex.qatools.allure</groupId>
 				<artifactId>allure-maven-plugin</artifactId>
 				<version>2.5</version>
+				<configuration>
+					<propertiesFilePath>target/allure-results/allure.properties</propertiesFilePath>
+				</configuration>
 			</plugin>
 		</plugins>
 	</reporting>

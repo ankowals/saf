@@ -8,7 +8,7 @@ simple automation framework for learning purposes
 What do we want from a test automation framework?
 
 
-	a way to execute e2e test using Gherkin language (BDD)
+	a way to execute e2e test using keyword driven approach (Gherkin and BDD are good enough)
 	a way to execute tests related to  
 		- rest json/xml (soap)
 		- gui (web/native)
@@ -16,20 +16,20 @@ What do we want from a test automation framework?
 		- mobile
 		- pdf validation
 		- others??
-	a way to intergate any 3rd party app by execution of any command on local host 
+	a way to integrate any 3rd party app by execution of any command on local host 
 	a way to execute any command on remote host over ssh/winRM
 	a way to manage and configure test environment
 	a way to manage and configure test data
 	a way to prepare/calculate test data at runtime (macros)
 	a way to manage and code a set of common modules/step/functions to be used for testing purposes
-	a way to downlaod any 3rd party symptoms from SUT like logs, trace files
-	a way to log any activity dony by the framework
+	a way to download any 3rd party symptoms from SUT like logs, trace files
+	a way to log any activity done by the framework
 	a way to report tests status
 	a way to attach logs/files/messages/screenshots to the report
-	a way to start test from IDE and command line as well as an ability to overwrite parameters when test suite started from cmd
-	a way to automatically deploy the framework under windows (dependency management)
-	a way to share the code/tests between testers to increae re-usability (version control system, re-usable libraries of keywords)
-	a way to monitor and indicate quality of commited tests (see SonarQube for example)
+	a way to start test from IDE and command line as well as an ability to overwrite parameters when test suite was started from cmd
+	a way to automatically deploy the framework under windows (dependency management + private repo)
+	a way to share the code/tests between testers to increase re-usability (version control system, re-usable libraries of keywords)
+	a way to monitor and indicate quality of committed tests (see SonarQube for example)
 	a way to support PageObject model for web automation purposes
 	a way to share common data between steps (dependency injection)
 	a way to schedule test execution (see Jenkins/TeamCity)
@@ -37,18 +37,21 @@ What do we want from a test automation framework?
 	a way to manage multiple projects (version control system)
 	a way to pause test execution and allow for manual intervention (integrate autoIT pause script)
 	a way to integrate with test/requirement management tool (like for example jira, so we can have links to tests/epic/stories in the test report)
-	a way to intgrate with incident management tool (like for example jira, so we can have at least links to defects that affect particular test in the report and maybe their status etc.)
-	a way to write simmple step defs (libraries of methods support because for example usage of try-catch blocks is ugly)
+	a way to integrate with incident management tool (like for example jira, so we can have at least links to defects that affect particular test in the report and maybe their status etc.)
+	a way to write simple step defs (libraries of methods support because for example usage of try-catch blocks is ugly)
 	a way to manage templates
 	a way to manage resources (make sure that open connections will be closed when test is over)
+	a way to generate steps documentation (javadoc)
 	
 	a way to integrate with configuration(infrastructure) management tool can be a nice addon (like Puppet, Ansible or Chef)
-	a way to integrate VM/container managament tool like Docker or Vagrant can be a nice addon
+	a way to integrate VM/container management tool like Docker or Vagrant can be a nice addon
 	a way to re-run failed tests can be a nice addon
 	a way to execute tests remotely can be a nice addon
 	a way to encrypt/decrypt test data can be a nice addon
-	a way to integrate with network protocols simulator (like diameter) or others can be a nice addon (see Seagull: an Open Source Multi-protocol traffic generator)
+	a way to integrate with network protocols simulator can be a nice addon (see Seagull: an Open Source Multi-protocol traffic generator)
 
+	to make maintenance easier we do not want smart coding, advanced java features
+	
 ----------------------------------
 
 Where are we?
@@ -57,48 +60,40 @@ Where are we?
 	
 	(in progress) a way to execute tests related to  
 		(done) - rest json/xml (soap) => RestAssured integrated 
-		(done) - gui (web/native) => Selenium WebDriver integrated for chrome, ff and ie, autoIT can be called via ExecutorCore
+		(done) - gui (web/native) => Selenium WebDriver integrated for chrome, ff and ie, autoIT can be called via ExecutorCore, Winium integrated
 		(done) - sql => jdbc integrated for oracle/mssql
 		(done) - pdf validation => pdfbox2 integrated 
 		(to do) - mobile => Appium integration
 
-
-		further enhancements:
-			- display environment information in test report
-			- consider autoIT integration or better use appium/winium for native win apps automation?
-
-
 		(to do) a way to downlaod any 3rd party symptoms from SUT like logs, trace files (create step def to run tcpdump on unix hosts or tshark/rawCap on windows hosts)
-		(to do) a way to monitor and indicate quality of commited tests (see SonarQube for example )
-		(to do) a way to generate test documentation automatically => add new logging categories (like atmn(category, message)), use scenrio outline with path to feature and log file after test execution		
+		(to do) a way to monitor and indicate quality of committed tests (see SonarQube for example )
+		(to do) a way to generate test documentation automatically => add new logging categories (like atmn(category, message)), use scenario outline with path to feature and log file after test execution		
 		(to do) add more tests examples
-	
 	
 	----------------------------------	
 		
-
 	ToDo before 1.0:		
-		1) integrate Appium		   
-		2) prepare step to start and stop tcpdump on a unix host on define interface with define filter and downlaod trace files			   
-		3) prepare step to trigger IE via autoIT script to handle windows authentication with Selenium (autoIT script available)	
-		4) move documentation to pdf file and wiki, add screenshots of test executed in cmd as well as in IDE, add screenshots of tests reports as well as tests logs
-		5) change the names from execution ctx, ctx object to global/scenario variables?
-		6) add git usage documentation (documnetation almost complete) and xpath creation documentation (documentation available)
-		7) add better examples of winRS usage
+		1) integrate Appium
+		2) prepare a step to write to pdf and read pdf from online resource
+		3) add Xml parser? or better add link to GPath/XmlPath description used with RestAssured?		   
+		4) prepare step to start and stop tcpdump on a unix host on define interface with define filter and download trace files			   
+		5) prepare step to trigger IE via autoIT script to handle windows authentication with Selenium (autoIT script available)	
+		6) move documentation to pdf file and wiki, add screenshots of test executed in cmd as well as in IDE, add screenshots of tests reports as well as tests logs
+		7) make sure that all steps/methods from libCore are documented
+		8) generate libCore documentation and add it to the repo
+		9) change the names from execution ctx, ctx object to global/scenario variables?
+		10) add git usage documentation (documnetation almost complete) and xpath creation documentation (documentation available)
+		11) move winRS steps to libCore, move cloudDirector steps to libCore
 
 	ToDo for 2.0:
-		0) supervise appiumDriver/restClient/webDriver/JdbcDriver/sshClient resources and make sure that all open will be closed in scenario or global hooks	-> in other words implement pool design pattern for web/appium/db drivers and ssh/winRM resources
+		0) supervise appiumDriver/restClient/webDriver/JdbcDriver/sshClient resources and make sure that all open will be closed in scenario or global hooks -> in other words implement pool design pattern for web/appium/db drivers and ssh/winRM resources
 		1) migrate to cucumber-jvm 2.x
 		2) migrate to allure 2.x
 		3) modify directory structure to get rid of src/main or src/test and use it with maven
-		4) protocol simulators integration can be a nice add on => via seagull?	
-		5) add support for web driver capabilities?
-		6) migrate to latest version of jetty mvn plugin
-
 
 	----------------------------------	
 
-What has been done?
+What is done?
 
 	(done) a way to execute e2e test using Gherkin language (BDD) => cucumber-jvm integrated
 	(done) a way to manage and configure test environment => via json configuration files
@@ -136,74 +131,143 @@ How can we use test automation framework?
 	to automate acceptance tests (after any deployment)
 	to automate integration tests
 	to automate regression tests
-	to execute sanity chcecks (smoke tests) and make sure that SUT configuration is correct (like all urls are reachable, ports open, interfaces are up & apps are running, login is possible for each user etc.)
-	to gether symptoms like traces/logs/tickets/events from multiple components of a system under test
-	to execute test system bringup and feed it with configruation data before test starts
-	to setup test environment (infrastructure/configuration management) before test suite execution
+	to automate smoke tests (sanity checks) and make sure that SUT configuration is correct (like all urls are reachable, ports open, interfaces are up & apps are running, login is possible for each user etc.)
+	to gather symptoms like traces/logs/tickets/events from multiple components of a system under test
+	to execute test system bring up and feed it with configuration data before test starts
+	to set up a test environment (infrastructure/configuration management) before test suite execution
 	to restore the system to the state before test started
 	to move configuration data between test systems
-	to describe system behavior via tests implementation (using Gherkin) - use tests as a living documentation
+	to describe system behaviour via tests implementation (using Gherkin) -> use tests as a living documentation
 	to use automated equipment for any not strictly test related activities like for example automate mobile phones to detect changes in the offer from a telco operator:)
 	
 	load generation/performance checks are out of scope
 	parallel test execution is out of scope for now
 	
-	For parallel test execution one can use capabilities of framework or better use multiple VMs to deploy multiple SUTs, framework instances, scheduler instances etc... 
-	in that case it has to be ensured that tests are seperated from each other 
+	For parallel test execution one can use capabilities of framework or better use multiple VMs to deploy multiple SUTs, framework instances (copies of the same project), scheduler instances etc... 
+	in that case it has to be ensured that tests are separated from each other 
 		- subsequent test does not depend on the result of previous test 
-		- tests are using separate test data/config data (do not operate on the same config data at the same time to avoid concurent modifciation)
-
+		- tests are using separate test data/config data (do not operate on the same config data at the same time to avoid concurrent modification)
 
 
 ----------------------------------
 
 
+Please find below list of libraries/plugins/software used for automation and their current versions. 
+
+Name, Version,  License 
+Java JDK, 1.8, Oracle Binary Code License 
+Maven, 3.5.2, Apache License Version 2.0 
+IntelliJ IDEA CE, 2017.2, Apache License Version 2.0 
+Cucumber for Java Plugin for IntelliJ, 173.3302, Apache License Version 2.0 
+Cucmber-junit, 1.2.5, MIT License 
+Cucumber-picocontainer, 1.2.5, MIT License 
+Selenium-java, 3.5.1, Apache License Version 2.0 
+Log4j-core, 2.8.2, Apache License Version 2.0 
+Log4j-iostreams, 2.8.2, Apache License Version 2.0 
+Slf4j-nop, 1.7.25, MIT License 
+Rest-assured, 3.0.3, Apache License Version 2.0 
+Json-path, 3.0.3, Apache License Version 2.0 
+Xml-path, 3.0.3, Apache License Version 2.0 
+Commons-lang, 2.4, Apache License Version 2.0 
+Commons-io, 2.2, Apache License Version 2.0 
+Commons-dbutils, 1.7, Apache License Version 2.0 
+Commons-exec, 1.3, Apache License Version 2.0 
+Pdfbox, 2.0.7, Apache License Version 2.0 
+Opencsv, 4.0, Apache License Version 2.0 
+Sshj, 0.23.0, Apache License Version 2.0 
+Expectit-core, 0.8.3, Apache License Version 2.0 
+Winrm4j, 0.5.0, Apache License Version 2.0 
+Allure-cucumber-jvm-adaptor, 1.6.2, Apache License Version 2.0 
+Maven-surefire-plugin, 2.20, Apache License Version 2.0 
+aspectjweaver, 1.8.10, Eclipse Public License - v 1.0 
+Maven-compiler-pluign, 3.7.0, Apache License Version 2.0 
+Jetty-maven-pluign, 9.2.10.v20150310, Apache License Version 2.0 
+Allure-maven-plugin, 2.5, Apache License Version 2.0 
+Winium-webdriver, 0.1.0-1, Mozilla Public License 2.0 
+Winium-elements-desktop, 0.2.0-1, Mozilla Public License 2.0 
+SikuliXApi, 1.1.2, MIT License 
+Jtds (jdbcDriver), 1.3.1, GNU LGPL 
+Chrome.Driver, 2.39, BSD 3-Clause "New" or "Revised" License 
+Winium.Desktop.Driver, 1.6.0, Mozilla Public License 2.0 
+7zip, 9.2.0, GNU LGPL + BSD 3-clause 
+Jenkins (standard install plugin set + PostBuildScript, Sidebar Link plugins), 2.109, MIT License 
+Artifactory, 6.0.2, GNU Affero GPL v3 
+
+
+----------------------------------
+
+
+Minimum requirements
+
+windows 8, 
+Java JDK 8, 
+Maven 3.5, 
+Chrome web browser
+
+
+-------------------------
+
 
 Installation instructions
 
 
-	1 install java jdk ( download from http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html )
-	2 set an environment variable, for example JDK_HOME=C:\Program Files\Java\jdk1.8.0_144
+	1 install java jdk ( download it from http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html ) 
+ 
+		to verify java installation in cmd issue 'java –version' 
+ 
+	2 download and extract maven binary ( download Binary Zip archive from https://maven.apache.org/download.cgi )
+	3 set a system wide environment variable M2_HOME, for example M2_HOME=C:\apache-maven3.5.0 
+	4 append %M2_HOME%\bin to PATH variable
 	
-	 	to verify java installation in cmd issue java -version
+		to verify maven installation in cmd issue 'mvn –version' 
 	
-	3 download and extract maven binary ( download Binary Zip archive from https://maven.apache.org/download.cgi )
-	4 set an environment variable, for example M2_HOME=C:\apache-maven-3.5.0
-	5 append %M2_HOME%\bin to PATH variable
-	
-	 	to verify maven installation in cmd issue mvn -version
-	
-	6 install IDE intlliJ Community Edition ( download from https://www.jetbrains.com/idea/download/#section=windows )
-	7 in intelliJ go to Files -> Settings -> Plugins -> Browse repositories and install Cucumber for Java plugin
-	8 configure path to JDK in pom.xml file under <jdk.path> tag
-
-		<properties>
-			<jdk.path>C:/Program Files/Java/jdk1.8.0_144/bin/javac</jdk.path>
-			...
-		</properties>	
-	    
-	9 configure port number in pom.xml file under <jetty.port> tag
-	
-		<properties>
-			
-			<jetty.start_port>8082</jetty.start_port>
-			<jetty.stop_port>8081</jetty.stop_port>
-			...
-		</properties>	    
-	   
+	5 install IDE called IntelliJ IDEA Community Edition ( download it from https://www.jetbrains.com/idea/download/#section=windows ) 
+	6 in IntelliJ go to Files -> Settings -> Plugins -> Browse repositories and install 'Cucumber for Java plugin' 
+ 
+		REMARK: any other IDE plugin is not required and does not have to be installed! 
+ 
+		It is possible to install this plugin from welcome screen. Please choose Configure -> Plugins 
+		Click 'Install JetBrains plugin…' button 
+		Search for 'Cucumber for Java' and install it
+		
 Optionally user can execute steps below. Especially for web automation case or jdbc/windows native apps automation.	   
 	   
-	10 install git ( download from https://git-scm.com/download/win )
-	11 clone the repo for example to C:\Documents\Projects\SAF	
-	12 download Selenium Chrome driver and other drivers if needed ( download from https://sites.google.com/a/chromium.org/chromedriver/downloads )
-	13 put web drivers in <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
-	14 download JDBC oracle driver and other drivers if needed ( download from http://www.oracle.com/technetwork/apps-tech/jdbc-112010-090769.html ) 
-	15 put odbc drivers in <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
-	16 Fix relative path (relative to project dir) to web drivers in \src\test\java\config\framework\framework.config
-	17 Fix relative path (relative to project dir) path to jdbc drivers in \src\test\java\config\framework\framework.config
-	18 Install autoIt ( download from https://www.autoitscript.com/site/autoit/downloads/ )
+	7 install git ( download from https://git-scm.com/download/win )
+	8 clone the repo for example to C:\Documents\Projects\SAF	
+	9 download Selenium Chrome driver and other drivers if needed ( download from https://sites.google.com/a/chromium.org/chromedriver/downloads )
+	10 put web drivers in <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
+	11 download JDBC oracle driver and other drivers if needed ( download from http://www.oracle.com/technetwork/apps-tech/jdbc-112010-090769.html ) 
+	12 put odbc drivers in <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
+	13 Fix relative path (relative to project dir) to web drivers in \src\test\java\config\framework\framework.config
+	14 Fix relative path (relative to project dir) path to jdbc drivers in \src\test\java\config\framework\framework.config
+	15 Install autoIt ( download from https://www.autoitscript.com/site/autoit/downloads/ )
 
 
+----------------------------------
+
+	
+Set basic project environment properties in setting.xml file
+
+	1 configure path to JDK in setting.xml file under <jdk.path> tag, for example 
+ 
+		<properties>   
+			<jdk.path>C:/Program Files/Java/jdk1.8.0_144/bin/javac</jdk.path>   
+			...  
+		</properties>
+		
+	2 configure port number in setting.xml file under <jetty.port> tag, for example 
+		<properties>      
+			<jetty.start_port>8082</jetty.start_port>   
+			<jetty.stop_port>8081</jetty.stop_port>   
+			...  
+		</properties> 
+ 
+	3 add private maven repository to active profile in setting.xml or in pom.xml if required
+	4 Instruct maven to import setting.xml configuration. 
+		Go File -> Settings… 	
+		Override user settings file for maven under Settings -> Build, Execution, Deployment -> Maven 
+	
+	
 ----------------------------------
 
 
@@ -213,11 +277,15 @@ How to import project in IntelliJ?
 	2 point it to the location where your project is
 	3 select "Import project from external model", select "Maven" and hit Next
 	4 go with default options and click Next
-	5 the project is recognized as maven project and click Next
-	6 in case intelliJ is not able to locate your JDK, click "plus" icon in Select Project SDK window and point to the JDK installed on your machine, click Next
-	7  enter the name of project and click Finish
+	5 click environment variables button in the lower right corner and modify User settings file (it should point to your setting.xml)
+	6 the project is recognized as maven project and click Next
+	7 in case intelliJ is not able to locate your JDK, click "plus" icon in Select Project SDK window and point to the JDK installed on your machine, click Next
+	8 enter the name of project and click Finish
+	9 go to Run -> Edit Configurations... and configure 'Cucumber for Java' plugin to use additional formatter 
+	10 add new environment variable cucumber.options under Default configuration of the plugin. 
+		It’s value shall be --plugin org.jetbrains.plugins.cucumber.java.run.CucumberJvmSMFormatter --monochrome --plugin libs.libCore.modules.CustomFormatter  
 
-
+	
 ----------------------------------
 
 
@@ -233,6 +301,7 @@ Dir structure shall be like this
 						- environment
 						- framework
 						- testdata
+						project.config
 					- features
 						- Web
 							- feature1
@@ -255,6 +324,8 @@ Dir structure shall be like this
 						...
 		- target
 		pom.xml
+		setting.xml
+		README.md
 
 
 
@@ -277,8 +348,9 @@ Dir src/test/java/features contains features files (cotntainers for tests).
 
 Dir traget/ will be used to store results of test execution like for example test report.
 
-File pom.xml contains project properties and dependencies. 
-
+File pom.xml contains project properties and dependencies.  It shall not be changed by the end users.
+File setting.xml contains end user project environment properties. This file can be moved outside project dir but in such case a full path to it shall be provided when calling mvn command
+File project.config contains project test configuration
 
 
 --------------------------------
@@ -352,7 +424,7 @@ Test report will be created.
 TestData/ExpectedData can be passed to the steps directly in a feature file or can be taken from a *.config file.
 
 Global configuration is available but it can be overwritten/updated by local config.
-Config files will be loaded automatically. It is usually convinient to give same name to feature file like name of the feture it contains.
+Config files will be loaded automatically but feature names have to be unique! Best is to keep feature file name and feature name the same.
 For example file myTestFeature.feature shall contain
 	
 	Feature: myTestFeature
@@ -362,7 +434,7 @@ For example file myTestFeature.feature shall contain
 		...
 
 
-Log file will be created in target dir with a timestamp for each run, for example target/2017-09-11_103158_FK_Prototype
+Log file will be created in target dir with a timestamp for each run, for example target/2017-09-11_103158_SAF
 When run is done via mvn test command in addition to that a test report dir will be created, for example target/site
 Report can be viewed in the browser.
 
@@ -376,11 +448,11 @@ How the framework is build?
 
 
 
-Java is used for learning purposes. IntelliJ is used as an IDE which makes it easier to write tests and from which tests can be executed.
+Java is used for learning purposes.
 
 To make installation and deployment easy so called project build and dependency management tool is used. It is called maven.
 It will automatically download all needed libraries so there is no need to find them manually.
-Maven configuration is available in so called pom.xml file. It contains not just dependencies but also plugins.
+Maven configuration is available in so called pom.xml file and setting.xml file. Pom.xml contains not just dependencies but also plugins.
 Thanks to this maven can be used to start our tests from command line. For this purpose so called surefire plugin is used.
 
 For logging purposes log4j2 library is used. For BDD cucumber-jvm and junit libraries are used. For reporting purposes allure library is used. 
@@ -389,7 +461,7 @@ Configuration files are in json format. We need to parse the data available insi
 
 When steps are executed we need to pass the same instance of a class to them, for example webdriver instance, test data storage, output of step def execution etc. To make it possible we are using so called dependency injection. Without it for example each step will open a new browser window. For dependency injection pico-container library is used.
 
-For web automation Selenium WebDriver library is used. For api automation RestAssured library is used. To read Csv files openCSV library is used. 
+For web automation Selenium WebDriver library is used. For windows native apps automation Winium library is used. For api automation RestAssured library is used. To read Csv files openCSV library is used. 
 
 To better handle command execution and sql execution Commons-exec and commons-dBUtils libraries from Appache are used. Same for better handling of files and string manipulations (Commons-io and Commons-lang). 
 
@@ -397,10 +469,85 @@ To read/write pdf files pdfBox2 library is used.
 
 To have possibility to pause test execution autoIt scirpt is used. 
 
-To manage remote hosts via ssh and transfer files via scp/sftp sshj and expectit-core libraries are used. To manage windows remotes winrm4j library is used.
+To manage remote hosts via ssh and transfer files via scp/sftp sshj and expectit-core libraries are used. To mangae windows remotes winrm4j library is used.
 
 On top of that macro support, test data management, configuration files support, Page Object Model support and more was added.
 Project and test structure is also enforced to keep things consistent.
+
+
+--------------------------------
+
+
+How to setup private maven repository?
+
+To make distribution and usage of 3rd party libraries compliant with corporate process or policy we can setup a private maven repository. Such repository can act as a proxy and caching server which operates in internal network and from which testers can fetch dependencies.  
+To make this job easier we can use so called repository manager called Artifactory (it’s open-source version is more than enough for our purposes). 
+To run it please follow steps described below.  
+ 
+	1 Download an open source version from https://jfrog.com/open-source/. Please download the zip package. 
+	2 Unpack it to desired directory, for example C:\Users\superuser\Downloads\jfrog-artifactory-oss6.0.2 
+	3 Install Java SE version 8 or newer 
+	4 Go to artifactory-oss-6.0.2\bin 
+	5 Run artifactory.bat 
+ 
+This will start artifiactory with its default configuration. Artifactory Gui can be accessed under http://<host_name>:8081/artifactory  
+Default login and passwords are admin/password. To modify default 8081 port please change tomcat configuration under /tomcat/conf/server.xml.  
+ 
+Please create default repository configuration using configuration wizard for maven. Created repositories will act as proxy and cache repository. 
+ 
+Following repositories are going to be created libs-snapshot-local, libs-release-local, jcenter, libs-snapshot, libs-release. 
+ 
+Cached artifacts will be stored in jcenter-cache repository. Artifactory repositories are keeping artifacts database under artifactory-oss-6.0.2\data subdirectory. 
+Every times tester’s workstation will ask to download new artifact first jcenter-cache will be checked and in case artifact will be missing jcenter repository will be checked. 
+ 
+In addition user can create so called local repositories. This means user has a possibility to upload particular artifacts to such local repository and it can be used in internal network only. Please use Deploy button to add local artifacts/repos. 
+ 
+To make use of internal repository managed by artifactory we need to re-configure maven settings on tester’s workstation. Pom.xml or setting.xml file can be updated to include following entries. 
+	<repositories> 
+		<repository>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>         
+			<id>central</id>         
+			<name>libs-release</name>         
+			<url>http://<host_name>:8081/artifactory/libs-release</url>     
+		</repository>     
+		<repository>         
+			<snapshots />         
+			<id>snapshots</id>         
+			<name>libs-snapshot</name>         
+			<url>http://<host_name>:8081/artifactory/libs-snapshot</url>     
+		</repository> 
+	</repositories> 
+	<pluginRepositories>     
+		<pluginRepository>
+			<snapshots>
+				<enabled>false</enabled> 
+			</snapshots>         
+			<id>central</id>         
+			<name>libs-release</name>         
+			<url>http://<host_name>:8081/artifactory/libs-release</url>     
+		</pluginRepository>     
+		<pluginRepository>         
+			<snapshots />         
+			<id>snapshots</id>         
+			<name>libs-snapshot</name>         
+			<url>http://<host_name>:8081/artifactory/libs-snapshot</url>     
+		</pluginRepository> 
+	</pluginRepositories> 
+ 
+Where <host_name> is the name of the computer where our internal repository is located. No other changes to pom.xml/setting.xml are needed. From now one maven will try to fetch artifacts from this internal repository. 
+ 
+REMARK: jcentral repository can be made offline. This means that only artifacts from its cache are going to be served. In case something is missing an error will be thrown but no connection to maven central repository will be created. Cache will not be removed when Artifactory will be killed! 
+ 
+To make jcentral repository local only. Please follow steps below. 
+	1 Login as admin to Artifactory 
+	2 Open Admin menu and go to Remote Repositories 
+	3 Open jcenter 
+	4 Scroll down Basic properties and mark it as offline. Save it. 
+ 
+ 
+REMARK: Global offline mode exists as well. In this case remote repositories serve as caches only and do not proxy remote artifacts. It can be enabled by going into Admin tab under Configuration | General 
 
 
 
@@ -415,34 +562,55 @@ Usage
 
 To run a test from windows cmd please execute
 
-
 	cd <install_dir>
-	mvn clean test -Dcucumber.options="--tags @bookByIsbn"
-	mvn site
-	mvn jetty:run
+	mvn clean test -fae -s setting.xml -Dcucumber.options="--tags @bookByIsbn"
+	mvn site -s setting.xml
+	mvn jetty:run -s setting.xml
 	go to http://localhost:8082
+	
 
+Please note that usage of clean keyword ensures that artifacts from previous test execution are removed first.
 
-Please note that usage of clean keyword ensures that artifacts (like logs, reports, screenshots) from previous test execution are removed first.
+To run a test case using scenario or feature file name please execute
+	
+	mvn clean test -fae -s setting.xml -Dcucumber.options="--name '^Test 1 \- dummy test name\, which shows how to use regex \- 2 define a test name at run time\.$'" 
 
+Please note that commands provided above can be executed from a batch file. This is exactly what is happening when Jenkins is in use. 	
+	
 One can also use IntelliJ to run a feature file. In that case only log file will be created.
 To run a test from IntelliJ a cucumber plugin is used. Please click with right mouse button on the feature file name and choose 'Run'.
 In case of an exception indicating that step defs were not found please double check plugin configuration. To do so go to Run menu in the toolbar and choose Edit configurations. Select cucumber java and make sure that glue points to the correct directory or package (shall be 'libs').
 If test runs fine via mvn test command but not using IntelliJ this indicates missconfigruation of cucumber-jvm plugin.
 
-To generate a report from test please execute mvn site. After this command execute mvn jetty:run to run jetty. Check the report in the browser under http://localhost:port (default port is 8082).
+To generate a report from test please execute 'mvn site -s setting.xml'. After this command execute 'mvn jetty:run -s setting.xml' to run jetty. Check the report in the browser under http://localhost:port (default port is 8082).
 
 It is possible to overwrite active_env property from the command line. In that case project specific config as specified by the CMD argument will be used during test execution. To do so please execute a test for example like below
 
-	mvn clean test -Dactive_env="bookByIsbn" -Dcucumber.options="--tags @bookByIsbn"
+	mvn clean test -s setting.xml -fae -Dactive_env="bookByIsbn" -Dcucumber.options="--tags @bookByIsbn"
 
 In this particular case a default environment (SUT) configuration will be loaded and later on it will be overwritten by config available in a file src\test\java\config\environment\bookByIsbn.config. Cucumber option --tags can be used to run only a subset of tests that are tagged with @bookByIsbn tag.
 
 It is possible to set browser width and height via command line argument. To do so please execute test using command like below
 
-	mvn clean test -Dactive_env="demoOnline" -DwidthXheight="800 x 640" -Dcucumber.options="--tags @demoOnline"
+	mvn clean test -s setting.xml -fae -Dactive_env="demoOnline" -DwidthXheight="800 x 640" -Dcucumber.options="--tags @demoOnline"
 
 Argument -DwidthXheight= will be used to set browser dimensions.
+
+
+REMARK: it is possible to pass TestData/Environment/Expected data valus via CLi. In such case they will overwrite values taken from configuration file. To do so please use -Dctx.TestData.key=value flag. For example
+	call mvn test -s setting.xml -fae -Dctx.Environment.Active.WinRM.VM1.host=my_new_host_name -Dcucumber.options="--tags @execute_test_on_virtual_machine_my_new_host_name"
+
+
+
+
+How to run tests in parallel?
+
+
+
+Usage from command line allows us to run tests in parallel. Please note that in such case a careful test design shall be considered. End user needs to take care about test data and configuration data. Situation where one test can influence other one has to be avoided. For example employees/subscribers shall have unique identifiers etc. If one test modifies SUT configuration we shall make sure that at the same time it will not affect other tests. In addition if Sikuli is in use please remember that if one app covers other one it may fail to locate desired element on the screen (consider a case where multiple RDP or web browser windows are open on same host). 
+To run tests in parallel please create multiple copies of your project. In such case  you can run tests in each project at same time, for example using batch files.  
+In exactly same way we can create multiple Jenkins jobs, where each job is using a copy of same project. 
+In this way multiple jobs can be triggered at same time.
 
 
 
@@ -474,65 +642,118 @@ Description below allows to setup a new project with a job that can be started a
 
 	5 Proceed according to the instructions on the screen
 	6 Install suggested plugins
-	7 Create user
-	8 Go to Manage Jenkins -> Configure System -> Advanced and change default path to workspace directory if needed
-	9 Go to Manage Jenkins -> Configure System and adjust number of executors to decide how many jobs can be run in parallel
-	10 Optionally install new modern UI. To do so go to Manage Jenkins -> Manage Plugins -> Available tab and install BlueOcean plugin
-	11 Go to Manage Jenkins -> Mangae Plugins -> Available and install PostBuildScript plugin to run tasks when the job execution is over
-	12 Go back to main view and click Create New Jobs as Freestyle project
-	13 Thick "This project is parametrized" checkbox
-	14 Add String parameter PROJECTDIR with default value pointing to your project directory, for example "C:\Users\akowa\Documents\Projects\FK_Prototype"
-	15 Thick trim the string box
-	16 Add String parameter ACTIVEENV with default value empty
-	17 Add String parameter CUCUMBEROPTIONS with default value that you wish to pass to cucumber runner, for example tags that shall be used "--tags @demoOnline"
-	18 Thick trim the string box
-	19 Add build step "Execute Windows batch command"
+	7 Create admin user
+	8 Go to Manage Jenkins -> Configure System -> Advanced and change default path to workspace directory to ${JENKINS_HOME}/workspace/${ITEM_FULL_NAME}
+	9 Go to Manage Jenkins -> Configure System -> Advanced and modify number of executors to decide how many jobs can be run in parallel
+	10 Go to Manage Jenkins -> Manage Plugins -> Available tab and install PostBuildScript plugin to run tasks when the job execution is over 
+	11 Go back to main view and click Create New Jobs as Freestyle project
+	12 Thick "This project is parametrized" checkbox
+	13 Add String parameter PROJECTDIR with default value pointing to your project directory, for example "C:\Users\akowa\Documents\Projects\FK_Prototype"
+	14 Thick trim the string box
+	15 Add String parameter ACTIVEENV with default value empty
+	16 Thick trim the string box
+	17 Add build step "Execute Windows batch command"
+	
 		echo STEP 1 PRE BUILD
 		echo Stop jetty server so we can clean target directory
 
 		cd %PROJECTDIR%
-		mvn jetty:stop 
-	20 Add build step "Execute Windows batch command"
+		call mvn jetty:stop -s setting.xml 
+		call mvn clean -s setting.xml
+		
+	18 Add build step "Execute Windows batch command"
+	
 		echo STEP 2 BUILD
 		echo run tests
 
 		cd %PROJECTDIR%
-		mvn clean test -Dactive_env="%ACTIVEENV%" -Dcucumber.options="%CUCUMBEROPTIONS%"
-	21 Add PostBuild action "Execute Script"
-	22 In new PostBuld action add new build step "Execute Windows batch command" and mark if build was success, failure or unstable
-		Script content shall be 
+		call mvn test -s setting.xml -fae -Dactive_env="%ACTIVEENV%" -Dcucumber.options="--tags @test1" && call mvn -s setting.xml site
+		call mvn test -s setting.xml -fae -Dactive_env="%ACTIVEENV%" -Dcucumber.options="--tags @test2" && call mvn -s setting.xml site
 		
+		
+	19 Add build step "Execute Windows batch command"
+	
 		echo STEP 3 POST BUILD
-		echo generate test report
-
-		cd %PROJECTDIR%
-		mvn site 
-	23 Add build step "Execute Windows batch command" as a part of PostBuild step
-		echo STEP 4 POST BUILD
-		echo copy test report to workspace %WORKSPACE% for archiving
+		echo copy test report to workspace %WORKSAPCE% for archiving
 
 		cd %PROJECTDIR%
 		xcopy * "%WORKSPACE%\%JOB_NAME%_%BUILD_NUMBER%" /e /i /h /Y
-	24 Add build step "Execute Windows batch command" as a part of PostBuild step
+		
+	20 Add build step "Execute Windows batch command"
+	
+		echo STEP 4 POST BUILD
+		echo generate test report
+
+		cd %PROJECTDIR%
+		call mvn site -s setting.xml
+		
+	21 Add build step "Execute Windows batch command"
+	
 		echo STEP 5 POST BUILD
 		echo start jetty to display test report
 
 		set BUILD_ID=
 		echo cd %PROJECTDIR% > %TEMP%\startJetty.bat
-		echo mvn jetty:run >> %TEMP%\startJetty.bat
+		echo mvn jetty:run -s setting.xml >> %TEMP%\startJetty.bat
 
 		start /B "" cmd /C %* %TEMP%\startJetty.bat
-	25 To schedule new job add Build Triggers and select Build Periodically. To start execution every working day at approx 1 enter into the box
-	H 01 ** 1-5
-	26 Apply and save the changes
-	27 Watch it runs
-	28 View results via allure report in the web browser under localhost:jetty_start_port
+		
+	22 Apply and save the changes
+	23 Schedule the job
+	24 Watch it runs
+	25 View results via allure report
 
 
-Please keep in mind that just the results of the latest job will be visible in the report.
-It is possible to run multiple jobs in parallel. To do so just create few projects and confgure separate job for each project. Rememebr to adjust jetty ports in pom.xml for each projects to view the reports when the job is over.
+	REMARK: tests will be run in order defined in batch file mentioned above in step 18
+
+How to allow desktop interaction?
+
+By default Jenkins run as a service under Windows host. This means it can be managed by going to services.msc. Unfortunately this will not allow for desktop interaction. This means that when a browser is open via Jenkins job or RDP session is open by Jenkins job user will not see it on the host. 
+ 
+In general this is great because it allows to use this host when jobs are getting executed without a fear that user actions like mouse clicking or typing will influence test execution. Unfortunately Sikuli usage requires desktop integration. Currently it is used to handle flash based elements in Navigator UI of Wfc. 
+ 
+To enable desktop integration we can run Jenkins from cmd as a current user. To do so please follow steps described below 
+
+	1 Stop Jenkins service via services.msc 
+	2 Change startup type from Automatic to Manual 
+	3 Create a batch file with following content and run it 
+ 
+		cd "C:\Program Files (x86)\Jenkins "
+		java -jar Jenkins.war --httpPort=8083 
+ 
+		REMARK: 8083 number shall be changed to desired one  
+  
+	4 When Jenkins is started from CMD it will create a new directory in user’s home dir, for example C:\Users\superuser\.jenkins
+	5 Stop Jenkins instance that was run from CMD 
+	6 Synchronize content of directory C:\Program Files (x86)\Jenkins with C:\Users\superuser\.jenkins 
+	7 Start Jenkins again using batch file it will contain same configuration like previously used when it was started as a service from Program Files and desktop interaction will be allowed 
+
+	
+How to add links to reports to Jenkins dashboard?
+
+It is possible to show links to test reports on a Jenkins dashboard. Reports will be accessible only after job execution is done. It is very convenient for the end user to always check the job status via Jenkins dashboard and be able to go directly to the test report when the test execution is over.
+
+To add the links to the dashboard we can use a plugin called Sidebar links. To install it 
+
+	1 Go to Manage Jenkins -> Manage Plugins 
+	2 Click Available tab and install Sidebar Link plugin 
+	3 Go to Manage Jenkins -> Configure System and add required links to test reports 	
+	
+How to configure e-mail notifications?
+
+	1 Go to Manage Jenkins -> Configure System and add system admin e-mail address (it will be used as a sender) 	
+	2 Modify Extended E-Mail configuration and add 
+		SMTP server: <smtp_server_host_name>  
+		Default user E-mail suffix: @<domain_name> 	
+	3 If required default e-mail content and recipients can be configured as well. 
+	4 Configure E-Mail notification section 
+	5 Configure particular job to trigger e-mail notification for example when the job status is success. 
+		a) Add new Post-build action ‘Editable Email Notification’ 	
+		b) Change the default content or recipients configuration if required
+		c) Add trigger for notification. To do so please click on the 'Advanced Settings…' button and select 'Add Trigger' -> Success. Set 'Send to' to Recipient List. 
 
 
+		
 --------------------------------
 
 
@@ -559,7 +780,7 @@ Feature files or scenarios can be tagged. Use tags ("@tagName") and cucumber opt
 
 
 
-	mvn clean test -Dcucumber.options="--tags @bookByIsbn"
+	mvn clean test -s setting.xml -fae -Dcucumber.options="--tags @bookByIsbn"
 
 
 
@@ -639,7 +860,7 @@ Details of what is happening during test execution
 
 Cucumber runner is available in src/test/java/libs/libCore/modules/TestRunner.class
 It contains cucumber options like glue path (path to steps definitions), features path and allure report plugin.
-There shall be no need to change its parameters.
+There shall be no need to change it parameters.
 
 	package libs.libCore.modules;
 
@@ -649,7 +870,7 @@ There shall be no need to change its parameters.
 
 	@RunWith(Cucumber.class)
 	@CucumberOptions(
-		plugin = {"ru.yandex.qatools.allure.cucumberjvm.AllureReporter"},
+		plugin = {"ru.yandex.qatools.allure.cucumberjvm.AllureReporter", "libs.libCore.modules.CustomFormatter"},
 		features = "src/test/java/features",
 		glue = "libs")
 	public class TestRunner {}
@@ -870,14 +1091,14 @@ In addition there are flags available that can be used to indicate
 	- pause duration in case manual intervention during test execution is needed
 		PauseDuration
 		
-		and others (see below for details)
+		and others (see below and into libs/libCore/config/default.config for more details)
 
 Entity scripts.path can be use to indicate a path relative to project directory where some autoIT or shell scripts can be found for example.
 Entity apps can be used to group together any 3rd party apps that can be called by the step defs like for example autoIt, tshark, mergecap etc.
 
 In this way multiple systems under test can be configured.
 
-Please note that in libs/libCore/config user can find default configruation that can be overwriten by global config available in  src/test/java/config/framework or src/test/java/config/environment subdirectories. For this reason please do not change anything in libs/libCore/config files.
+Please note that in libs/libCore/config user can find default configruation that can be overwriten by global project config available in  src/test/java/config/project.config file. For this reason please do not change anything in libs/libCore/config files.
 
 Now it is time to read test data configuration from *.config files.
 Everything that is written below applies also to environment configuration files behaviour.
@@ -894,7 +1115,56 @@ From now on in case there is a need to access any configuration parameter one ca
 Storage.get("Environment.Active.Rest.url") method returns url value from active configuration. Please note that is is assigned to variable of type String. In case Storage.get() returns other type of data than String we may encounter ClassCastException.
 	
 
+	REMARK: Please note that it is possible to pass variables into the config files. Content of storage is re-evaluated in ScenarioHooks before test runs. Please see an example below.
+			Having 2 entities like TestData.Entity1.Key1 and Environment.Active.WinRM.VM1.host user can create new third config entity dummyEntity.
+			
+			TestData: {
+				Entity1: {
+					Key1: "${ctx.Environment.Active.WinRM.VM1.host}"
+					}
+				}	
+	
+			Environment: {
+				Active: {
+					WinRM: {
+						VM1: {
+							host: "myDummyHostName"
+							}
+						}
+					}	
+				}
+				
+			DummyEntity: {
+				key1: "${ctx.TestData.Entity1.Key1} is going to be used together with ${ctx.Environment.Active.WinRM.VM1.host}"
+				}	
+				
+How to add environment information to test report?
 
+To show anything in Environment section of test report please create following entitiy in Environment configuration.
+
+Environment:{
+    Default: {
+        WriteToReport: {
+            Key1: "This is dummy text",
+            Key2: "${ctx.TestData.This.Is.Dummy.Value.Taken.From.Config}"
+			}
+		}
+	}
+
+
+
+How to add link to issue/test description available in test/issue management solution into the test report?
+
+To show links into issue or test in scenario report please add following section into the Environment configuration
+
+	Environment:{
+		Default: {
+			IssueTrackerUrlPattern: "https://jira.my.company.com/browse",
+			TestTrackerUrlPattern: "https://jira.my.company.com/browse",
+			}
+		}
+			
+			
 ----------------------------------
 
 
@@ -903,8 +1173,31 @@ TestData
 
 
 
-Global configuration is available under src/test/java/config/testdata directory.
-Files under this directory are checked and evaluated. New storage is created based on their content.
+Global project configuration is available under src/test/java/config/project.config directory.
+Files included in it are checked and evaluated. New storage is created based on their content.
+An example of project.config file is below
+
+#include "config/framework/framework.config"
+#include "config/environment/winrm.config"
+#include "config/environment/default.config"
+#include "config/environment/active.config"
+#include "libs/libProject1/config/testdata.config"
+#include "libs/libProject2/config/testdata.config"
+#include "config/testdata/cloud.config"
+#include "config/testdata/database.config"
+#include "config/testdata/release.config"
+#include "config/testdata/testdata.config"
+#include "config/testdata/expected.config"
+
+TestData:{}
+
+Additional configuration files will be read in the order they are mentioned in project.config. In such way default configuration from other libraries can be included.
+
+Please remember that order of processing is as follows 
+	- first config files under libs/libCore/config
+	- then project.config under src/test/java/config/
+	- then local config files in feature file directory
+	
 An example of test data configuration is below (content of src/test/java/config/testdata/testdata.config file)
 
 	TestData={
@@ -1215,13 +1508,13 @@ it shall match test result like below
 	30, SALES, CHICAGO
 	40, OPERATIONS, BOSTON
 
-Each step execution shall be marked in a log with a "* Step started" string to make it easier to find it. For example
+Each step execution is marked in a log with a "* Step started" string to make it easier to find it. For example
 
 
 
 	[DEBUG] 2017-09-11 12:32:28.208 [main] Log - * Step started a_user_retrieves_the_book_by_isbn
 
-Please make sure that step developers will start their implementation with method call of Log.Info("* Step started ...") where "..." is the name of the step.
+
 
 --------------------------------
 
@@ -1233,7 +1526,7 @@ How to write step and share data between steps?
 
 Thanks to dependency injection there is a way to share objects between steps and modules. In SharedContext.class available under /src/test/java/libs/libCore/modules so called Context Object was defined.
 
-To grant access to it please make sure that your Steps class extends BaseSteps class and create a constructor like below
+To grant access to it please make sure that your Steps class extends BaseStep class and create a constructor like below
 
 	public class DemoOnlieSteps extends BaseSteps {
 
@@ -1249,9 +1542,7 @@ To grant access to it please make sure that your Steps class extends BaseSteps c
 Where DemoOnlineSteps is a class that contains project specific steps to handle web automation for particular page.
 In this way we can pass same instance of ctx between steps and modules. With this approach we can use methods defined for objects available in ctx variable.
 BaseSteps class define a set of helpers modules to make writing new step defs much easier. They are called as below
-Macro, StepCore, PageCore, SqlCore, Storage, FileCore, ExecutorCore, PdfCore, SshCore, WinRMCore. They contain a set of methods that can be used to do common things in steps like creating files, evaluating macros, reading environment configuration, evaluating templates, attaching files to the report etc.
-
-Please note that BaseSteps class can also be used for new models preparation. 
+Macro, StepCore, PageCore, SqlCore, Storage, FileCore, ExecutorCore, PdfCore, SshCore, WinRMCore, WinRSCore, WiniumCore, CloudDirectorCore. They contain a set of methods that can be used to do common things in steps like creating files, evaluating macros, reading environment configuration, evaluating templates, attaching files to the report etc.
 
 For example lets have a look at 2 steps below
 
@@ -1285,7 +1576,7 @@ ctx.Object is a bucket to which we can throw anything and later on we can retrie
 
 	ctx.Object.put("request",RequestSpecification.class, request);
 
-This metohd puts an object request of type RequestSpecification to ctx.Object bucket with name "request". Later on another step can retrieve it like below
+This metohd puts an object of type RequestSpecification to ctx.Object bucket with name "request". Later on another step can retrieve it like below
 
 	RequestSpecification request = ctx.Object.get("request",RequestSpecification.class);
 
@@ -1424,9 +1715,12 @@ Please use ctx.Object to pass objects between step defs.
 Please use PdfCore module for pdf manipulation.
 Please use SshCore module for ssh/scp/sftp execution.
 Please use winRmCore module for winrm execution.
+Please use winRSCore module for remote windows management via winRS client
+Please use CloudDriectoreCore module for virtual machine management via vmware cloud director
+Please use WiniumCore module for any action that shall be done in a windows application written for win8 and below (windows 10 sdk is supported by appium)
 
-It is also possible to write test data into a file. In this way it can be read later on and used during other test execution. Even though this creates dependecies between tests it maybe useful some times. Please consider following example we run a long lasting test. Action that has to be trigger takes 10 minutes to execute. In this case there is no point to wait for its results. Instead it maybe desired to divide the test into 2 parts (2 feature files). One will be called to trigger the action. Second one can contain validation steps.
-Second feature can be executed few minutes later and in the meantime other tests can run.
+It is also possible to write test data into a file. In this way it can be read later on and used during other test execution. Even though this creates dependecies between tests it maybe useful some times. Please consider following example we run a long lasting test. Action that has to be trigger takes 10 minutes to execute. In this case there is no point to wait for its results. Instead it maybe desired to divide the test into 2 parts (feature files). One will be called to trigger the action. Second one can contain validation steps.
+Second feature can be executed few minutes later and in the meantime other test can run.
 In such case we have to extract test data that was used in the first part of the test (first feature file).
 
 See an example below to understand how to write test data storage (or any other storage) to a text file.
@@ -1552,9 +1846,7 @@ It can be retrieved later on in the next Scenario or different Feature. See an e
  
 Please keep in mind that it is not recommended to use this feautre as it creates dependencies between tests (Scenarios) that shall be avoided as much as possible. 
 
-One last remark it is not recommended to use try/catch blocks is step defs implementation. If there is a need to use it please try to do it in a model and not step def itself. This approach greatly increases readability of steps implementation.
 
-To force stop step execution use Log.error() method.
 
 --------------------------------
 
@@ -1820,6 +2112,47 @@ Url that will be open can be defined as Environment.Default.Web.url.
 It is also possible to provide browser width and height. To indicate max dimensions please use keyword "Max" else define them as String with format "width x height", for example "1024 x 960".
 
 
+--------------------------------
+
+
+How to write POM for windows UI automation?
+
+In exactly same way like in case of POM. Except we do not need to uase BasePage any more.
+We can use WiniumCore to search/await or interact with any elements of the Gui.
+
+What is different in comparison to web automation? Main difference is that apps can run on local host or remote host. In case remote host is in use we need to setup and remove connection (RDP/VNC) that will open windows os desktop.
+This can also be done using WiniumCore and WinRSCore combaintation. Please see an example below.
+
+	@Given("^on remote host (.+) login to an app as user (.+) with password (.+)$")
+	public void on_remote_host_login_to__an_app(String node, String user, String pass) throws Throwable {
+		Log.info("* Step started on_remote_host_login_to__an_app");
+
+		String pathToApp = "C:\\path_to_my_app\\start_app.exe";
+
+		WinRSCore.awaitForHostAvailability(node);
+		WinRSCore.awaitForHostRdpAvailability(node);
+
+		Log.debug("Closing any running instance of an app");
+		String cmd = "foreach($proc in Get-Process | Where {$_.ProcessName -like 'an app'}){Stop-Process $proc}";
+		WinRSCore.executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, 120);
+
+		WiniumCore.startApp(node, pathToApp, "");
+
+		login = new AnAppLoginPage(ctx);
+		main = login.loginToAnApp(user, pass);
+
+	}
+
+	Please note that startApp method gets a node parameter which poinst to remote host configured in WinRM.config. If an app shall be started on the tester's workstation "localhost" or empty string "" shall be passed.
+	Any additional parameters that shall be passed to an *.exe file can be providedas a third input for startApp method.
+	
+Second thing that is different in comparison to web ui automation is the fact that we have to inspect UI elements using a dedicated application called inspector. It is part of windows sdk and can be downloaded from https://developer.microsoft.com/en-us/windows/downloads/sdk-archive.
+Please use version released for windows 8.1 For windows 10 Appium instead of Winium shall be used.
+After installation with default settings inspect.exe can be found in C:\Program Files (x86)\Windows Kits\8.1\bin\x86 directory.
+
+As locators user can use xpaths, automation ids, classes etc... exactly like in case of web UI automation.	
+
+
 
 --------------------------------
 
@@ -1850,8 +2183,8 @@ What kind of test can/shall be performed for the rest/soap api? Tests that can e
 					delete after delete
 					delete non-existing
 		
-In practice typical rest implementation use http protocol for message transport and json spec for data transfer.
-In case we are dealing with soap api http protocol is used for message transport and xml for data transfer.
+In practice typical rest implementation using http protocol for message transport and json for data transfer.
+In case we are dealing with soap api http is used for message transport and xml for data transfer.
 
 RestAssured is integrated which means we can either build rest/soap requests using method exposed by RestAssured or easier use template files to store message body (either json or xml) and read the message body from such template.
 This method is usually very easy to use because templates can be created using any other tool available like SopaUi or chrome plugins.
@@ -2006,14 +2339,17 @@ In case we would like to trigger any other request like get we have to change th
         String url = Storage.get("Environment.Active.Rest.url");
         Long statusCode = Storage.get("Expected.statusOK");
         Integer expectedCode = statusCode.intValue();
-	
-        given()
-            .when()
-            .log()
-            .all()
-            .get(url)
-                .then()
-                .statusCode(expectedCode);
+        try {
+            given()
+                .when()
+                .log()
+                .all()
+                .get(url)
+                    .then()
+                    .statusCode(expectedCode);
+        } catch (AssertionError e) {
+            Log.error("", e);
+        }
     }
 
 
@@ -2206,7 +2542,7 @@ User can change it if needed for a particular project. To do so please edit foll
 		}
 		...
 
-Please note that for data verification purposes RestAssured is using so called GPath specification. For more details how to extract data from json/xml body please see gpath spec for example here http://groovy-lang.org/processing-xml.html.
+
 
 --------------------------------
 
@@ -2359,7 +2695,7 @@ Becuase our data set is very small we will use template compariosn
         StepCore.compareWithTemplate(templateName, path);
     }
     
-It maybe a better idea for a huge data set to compare 2 tables in sql. For example by executing query like below if ms sql db is in use
+It maybe a better idea for a huge data set to compare 2 tables in sql. For example by executing query like below
  
  	select from table a
 	except
@@ -2371,7 +2707,7 @@ In case table a was modified by some ETL we can backup it by executing
 
 	select * into a_backup from a
 	
-After that we can compare content of a table before and after modification using previously privided query. Of course it is also possible to use select column1, column2... instead of select * if all we want to do is to compare just selected columns. Sql queries shall be adjusted for other db types like oracle etc.
+After that we can compare content of a table before and after modification using previously privide query. Of course it is also possible to use select column1, column2... instead of select * if all we want to do is to compare just selected columns.
 
 DB connection will be automatically closed in @After hook.
 
@@ -2825,3 +3161,172 @@ See an example below to better understand how to mount a network share and copy 
     }
 
 Step above will use net use to mount a network share (in this particular case path is hardcode to be a local folder). When this will be done we want to copy a file called toJestPlikTekstowy.txt to Documents directory of a user. To make this possible we will create a script called mount.bat on a remote host and execute its content immediately via winRM.
+
+
+
+Windows remoting is used by WinRSCore module. Its purpose is to allow to do remote windows host mangement from windows workstation where winRS client is installed.
+WinRS is a cmd winRM client developed by Microsoft.
+
+ 
+WinRSCore uses winRM.config as well.
+
+	WinRM: {
+	    node1: {
+		host: "127.0.0.1",
+		port: 55985,
+		user: "Vagrant",
+		domain: "UserDomain",
+		password: "vagrant"
+	    }
+	}
+
+It connects by default to users home directory on local host and supports whole set of possibilities like files transfer, scheduling tasks execution etc. Please see methods available in winRSCore module for more details.
+
+
+
+--------------------------------
+
+
+
+Usage of cloud director integration
+
+
+
+Basic cloud director integration is implemented. It allows to create new VM in an existing Vapp, as well as restart them, remove them and read their status.
+Integration is done via cloud director api. Templates used to trigger api request can be found under libs/libCore/templates/vCloudDirector.
+
+A feature file to create, restart, read status and delete new virtual machine can look like below.
+
+	Feature: test VM creation
+
+		Scenario: create and remove VM using vCloudDirector Soap api
+
+			Given add new vm VM1 to vApp
+			When powerOn vm VM1
+			Then check vm VM1 status
+				And check that DNS entry for remote host VM1 was updated
+				And check vm VM1 status
+				And reboot vm VM1
+				And remove vm VM1 from vApp
+
+Basic environment configuration is available in libs/libCore/config/cloud.config
+
+	Environment:{
+		Default: {
+			vCloudDirector: {
+				host:   "https://my.company.cloud.com",
+				org:    "myorg",
+				user:   "myuser",
+				pass:   "mypass",
+				api:    "1.5",
+
+				GuestCustomizationSection: {
+					DomainName: "my.company.cloud.com",
+					DomainUserName: "myDomainUser",
+					DomainUserPassword: "myDomainPassword",
+					AdminPassword: "myAdminPassword"
+					}
+				}
+			}
+		}
+			
+Here user can setup login details and domain/admin password used by remote host.
+Virtual machiens details can be provided in TestData, for example like below.
+
+TestData: {
+
+    VM1: {
+        VAppTemplate:       "myVappTemplate",           #name of the vApp template
+        CatalogItem:        "myCatalogItem",           	#name of the item available in the catalog that holds VApp templates
+        Vdc:                "myVdc",                    #name of the vdc
+        VApp:               "myVapp",                	#name of the vApp where vm shall be deployed (case sensitive)
+        Catalog:            "myCatalog",                #name of the catalog
+        VmTemplate:         "myVmTemplate",           	#name of the vm template from vApp template
+        NewVmName:          "myVmName",            		#name of the vm to be deployed in vApp
+        Network:            "myNetworkName",            #name of the network available in vdc
+        ip_allocation_mode: "DHCP"
+
+        #Memory:             "16384",                   #16 GB
+        #Cpu:                "4"                        #number of available cpu
+        #DiskSize:           "204800"                   #200 GB
+    },
+
+    VM2: {
+        Vdc:                "myVdc",                    #name of the vdc
+        VApp:               "myVapp",                   #name of the vApp where vm shall be deployed
+        NewVmName:          "myVmName"                  #name of the vm to be deployed in vApp
+       }
+
+}
+
+VM1 data is required to create new VM. VM2 data is required to restart/read it.
+To understand it better please have a look below how cloud director works.
+
+All virtual machines are created as a part of so called vApp. vApps are just containers for one or more virtual machines. Available resources (like cpu, memory, storage space, networks) are grouped together in so called VirtualDataCenters (vdc). This means that each vApp has to belong to 1 vdc. 
+Each virtual machine has to belong to the network available in VDC.  
+To make the whole process easier it is possible to create new virtual machines and vApps using templates. Templates are grouped together in the catalogs for easier management. Catalog contains items that group together one or more templates. 
+ 
+From technical point of view new virtual machine creation process means that we want to assign new virtual machine created from a template available in the catalog (in one of the items) that belongs to particular vdc and assign it to an existing vApp. 
+			
+			
+--------------------------------
+
+
+
+Usage of sikuli
+
+Sikuli uses image compariosn algorithms for automation purposes. Due to this fact there was not special sikuli integration done. It is recommended only to use this tool when Winium/Selenium will not be able to handle autoamtion (for example flash based elemnets automation).
+Few usage examples are however provided below.
+Sikuli shall be used together with Selenium or Winium driver to handle special cases only.
+
+First we need to set a variable which contains path to the images we would like to use with Sikuli, for example
+
+	String pathToImages = FileCore.getProjectPath() + File.separator + "libs" + File.separator +
+        "libProject1" + File.separator + "resources" + File.separator + "sikuliImages" +
+        File.separator;
+
+Now we can instansiate Screen object like below.
+
+		Screen screen = new Screen();
+
+		Log.debug("About to click into the image Icon1.png");
+	
+		Integer sw = screen.getBounds().width;
+		Integer sh = screen.getBounds().height;
+		Log.debug("Screen size is " + sw + " x " + sh);
+		
+		screen.setRect(sw-sw/3,0,sw/3, sh).highlight().wait(new Pattern(pathToImages + "Icon1.png").similar(0.7f), 5);
+		screen.setRect(sw-sw/3,0,sw/3, sh).highlight().hover(new Pattern(pathToImages + "Icon1.png").similar(0.7f));
+		
+		StepCore.sleep(1);
+		screen.setRect(sw-sw/3,0,sw/3, sh).highlight().doubleClick();
+		StepCore.sleep(1);
+
+As can be seen we can extract information about screen size and use it to reduce screen part which shall be checked by sikuli.
+It is nice to indicate that screen part to the user using red border. 
+We can await for an element, click it, doubleclick it or use try catch block to get a screen shot and attach it to the report.
+Please note that when selenium/winium driver is in use we do not need to use try/catch block to get a screenshot in case of failure. It will be automatically attached to the report.
+Default similarity is 0.7. Reducing it to 0.5 or below usually does not make any sense.	
+	
+What else is possible with Sikuli? 
+
+	- we can hover mouse over an element
+
+		screen.wait(new Pattern(pathToImages + "Icon2.png"), 2);
+		screen.mouseMove(0,30);
+		screen.click(new Pattern(pathToImages + "Icon2.png"));
+		screen.mouseMove(30,0);
+		StepCore.sleep(1);
+
+	- we can type
+	
+		screen.type("Q");
+		
+	- we can scroll using mouse wheel
+
+		screen.wheel(WHEEL_DOWN, 40);	
+
+and much, much more... please see sikuliX doxumentation and tutorials for more details.		
+
+
+REMARK: if Sikuli is in use please remember that if one app covers other one it may fail to locate desired element on the screen (consider a case where multiple RDP or web browser windows are open on same host). 
