@@ -4,7 +4,13 @@ import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
 import libs.libCore.modules.*;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
+import org.openqa.selenium.winium.DesktopOptions;
+import org.openqa.selenium.winium.WiniumDriver;
+import org.openqa.selenium.winium.WiniumDriverService;
+
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public class CoreSteps extends BaseSteps {
 
@@ -21,6 +27,12 @@ public class CoreSteps extends BaseSteps {
     @Given("^open browser$")
     public void open_browser() throws Throwable {
         Log.info("* Step started open_browser");
+
+        //Just in case Skilui is in use -> we don't want to allow to open new browser window if tests are run in parallel on same host
+        if ( Storage.get("Environment.Active.WebDrivers.useSikuli") ){
+            StepCore.activateBrowserLock();
+            StepCore.lockBrowser();
+        }
 
         String browser = Storage.get("Environment.Active.Web.browser");
         EventFiringWebDriver driver = new DriverFactory(ctx).create(browser);
@@ -133,7 +145,7 @@ public class CoreSteps extends BaseSteps {
     public void set_to(String storageName, String value) throws Throwable {
         Log.info("* Step started set_to");
 
-        String val = StepCore.checkIfInputIsVariable(value);
+        Object val = StepCore.checkIfInputIsVariable(value);
 
         Storage.set(storageName, val);
         Storage.get(storageName);
@@ -209,23 +221,7 @@ public class CoreSteps extends BaseSteps {
 
 
     /**
-     * Opens an app on local host without additional arguments
-     *
-     * @param pathToApp String, path to the executable file
-     *
-     * @throws Throwable
-     */
-    @Given("^open an app from (.+)")
-    public void open_an_app_from(String pathToApp) throws Throwable {
-        Log.info("* Step started open_an_app_from");
-
-        WiniumCore.startApp("localhost", pathToApp, "");
-
-    }
-
-
-    /**
-     * Opens an app on remote host without additional arguments
+     * Opens a gui app on a windows remote host without additional arguments
      *
      * @param node String,
      * @param pathToApp String, path to the executable file
@@ -236,7 +232,27 @@ public class CoreSteps extends BaseSteps {
     public void on_remote_host_open_an_app_from(String node, String pathToApp) throws Throwable {
         Log.info("* Step started on_remote_host_open_an_app_from");
 
-        WiniumCore.startApp(node, pathToApp, "");
+        WinRSCore.startApp(node, pathToApp, "");
+
+    }
+
+
+    /**
+     * Opens a gui app on a windows host without additional arguments
+     *
+     * @param pathToApp String, path to the executable file
+     *
+     * @throws Throwable
+     */
+    @Given("^open an app from (.+) with args (.+)")
+    public void open_an_app_from(String pathToApp, String args) throws Throwable {
+        Log.info("* Step started open_an_app_from");
+
+        ExecutorCore.startApp(pathToApp, args);
+
+        StepCore.sleep(2);
+
+
 
     }
 

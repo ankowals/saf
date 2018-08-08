@@ -345,6 +345,97 @@ public class CoreCloudDirectorSteps extends BaseSteps {
     }
 
 
+
+    @When("^disconnect network for vm (.+)$")
+    public void disconnect_network_for_vm(String name) throws Throwable {
+        Log.info("* Step started disconnect_network_for_vm");
+
+        String org = Storage.get("Environment.Active.vCloudDirector.org");
+        String vm_name = Storage.get("TestData." + name + ".NewVmName"); //name of the vm to be deployed in vApp
+        String vapp = Storage.get("TestData." + name + ".VApp");//name of the vApp where vm shall be deployed
+        String vdc = Storage.get("TestData." + name + ".Vdc");
+
+        if ( vm_name == null ) {
+            Log.error("Value of TestData." + name + ".NewVmName null or empty!");
+        }
+        if ( vapp == null ) {
+            Log.error("Value of TestData." + name + ".VApp null or empty!");
+        }
+        if ( vdc == null ) {
+            Log.error("Value of TestData." + name + ".Vdc null or empty!");
+        }
+
+        CloudDirectorCore.login();
+        CloudDirectorCore.getOrganization(org);
+        CloudDirectorCore.getVdc(vdc);
+        String vAppUrl = CloudDirectorCore.getVApp(vapp);
+        String newVmUrl = CloudDirectorCore.getVmFromVApp(vm_name, vAppUrl);
+        CloudDirectorCore.disconnectNetworkConnection(newVmUrl);
+        CloudDirectorCore.logout();
+    }
+
+
+    @When("^connect network for vm (.+)$")
+    public void connect_network_for_vm(String name) throws Throwable {
+        Log.info("* Step started connect_network_for_vm");
+
+        String org = Storage.get("Environment.Active.vCloudDirector.org");
+        String vm_name = Storage.get("TestData." + name + ".NewVmName"); //name of the vm to be deployed in vApp
+        String vapp = Storage.get("TestData." + name + ".VApp");//name of the vApp where vm shall be deployed
+        String vdc = Storage.get("TestData." + name + ".Vdc");
+
+        if ( vm_name == null ) {
+            Log.error("Value of TestData." + name + ".NewVmName null or empty!");
+        }
+        if ( vapp == null ) {
+            Log.error("Value of TestData." + name + ".VApp null or empty!");
+        }
+        if ( vdc == null ) {
+            Log.error("Value of TestData." + name + ".Vdc null or empty!");
+        }
+
+        CloudDirectorCore.login();
+        CloudDirectorCore.getOrganization(org);
+        CloudDirectorCore.getVdc(vdc);
+        String vAppUrl = CloudDirectorCore.getVApp(vapp);
+        String newVmUrl = CloudDirectorCore.getVmFromVApp(vm_name, vAppUrl);
+        CloudDirectorCore.connectNetworkConnection(newVmUrl);
+        CloudDirectorCore.logout();
+    }
+
+
+
+    @When("^get network cards details for vm (.+)$")
+    public void get_network_cards_details(String name) throws Throwable {
+        Log.info("* Step started get_network_cards_details");
+
+        String org = Storage.get("Environment.Active.vCloudDirector.org");
+        String vm_name = Storage.get("TestData." + name + ".NewVmName"); //name of the vm to be deployed in vApp
+        String vapp = Storage.get("TestData." + name + ".VApp");//name of the vApp where vm shall be deployed
+        String vdc = Storage.get("TestData." + name + ".Vdc");
+
+        if ( vm_name == null ) {
+            Log.error("Value of TestData." + name + ".NewVmName null or empty!");
+        }
+        if ( vapp == null ) {
+            Log.error("Value of TestData." + name + ".VApp null or empty!");
+        }
+        if ( vdc == null ) {
+            Log.error("Value of TestData." + name + ".Vdc null or empty!");
+        }
+
+        CloudDirectorCore.login();
+        CloudDirectorCore.getOrganization(org);
+        CloudDirectorCore.getVdc(vdc);
+        String vAppUrl = CloudDirectorCore.getVApp(vapp);
+        String newVmUrl = CloudDirectorCore.getVmFromVApp(vm_name, vAppUrl);
+        CloudDirectorCore.getVmNetworkCardsDetails(newVmUrl);
+        CloudDirectorCore.logout();
+    }
+
+
+
+
     /**
      * [DEPRECATED]
      * Power off an existsing vm via vCloudDirector api
