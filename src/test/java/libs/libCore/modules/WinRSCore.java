@@ -1,10 +1,17 @@
 package libs.libCore.modules;
 
 import org.apache.commons.lang.StringUtils;
+import org.openqa.selenium.WebDriverException;
+import org.openqa.selenium.winium.DesktopOptions;
+import org.openqa.selenium.winium.WiniumDriver;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class WinRSCore {
@@ -14,6 +21,7 @@ public class WinRSCore {
     private StepCore StepCore;
     private ExecutorCore ExecutorCore;
     private Storage Storage;
+    private CloudDirectorCore CloudDirectorCore;
 
     // PicoContainer injects class SharedContext
     public WinRSCore(SharedContext ctx) {
@@ -22,6 +30,7 @@ public class WinRSCore {
         this.ExecutorCore = ctx.Object.get("ExecutorCore",ExecutorCore.class);
         this.Storage = ctx.Object.get("Storage",Storage.class);
         this.StepCore = ctx.Object.get("StepCore",StepCore.class);
+        this.CloudDirectorCore = ctx.Object.get("CloudDirectorCore",CloudDirectorCore.class);
     }
 
 
@@ -270,7 +279,7 @@ public class WinRSCore {
             //cmdList.add("call winrm set winrm/config/service/auth @{Basic=\"true\"}");
 
             String cmd = joinCommands(cmdList, "\r\n", true);
-            String script = "temp.bat";
+            String script = "adjustWinRmConfig.bat";
             transferScript(node, cmd, script);
 
             String result = executeSingleCommandOnVM("call " + script, node, 120);
@@ -306,6 +315,8 @@ public class WinRSCore {
      */
     public void awaitForHostAvailability(String node){
 
+        //[DEPRECATED]
+        /*
         String address = Storage.get("Environment.Active.WinRM." + node + ".host");
 
         if ( address == null ){
@@ -338,6 +349,143 @@ public class WinRSCore {
             }
 
         }
+        */
+
+        String address = Storage.get("Environment.Active.WinRM." + node + ".host");
+
+        if ( address == null ){
+            Log.error("Configuration for Environment.Active.WinRM." + node + ".host not found or null!");
+        }
+
+        Log.debug("Refreshing DNS cache to make connection quicker");
+        File workingDir = FileCore.getTempDir();
+        String cmd = "ipconfig /flushdns";
+        ExecutorCore.execute(cmd, workingDir, 60, true);
+
+        Log.debug("Checking if host " + address + " is accessible");
+
+        String result = "";
+        Integer i = 0;
+        while ( ! result.contains("host " + address + " is accessible") ) {
+
+            result = executeSingleCommandOnVM("'echo host " + address + " is accessible'", node, 60);
+
+            if ( result.contains("host " + address + " is accessible")){
+                break;
+            }
+
+            //StepCore.sleep(60);
+            i++;
+
+            if ( i == 55 ){
+                Log.error("Host not accessible! Timeout of 55 minutes reached! " + "" +
+                        "Consider to add remote host address " + address + " to Trusted hosts list");
+            }
+
+            Boolean useCloudDirector = Storage.get("Environment.Active.Cloud.useCloudDirector");
+            if ( useCloudDirector ) {
+                //force reboot via cloud director because winRM service does not want to start
+                if ( i == 1 || i == 40 ) {
+                    if ( !address.contains(".") ) {
+                        Log.warn("host address is not FQDN! Can't perform reboot via cloud director api");
+                        continue;
+                    }
+                    Boolean isReboot = false;
+                    String vMkey = "";
+                    String org = Storage.get("Environment.Active.vCloudDirector.org");
+                    //find config entity that contains VmApp key and check if host equals NewVmName key
+                    HashMap<String, Object> map = Storage.get("TestData");
+                    for ( HashMap.Entry<String, Object> entry : map.entrySet() ) {
+                        if ( entry.getValue() instanceof HashMap) {
+                            if ( ((HashMap) entry.getValue()).containsKey("VApp") ) {
+                                vMkey = entry.getKey();
+                                String name = ((HashMap) entry.getValue()).get("NewVmName").toString();
+                                if ( name != null || (!name.equals("")) ) {
+                                    String[] tmp = address.split("[.]");
+                                    if ( name.equalsIgnoreCase(tmp[0]) ) {
+                                        Log.debug("Cloud configuration for Vm has been found. Rebooting");
+                                        isReboot = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if ( isReboot && i == 1 ) {
+
+                        Log.debug("Going to disconnect network connection");
+
+                        String vm_name = Storage.get("TestData." + vMkey + ".NewVmName"); //name of the vm to be deployed in vApp
+                        String vapp = Storage.get("TestData." + vMkey + ".VApp");//name of the vApp where vm shall be deployed
+                        String vdc = Storage.get("TestData." + vMkey + ".Vdc");
+
+                        if (vm_name == null) {
+                            Log.warn("Value of TestData." + vMkey + ".NewVmName null or empty!");
+                            continue;
+                        }
+                        if (vapp == null) {
+                            Log.warn("Value of TestData." + vMkey + ".VApp null or empty!");
+                            continue;
+                        }
+                        if (vdc == null) {
+                            Log.warn("Value of TestData." + vMkey + ".Vdc null or empty!");
+                            continue;
+                        }
+
+                        CloudDirectorCore.login();
+                        CloudDirectorCore.getOrganization(org);
+                        CloudDirectorCore.getVdc(vdc);
+                        String vAppUrl = CloudDirectorCore.getVApp(vapp);
+                        String newVmUrl = CloudDirectorCore.getVmFromVApp(vm_name, vAppUrl);
+                        CloudDirectorCore.disconnectNetworkConnection(newVmUrl);
+                        CloudDirectorCore.logout();
+
+                        Log.debug("Going to connect network connection back");
+                        CloudDirectorCore.login();
+                        CloudDirectorCore.getOrganization(org);
+                        CloudDirectorCore.getVdc(vdc);
+                        vAppUrl = CloudDirectorCore.getVApp(vapp);
+                        newVmUrl = CloudDirectorCore.getVmFromVApp(vm_name, vAppUrl);
+                        CloudDirectorCore.connectNetworkConnection(newVmUrl);
+                        CloudDirectorCore.logout();
+                    }
+
+                    if ( isReboot && i == 40 ) {
+
+                        Log.debug("Going to reboot host via cloudDirector api");
+
+                        String vm_name = Storage.get("TestData." + vMkey + ".NewVmName"); //name of the vm to be deployed in vApp
+                        String vapp = Storage.get("TestData." + vMkey + ".VApp");//name of the vApp where vm shall be deployed
+                        String vdc = Storage.get("TestData." + vMkey + ".Vdc");
+
+                        if (vm_name == null) {
+                            Log.warn("Value of TestData." + vMkey + ".NewVmName null or empty!");
+                            continue;
+                        }
+                        if (vapp == null) {
+                            Log.warn("Value of TestData." + vMkey + ".VApp null or empty!");
+                            continue;
+                        }
+                        if (vdc == null) {
+                            Log.warn("Value of TestData." + vMkey + ".Vdc null or empty!");
+                            continue;
+                        }
+
+                        CloudDirectorCore.login();
+                        CloudDirectorCore.getOrganization(org);
+                        CloudDirectorCore.getVdc(vdc);
+                        String vAppUrl = CloudDirectorCore.getVApp(vapp);
+                        String newVmUrl = CloudDirectorCore.getVmFromVApp(vm_name, vAppUrl);
+                        CloudDirectorCore.rebootVm(newVmUrl);
+                        CloudDirectorCore.logout();
+                    }
+                }
+            }
+
+        }
+
+
 
     }
 
@@ -429,7 +577,7 @@ public class WinRSCore {
             sPaths = sPaths + ", \"" + path + "\"";
         }
 
-        String script = "temp.ps1";
+        String script = "verifyThatFilesExist.ps1";
         String cmd = "Write-Host \"Checking files availability\";$paths=@(" + sPaths.replaceFirst(", ","") + ");foreach($path in $paths){" +
                 "Write-Host $path;if (!(Test-Path $path)){Write-Host \"Error: Path '$path' not found\"}}";
 
@@ -481,6 +629,8 @@ public class WinRSCore {
         if ( passwd == null ){
             Log.error("Configuration for Environment.Active.WinRM." + node + ".password not found or null!");
         }
+
+        awaitForHostAvailability(node);
 
         //create file in temp dir
         File dir = FileCore.createTempDir();
@@ -865,11 +1015,11 @@ public class WinRSCore {
         while( i < 11) {
             Log.debug("Extracting process id of a scheduled task TempAutomationTask");
             String tmp = pathToScript.replaceAll("\\\\", "\\\\\\\\");
-            cmd = "$proc = Get-CimInstance Win32_Process | Where {$_.CommandLine -match 'Command " + tmp + "'} | Select Caption, CommandLine, ProcessId;" +
+            cmd = "$proc = Get-CimInstance Win32_Process | Where {$_.CommandLine -match 'Command " + tmp + "' -or $_.CommandLine -match ' & .*" + tmp + "'} | Select Caption, CommandLine, ProcessId;" +
                     "Write-Host $proc.ProcessId, $proc.CommandLine -Separator ',';";
             result = executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, 120);
             processId = "";
-            if (result.contains("-Command " + pathToScript)) {
+            if ( result.contains("-Command " + pathToScript) || result.contains(" & \'" + pathToScript) ) {
                 String[] t_processId = result.split(",");
                 processId = t_processId[0];
                 break;
@@ -956,7 +1106,7 @@ public class WinRSCore {
 
         //this script is used to run the original one
         //it will be called from a scheduled task and in turn it will call the original one:)
-        script = "wrapperTask.ps1";
+        script = "wrapperTaskmw.ps1";
 
         cmd = "Start-process powershell -NoNewWindow -Wait" +
                 " -ArgumentList \"-NoProfile -ExecutionPolicy Bypass" +
@@ -964,13 +1114,13 @@ public class WinRSCore {
         transferScript(node, cmd, script);
 
         //this script is used to create scheduled task
-        script = "tempTask.ps1";
+        script = "tempTaskmw.ps1";
 
         cmdList = new ArrayList();
         cmdList.add("schtasks /CREATE /TN '" + taskName + "' /SC MONTHLY /RL HIGHEST " +
                 "/RU \"" + domain + "\\" + user + "\" /IT " +
                 "/RP \"" + password + "\" " +
-                "/TR \"powershell -NoProfile -ExecutionPolicy Bypass -File " + userDir + "\\wrapperTask.ps1\" " +
+                "/TR \"powershell -NoProfile -ExecutionPolicy Bypass -File " + userDir + "\\wrapperTaskmw.ps1\" " +
                 "/F;");
         cmdList.add("$taskFile = \"" + userDir + "\\RemoteTask.txt\";");
         cmdList.add("Remove-Item $taskFile -Force -ErrorAction SilentlyContinue;");
@@ -1083,7 +1233,7 @@ public class WinRSCore {
      *
      * @return String
      */
-    public String uploadAndStartWiniumDriver(String node){
+    private String uploadAndStartWiniumDriver(String node){
 
         String address = Storage.get("Environment.Active.WinRM." + node + ".host");
         String user = Storage.get("Environment.Active.WinRM." + node + ".user");
@@ -1116,22 +1266,22 @@ public class WinRSCore {
             /*
             Log.debug("Downloading Winium.Desktop.Driver.zip file");
             String cmd = "Invoke-WebRequest -Uri \"https://github.com/2gis/Winium.Desktop/releases/download/v1.6.0/Winium.Desktop.Driver.zip\" -OutFile \"Winium.Desktop.Driver.zip\"";
-            RemoteExecution.executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, 300);
+            executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, 300);
 
             Log.debug("Extracting it");
-            RemoteExecution.executeSingleCommandOnVM("unzip -e -o Winium.zip", node, 60);
+            executeSingleCommandOnVM("unzip -e -o Winium.zip", node, 60);
             */
 
             }
-        String rdpProcessId = openRdpSession(node);
+
+        String rdpProcessId = openRdpSession(node, true);
         String port = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.port");
 
         String cmd = "Get-CimInstance Win32_Process | Where {$_.name -match '.*Winium.*'} | Select Caption, CommandLine, ProcessId | Format-list";
         String result = executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, 120);
 
         if ( ! result.contains("Winium.Desktop.Driver.exe")) {
-
-            /*
+/*
             Log.debug("Opening firewall port " + port + " for domain profile on node " + node);
             cmd = "New-NetFirewallRule -DisplayName 'HTTP(S) Inbound' -Profile Domain -Direction Inbound" +
                     " -Action Allow -Protocol TCP -LocalPort '" + port + "';";
@@ -1139,11 +1289,14 @@ public class WinRSCore {
             cmd = "New-NetFirewallRule -DisplayName 'HTTP(S) Outbound' -Profile Domain -Direction Outbound" +
                     " -Action Allow -Protocol TCP -LocalPort '" + port + "';";
             executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, 120);
-            */
-
+*/
             Log.debug("Running WiniumDriver on node " + node);
-            String script = "temp.bat";
-            cmd = "call " + userDir + "\\Winium.Desktop.Driver.exe --port " + port;
+            //String script = "WiniumDriverStarter.bat";
+            //cmd = "call " + userDir + "\\Winium.Desktop.Driver.exe --port " + port;
+            String script = "WiniumDriverStarter.ps1";
+            cmd = "If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] \"Administrator\"))" +
+                    "{$arguments = \"& '\" + $myinvocation.mycommand.definition + \"'\";Start-Process powershell -Verb runAs -ArgumentList $arguments;Break};" +
+                    "$port = \"--port " + port + "\";Start-Process \"" + userDir + "\\Winium.Desktop.Driver.exe\" $port -Wait;";
             transferScript(node, cmd, script);
 
             String pathToScript = userDir + "\\" + script;
@@ -1151,11 +1304,157 @@ public class WinRSCore {
 
             StepCore.sleep(5);
 
+            Log.debug("Checking if WiniumDesktopDriver was started");
+            /*
+            cmd = "Get-CimInstance Win32_Process | Where {$_.Caption -match 'Winium.Desktop.Driver.exe'} | Select Caption, CommandLine, ProcessId | Format-list";
+            result = executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, 120);
+            */
+            Integer i = 0;
+            while ( i < 90 ){
+                cmd = "netstat -an | findstr \"" + port + "\"";
+                result = executeSingleCommandOnVM(cmd, node, 120);
+                if (result.contains("LISTENING")){
+                    break;
+                }
+                StepCore.sleep(2);
+                i++;
+            }
+
+            if ( i >= 90 ){
+                Log.error("Port " + port + " not in state LISTENING on host " + address +
+                "! Please make sure that it is not blocked by firewall and that Winium.Desktop.Driver.exe process was started!");
+            }
+
         }
 
         return rdpProcessId;
 
     }
+
+
+    /**
+     * Starts an Gui app on local or remote host<br>
+     * Use it with winiumCore to handle automation of GUI apps under windows
+     *
+     * @param node String, node identifier, or localhost
+     * @param pathToApp String, path to an app that shall be started
+     * @param args String, additional arguments that shall be passed to an app
+     */
+    public void startApp(String node, String pathToApp, String args){
+
+        Log.debug("Going to start an app on a remote host " + node);
+        String host = Storage.get("Environment.Active.WinRM." + node + ".host");
+        if ( host == null ){
+            Log.error("Configuration for Environment.Active.WinRM." + node + ".host not found or null!");
+        }
+
+        //check if app we want to run exists otherwise unknown error or access denied error can be thrown!
+        Log.debug("Checking that path " + pathToApp + " exists on the host " + host);
+        if ( pathToApp.contains(":\\") || pathToApp.contains(":/") || pathToApp.contains("$")){
+            Boolean isAvailable = checkThatFileExists(node, pathToApp);
+            if ( ! isAvailable ) {
+                Log.error("File " + pathToApp + " does not exists!");
+            }
+        }
+
+        Log.debug("Starting winium resources");
+        ctx.Object.put("WiniumRemoteNodeId", String.class, node);
+        String rdpProcessId = uploadAndStartWiniumDriver(node);
+        ctx.Object.put("WiniumRemoteRDPProcessId", String.class, rdpProcessId);
+        minimizeAllWindows (node, "minimizeWindowsTask");
+
+        String port = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.port");
+        String url = "http://" + host + ":" + port;
+        Log.debug("Url is " + url);
+        URL uri = null;
+        try {
+            uri = new URL(url);
+        } catch (MalformedURLException e) {
+            Log.error("", e);
+        }
+
+        Log.debug("Trying to run an app from " + pathToApp);
+        DesktopOptions options = new DesktopOptions();
+        options.setApplicationPath(pathToApp);
+        if ( args != null && (! args.equals("")) ) {
+            Log.debug("Setting application arguments " + args);
+            options.setArguments(args);
+        } else {
+            Log.debug("No application arguments provided " + args);
+        }
+
+        WiniumDriver App = new WiniumDriver(uri, options);
+        ctx.Object.put("App", WiniumDriver.class, App);
+
+        //initialize winiumCore with driver
+        WiniumCore winiumCore = new WiniumCore(ctx);
+        ctx.Object.put("WiniumCore", WiniumCore.class, winiumCore);
+
+        if ( args != null && (! args.equals("")) ){
+            Log.debug("Started an app from " + pathToApp + " " + args);
+        } else {
+            Log.debug("Started an app from " + pathToApp);
+        }
+
+        App = ctx.Object.get("App", WiniumDriver.class);
+        if ( App == null ){
+            Log.error("Winium.Desktop.Driver was not initialized properly!");
+        }
+
+    }
+
+
+    /**
+     * Closes winium resources on a remote host
+     *
+     */
+    public void closeWiniumResources(){
+
+        //WiniumDriver driver = ctx.Object.get("App", WiniumDriver.class);
+        WiniumDriver App = ctx.Object.get("App", WiniumDriver.class);
+        String rdpProcessId = ctx.Object.get("WiniumRemoteRDPProcessId", String.class);
+        String node = ctx.Object.get("WiniumRemoteNodeId", String.class);
+
+        if ( App != null ) {
+            Log.debug("Try to close an application");
+            try {
+                App.close();
+                ctx.Object.put("App", WiniumDriver.class, null);
+            } catch (WebDriverException e){
+                Log.warn("Application is already closed");
+                ctx.Object.put("App", WiniumDriver.class, null);
+            }
+        }
+
+        if ( rdpProcessId != null ) {
+            Log.debug("Killing Winium driver process on remote host " + node);
+            String cmd = "Get-CimInstance Win32_Process | Where {$_.name -match '.*Winium.*'} | Select Caption, CommandLine, ProcessId | Format-list";
+            String result = executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, 120);
+
+            if ( result.contains("Winium.Desktop.Driver.exe") ) {
+                Log.debug("Closing Winium.Desktop.Driver.exe");
+                String[] tmp = StringUtils.deleteWhitespace(result.trim()).split("ProcessId:");
+                String processId = tmp[tmp.length - 1].trim();
+                cmd = "Stop-Process -Id " + processId + " -Force -passThru";
+                executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, 120);
+
+                Log.debug("Deleting scheduled task used to run Winium driver");
+
+                String script = "tempTask.ps1";
+                cmd = "schtasks /DELETE /TN 'TempAutomationTask' /F;";
+                transferScript(node, cmd, script);
+
+                result = executeSingleCommandOnVM("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File \"" + script + "\"", node, 120);
+                if (!result.contains("SUCCESS:")) {
+                    Log.error("Failed to remove scheduled task TempAutomationTask");
+                }
+
+                killRdpSession(rdpProcessId);
+            }
+        }
+
+    }
+
 
 
     /**
@@ -1194,7 +1493,7 @@ public class WinRSCore {
      *
      * @return String
      */
-    public String openRdpSession(String node){
+    public String openRdpSession(String node, Boolean forceLogOff){
         File workingDir = FileCore.getTempDir();
 
         String address = Storage.get("Environment.Active.WinRM." + node + ".host");
@@ -1216,6 +1515,9 @@ public class WinRSCore {
         }
 
         Log.debug("Checking if there is RDP session open towards node " + address);
+
+        //Just in case Skilui is in use -> we don't want to allow to open new RDP window if tests are run in parallel on same host
+        StepCore.lockBrowser();
 
         String cmd = "powershell.exe \"Get-CimInstance Win32_Process | Where {$_.name -match '.*mstsc.*'" +
                 " -and $_.CommandLine -match '.*" + address + ".*'} | Select ProcessId | Format-list\"";
@@ -1259,41 +1561,67 @@ public class WinRSCore {
         cmds.add("{New-Item -Path $path -Force;New-ItemProperty -Path $path -Name $name -Value $val -PropertyType $type -Force}");
         cmds.add("else{New-ItemProperty -Path $path -Name $name -Value $val -PropertyType $type -Force}");
 
-        String script = "temp.ps1";
+        String script = "fixScalingSettings.ps1";
         cmd = joinCommands(cmds,"\r\n",false);
         transferScript(node, cmd, script);
         executeSingleCommandOnVM("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File \"" + script + "\"", node, 120);
 
-        //force log off so new settings will ba applicable to the next session
-        Log.debug("Force logoff");
-        cmds = new ArrayList<>();
-        cmds.add("$serverName = 'localhost'");
-        cmds.add("$sessions = qwinsta /server $serverName| ?{ $_ -notmatch '^ SESSIONNAME' } | %{");
-        cmds.add("$item = \"\" | Select \"Active\", \"SessionName\", \"Username\", \"Id\", \"State\", \"Type\", \"Device\"");
-        cmds.add("$item.Active = $_.Substring(0,1) -match '>'");
-        cmds.add("$item.SessionName = $_.Substring(1,18).Trim()");
-        cmds.add("$item.Username = $_.Substring(19,20).Trim()");
-        cmds.add("$item.Id = $_.Substring(39,9).Trim()");
-        cmds.add("$item.State = $_.Substring(48,8).Trim()");
-        cmds.add("$item.Type = $_.Substring(56,12).Trim()");
-        cmds.add("$item.Device = $_.Substring(68).Trim()");
-        cmds.add("$item");
-        cmds.add("}");
-        cmds.add("foreach ($session in $sessions){");
-        cmds.add("if($session.Username -ne \"\" -or $session.Username.Length -gt 1){");
-        cmds.add("Write-Host $session.Username is going to be logged off");
-        cmds.add("logoff /server $serverName $session.Id");
-        cmds.add("}");
-        cmds.add("}");
+        //force log off so new settings will be applicable to the next session
+        if ( forceLogOff ) {
+            Log.debug("Force logoff");
+            cmds = new ArrayList<>();
+            cmds.add("$serverName = 'localhost'");
+            cmds.add("$sessions = qwinsta /server $serverName| ?{ $_ -notmatch '^ SESSIONNAME' } | %{");
+            cmds.add("$item = \"\" | Select \"Active\", \"SessionName\", \"Username\", \"Id\", \"State\", \"Type\", \"Device\"");
+            cmds.add("$item.Active = $_.Substring(0,1) -match '>'");
+            cmds.add("$item.SessionName = $_.Substring(1,18).Trim()");
+            cmds.add("$item.Username = $_.Substring(19,20).Trim()");
+            cmds.add("$item.Id = $_.Substring(39,9).Trim()");
+            cmds.add("$item.State = $_.Substring(48,8).Trim()");
+            cmds.add("$item.Type = $_.Substring(56,12).Trim()");
+            cmds.add("$item.Device = $_.Substring(68).Trim()");
+            cmds.add("$item");
+            cmds.add("}");
+            cmds.add("foreach ($session in $sessions){");
+            cmds.add("if($session.Username -ne \"\" -or $session.Username.Length -gt 1){");
+            cmds.add("Write-Host $session.Username is going to be logged off");
+            cmds.add("logoff /server $serverName $session.Id");
+            cmds.add("}");
+            cmds.add("}");
 
-        script = "temp.ps1";
-        cmd = joinCommands(cmds,"\r\n",false);
-        transferScript(node, cmd, script);
-        executeSingleCommandOnVM("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File \"" + script + "\"", node, 120);
+            script = "forceLogoffUsers.ps1";
+            cmd = joinCommands(cmds, "\r\n", false);
+            transferScript(node, cmd, script);
+            executeSingleCommandOnVM("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File \"" + script + "\"", node, 120);
+        }
 
+        String size = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.size");
+        cmd = "";
+        if ( size == null
+                || size.equals("")
+                || StringUtils.containsIgnoreCase(size, "Default") ) {
+            //default is set to maximise browser window
+            Log.debug("Going to use default resolution of RDP window");
+            cmd = "powershell.exe \"$Server='" + address + "';$User='" + domain + "\\" + user + "';" +
+                    "$Pass='" + passwd + "';cmdkey /generic:$Server /user:$User /pass:$Pass;mstsc /v:$Server\"";
+        } else {
+            Log.debug("Going to use " + size + " resolution of RDP window");
+            //expected format is width x height
+            String tmp = StringUtils.deleteWhitespace(size).trim();
+            String[] dimensions = tmp.split("[xX]");
+            Integer width = null;
+            Integer height = null;
+            try {
+                width = Integer.parseInt(dimensions[0]);
+                height = Integer.parseInt(dimensions[1]);
+            } catch (NumberFormatException e) {
+                Log.error("", e);
+            }
+            cmd = "powershell.exe \"$Server='" + address + "';$User='" + domain + "\\" + user + "';" +
+                    "$Pass='" + passwd + "';cmdkey /generic:$Server /user:$User /pass:$Pass;mstsc /v:$Server /h:" + height + " /w:" + width + "\"";
+        }
         Log.debug("Opening Rdp session to " + node);
-        cmd = "powershell.exe \"$Server='" + address + "';$User='" + domain + "\\" + user + "';" +
-                "$Pass='" + passwd + "';cmdkey /generic:$Server /user:$User /pass:$Pass;mstsc /v:$Server\"";
+
         ExecutorCore.execute(cmd, workingDir, 10, false);
 
         Log.debug("Extracting process id of RDP session");
@@ -1327,6 +1655,22 @@ public class WinRSCore {
     }
 
 
+    public Boolean checkIfRdpSessionIsOpen(String rdpProcessId){
+        Log.debug("Checking RDP session with process id  " + rdpProcessId);
+
+        Boolean exitValue = false;
+        File workingDir = FileCore.getTempDir();
+
+        String cmd = "powershell.exe \"$process=Get-process -Id " + rdpProcessId + " -ErrorAction SilentlyContinue;if($process -eq $null){Write-Host NotRunning}\"";
+        ByteArrayOutputStream out = ExecutorCore.execute(cmd, workingDir, 10, true);
+        String result = new String(out.toByteArray(), Charset.defaultCharset());
+        if ( ! result.contains("NotRunning") ){
+            exitValue = true;
+        }
+
+        return exitValue;
+    }
+
     /**
      * Stops service on a remote windows host and returns true if service is not longer running
      * An error will be printed if service will not be stopped within a defined timeout
@@ -1342,14 +1686,13 @@ public class WinRSCore {
 
         Boolean output = false;
 
-        String cmd = "Stop-Service " + serviceName;
+        String cmd = "Stop-Service '" + serviceName + "' -Force -passThru";
         String result = executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, timeout);
         if ( result.contains("Cannot find any service with service name")){
             Log.debug(serviceName + " service not running");
             output = true;
         } else {
-            cmd = "Get-Service " + serviceName;
-            result = executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, 300);
+            result = getServiceStatus(node, serviceName, 120);
 
             if ( result.contains("StopPending") ){
                 Log.warn("Service was not shutdown. Hanging state detected! Going to kill it");
@@ -1372,12 +1715,11 @@ public class WinRSCore {
                     executeSingleCommandOnVM(cmd, node, 120);
                 }
 
-                cmd = "Get-Service " + serviceName + " | select status | format-list";
-                result = executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, 120);
+                result = getServiceStatus(node, serviceName, 120);
             }
 
 
-            if (result.contains("Stopped")) {
+            if ( result.contains("Stopped") ) {
                 Log.debug(serviceName + " was successfully stopped");
                 output = true;
             } else {
@@ -1408,9 +1750,8 @@ public class WinRSCore {
         if ( result.contains("Cannot find any service with service name")){
             Log.debug(serviceName + " service not running");
         } else {
-            cmd = "Get-Service " + serviceName;
-            result = executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, 300);
-            if (result.contains("Running")) {
+            result = getServiceStatus(node, serviceName, 120);
+            if ( result.contains("Running") ) {
                 Log.debug(serviceName + " service was successfully started");
                 output = true;
             } else {
@@ -1419,6 +1760,57 @@ public class WinRSCore {
         }
 
         return output;
+    }
+
+
+    /**
+     * Retrieves service status from a remote windows host and returns is value or NotFound
+     * An error will be printed if service status will not be found within a defined timeout
+     *
+     * @param node String, node name from winrm configuration of the remote that shall be used
+     * @param serviceName String, name of the service
+     * @param timeout Integer, timeout in seconds
+     *
+     * @return Boolean
+     */
+    public String getServiceStatus(String node, String serviceName, Integer timeout){
+        Log.debug("Getting service status of " + serviceName + " service");
+
+        String output = "NotFound";
+        String cmd = "$ScStatus=Get-Service \'" + serviceName + "\' | Select Status;Write-Host $ScStatus";
+        String result = executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, timeout);
+        if ( result.contains("Cannot find any service with service name")){
+            Log.warn(serviceName + " service not found!");
+        } else {
+            output = result.replace("@{Status=","").replace("}","").trim();
+        }
+
+        Log.debug("Service " + serviceName + " status is " + output);
+
+        return output;
+    }
+
+
+    /**
+     * Awaits for particular service to reach desired state. Maximum timeout is 15 minutes
+     *
+     * @param node String, node name from winrm configuration of the remote that shall be used
+     * @param serviceName String, display name of the service that shall be checked, for example SQL Server (MSSQLSERVER)
+     * @param desiredStatus String,  desired state of service, for example Running, Stopped
+     * @param timeout String, timeout in format 00:00:30 which can't be higher than 15 minutes
+     */
+    public void awaitForServiceStatus(String node, String serviceName, String desiredStatus, String timeout){
+
+        //Get all services where DisplayName matches serviceName and loop through each of them
+        //Wait for the service to reach desiredStatus or a maximum timeout
+        String cmd = "foreach($service in (Get-Service -DisplayName \'" + serviceName + "\')){" +
+                "$service.WaitForStatus(\'" + desiredStatus + "\', \'" + timeout +"\')}";
+        String result = executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, 900);
+
+        if ( result.contains("Exception") || result.contains("Time out has expired") ){
+            Log.error("Timeout has been reached!");
+        }
+
     }
 
 

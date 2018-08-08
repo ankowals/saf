@@ -1,16 +1,27 @@
 package libs.libCore.modules;
 
 import org.apache.commons.exec.*;
+import org.apache.commons.lang.StringUtils;
+import org.openqa.selenium.WebDriverException;
+import org.openqa.selenium.winium.DesktopOptions;
+import org.openqa.selenium.winium.WiniumDriver;
 
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.Charset;
 
 public class ExecutorCore {
 
     private SharedContext ctx;
+    private FileCore FileCore;
+    private Storage Storage;
 
     // PicoContainer injects class SharedContext
     public ExecutorCore(SharedContext ctx) {
         this.ctx = ctx;
+        this.FileCore = ctx.Object.get("FileCore",FileCore.class);
+        this.Storage = ctx.Object.get("Storage",Storage.class);
     }
     /**
      * Execute a Command as a background or blocking process.
@@ -121,5 +132,84 @@ public class ExecutorCore {
         return os1;
     }
 
+
+    public void startApp(String pathToApp, String args){
+        File workingDir = FileCore.getTempDir();
+        String port = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.port");
+        String url = "http://localhost:" + port;
+        Log.debug("Url is " + url);
+        URL uri = null;
+        try {
+            uri = new URL(url);
+        } catch (MalformedURLException e) {
+            Log.error("", e);
+        }
+
+        Log.debug("Trying to run an app from " + pathToApp);
+        DesktopOptions options = new DesktopOptions();
+        options.setApplicationPath(pathToApp);
+        if ( args != null && (! args.equals("")) ) {
+            Log.debug("Setting application arguments " + args);
+            options.setArguments(args);
+        } else {
+            Log.debug("No application arguments provided " + args);
+        }
+
+        String path = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.path");
+        //Set winium driver path
+        //System.setProperty("webdriver.winium.driver.desktop", FileCore.getProjectPath() + File.separator + path);
+        //WiniumDriverService service = new WiniumDriverService.Builder()
+        //        .usingPort(Integer.valueOf(port)).withVerbose(true).withSilent(false).build();
+        //service.start(); //Build and Start a Winium Driver service
+
+        execute(FileCore.getProjectPath() + File.separator + path + " --port " + port, workingDir, 60, false);
+
+        WiniumDriver App = new WiniumDriver(uri, options);
+        ctx.Object.put("App", WiniumDriver.class, App);
+
+        //initialize winiumCore with driver
+        WiniumCore winiumCore = new WiniumCore(ctx);
+        ctx.Object.put("WiniumCore", WiniumCore.class, winiumCore);
+
+        if ( args != null && (! args.equals("")) ){
+            Log.debug("Started an app from " + pathToApp + " " + args);
+        } else {
+            Log.debug("Started an app from " + pathToApp);
+        }
+
+        App = ctx.Object.get("App", WiniumDriver.class);
+        if ( App == null ){
+            Log.error("Winium.Desktop.Driver was not initialized properly!");
+        }
+        ctx.Object.put("WiniumDriverStartedOnLocalHost", Boolean.class, true);
+    }
+
+
+    public void closeWiniumResources(){
+        File workingDir = FileCore.getTempDir();
+        WiniumDriver App = ctx.Object.get("App", WiniumDriver.class);
+        if ( App != null ) {
+            Log.debug("Try to close an application");
+            try {
+                App.close();
+                ctx.Object.put("App", WiniumDriver.class, null);
+            } catch (WebDriverException e){
+                Log.warn("Application is already closed");
+                ctx.Object.put("App", WiniumDriver.class, null);
+            }
+        }
+
+        String cmd = "Get-CimInstance Win32_Process | Where {$_.name -match '.*Winium.*'} | Select Caption, CommandLine, ProcessId | Format-list";
+        ByteArrayOutputStream out = execute("Powershell.exe \"" + cmd + "\"", workingDir, 60, true);
+        String result = new String(out.toByteArray(), Charset.defaultCharset());
+        if ( result.contains("Winium.Desktop.Driver.exe") ) {
+            Log.debug("Closing Winium.Desktop.Driver.exe");
+            String[] tmp = StringUtils.deleteWhitespace(result.trim()).split("ProcessId:");
+            String processId = tmp[tmp.length - 1].trim();
+            cmd = "Stop-Process -Id " + processId + " -Force -passThru";
+            execute("Powershell.exe \"" + cmd + "\"", workingDir, 60, true);
+        }
+
+    }
 
 }

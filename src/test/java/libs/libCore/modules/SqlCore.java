@@ -216,27 +216,27 @@ public class SqlCore {
 
 
     /**
-     * Executes sql insert statement and returns scalar indicating how many rows where inserted
-     * to the table
+     * Executes sql insert statement
      *
      * @param SqlQuery String, query to be executed
      * @return Integer
      */
-    public Integer insert (String SqlQuery) {
+    public void insert (String SqlQuery) {
 
-        Log.debug("Going to execute Sql insert " + SqlQuery);
-        ScalarHandler<Integer> scalarHandler = new ScalarHandler<>();
-        Integer scalar = null;
+        Log.debug("Going to execute Sql " + SqlQuery);
+        //ScalarHandler<Integer> scalarHandler = new ScalarHandler<>();
+        //Integer scalar = null;
         QueryRunner runner = new QueryRunner();
 
         try {
-            scalar = runner.insert(Sql, SqlQuery, scalarHandler);
+            //scalar = runner.insert(Sql, SqlQuery, scalarHandler);
+            runner.insert(Sql, SqlQuery, new ScalarHandler<>());
             Log.debug("Sql query executed");
         } catch (SQLException e) {
             Log.error( "", e );
         }
 
-        return scalar;
+        //return scalar;
     }
 
 
@@ -249,7 +249,7 @@ public class SqlCore {
      */
     public Integer update (String SqlQuery) {
 
-        Log.debug("Going to execute Sql update " + SqlQuery);
+        Log.debug("Going to execute Sql " + SqlQuery);
         Integer scalar = 0;
         QueryRunner runner = new QueryRunner();
 
@@ -265,15 +265,14 @@ public class SqlCore {
 
 
     /**
-     * Executes sql delete statement and returns scalar indicating how many rows where removed
-     * from the table
+     * Executes sql delete statement
      *
      * @param SqlQuery String, query to be executed
      * @return Integer
      */
     public Integer delete (String SqlQuery) {
 
-        Log.debug("Going to execute Sql delete " + SqlQuery);
+        Log.debug("Going to execute Sql " + SqlQuery);
         Integer scalar = 0;
         QueryRunner runner = new QueryRunner();
 

@@ -342,6 +342,17 @@ public class CloudDirectorCore {
     }
 
 
+
+    public void getVmNetworkCardsDetails(String vmHref){
+        Log.debug("Trigger request to get network cards details of vm " + vmHref);
+
+        RequestSpecification request = buildRequest(vmHref + "/virtualHardwareSection/networkCards");
+        ValidatableResponse response = triggerGetRequest(request, 200);
+
+
+    }
+
+
     public void setVmMemory(String vmHref, String memorySize) {
         Log.debug("Trigger request to set memory amount of vm " + vmHref);
 
@@ -398,6 +409,67 @@ public class CloudDirectorCore {
         validateTaskStatus("success", href, "Failed to set number of Cpu");
 
     }
+
+
+    /**
+     * Modifies IsConnected flag for all connections from true to false
+     *
+     * @param vmHref String, href used to identified particular VM
+     */
+    public void disconnectNetworkConnection(String vmHref){
+        Log.debug("Trigger request to disconnect network from " + vmHref);
+
+        //get networkConnectionSection
+        RequestSpecification request = buildRequest(vmHref + "/networkConnectionSection");
+        ValidatableResponse response = triggerGetRequest(request, 200);
+
+        String content = response.extract().asString();
+        content = content.replaceAll("IsConnected>true", "IsConnected>false");
+
+        //resend the response content with new values of memory amount
+        request = buildRequest(vmHref + "/networkConnectionSection");
+        request.contentType("application/vnd.vmware.vcloud.networkConnectionSection+xml")
+                .body(content);
+
+        response = triggerPutRequest(request, 202);
+        Log.debug("Extract diconnectNetworkConnection Task href from response to /api/vm/{id}/networkConnectionSection request");
+        XmlPath xml = setRoot(response,"Task");
+        String href = xml.getString("@href");
+        href = href.replace("api/api","api");
+        validateTaskStatus("success", href, "Failed to disconnect network");
+
+    }
+
+
+    /**
+     * Modifies IsConnected flag for all connections from false to true
+     *
+     * @param vmHref String, href used to identified particular VM
+     */
+    public void connectNetworkConnection(String vmHref){
+        Log.debug("Trigger request to connect network to " + vmHref);
+
+        //get networkConnectionSection
+        RequestSpecification request = buildRequest(vmHref + "/networkConnectionSection");
+        ValidatableResponse response = triggerGetRequest(request, 200);
+
+        String content = response.extract().asString();
+        content = content.replaceAll("IsConnected>false", "IsConnected>true");
+
+        //resend the response content with new values of memory amount
+        request = buildRequest(vmHref + "/networkConnectionSection");
+        request.contentType("application/vnd.vmware.vcloud.networkConnectionSection+xml")
+                .body(content);
+
+        response = triggerPutRequest(request, 202);
+        Log.debug("Extract diconnectNetworkConnection Task href from response to /api/vm/{id}/networkConnectionSection request");
+        XmlPath xml = setRoot(response,"Task");
+        String href = xml.getString("@href");
+        href = href.replace("api/api","api");
+        validateTaskStatus("success", href, "Failed to disconnect network");
+
+    }
+
 
 
     public void setVmDisk(String vmHref, String initialDiskSize, String diskSize) {

@@ -135,8 +135,7 @@ public class DriverFactory {
         String WidthXHeight = Storage.get("Environment.Active.Web.size");
         if ( WidthXHeight == null
                 || WidthXHeight.equals("")
-                || WidthXHeight.contains("M")
-                || WidthXHeight.contains("m") ) {
+                || StringUtils.containsIgnoreCase(WidthXHeight, "Max")) {
             //default is set to maximise browser window
             Log.debug("Going to set max dimensions of browser window");
             driver.manage().window().maximize();

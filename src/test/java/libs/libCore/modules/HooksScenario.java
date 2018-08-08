@@ -13,6 +13,7 @@ import org.apache.logging.log4j.core.appender.OutputStreamAppender;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.layout.PatternLayout;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.logging.LogEntry;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
 import org.openqa.selenium.winium.WiniumDriver;
@@ -34,7 +35,6 @@ public class HooksScenario {
     private SharedContext ctx;
     private StepCore StepCore;
     private PageCore PageCore;
-    private WiniumCore WiniumCore;
     private Storage Storage;
     private ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -114,14 +114,11 @@ public class HooksScenario {
         StepCore step = new StepCore(ctx);
         ctx.Object.put("StepCore", StepCore.class, step);
 
-        WinRSCore winRSCore = new WinRSCore(ctx);
-        ctx.Object.put("WinRSCore", WinRSCore.class, winRSCore);
-
         CloudDirectorCore cloudDirectorCore = new CloudDirectorCore(ctx);
         ctx.Object.put("CloudDirectorCore", CloudDirectorCore.class, cloudDirectorCore);
 
-        WiniumCore winiumCore = new WiniumCore(ctx);
-        ctx.Object.put("WiniumCore", WiniumCore.class, winiumCore);
+        WinRSCore winRSCore = new WinRSCore(ctx);
+        ctx.Object.put("WinRSCore", WinRSCore.class, winRSCore);
 
         //get resources from ctx object
         FileCore FileCore = ctx.Object.get("FileCore", FileCore.class);
@@ -283,6 +280,18 @@ public class HooksScenario {
             RestAssured.config = RestAssured.config().redirect(
                     redirectConfig().followRedirects(followRedirects)
             );
+        }
+
+        Integer responseTimeout = Storage.get("Environment.Active.Rest.responseTimeout");
+        if ( responseTimeout != null ){
+            Log.debug("Setting CoreConnectionPNames.CONNECTION_TIMEOUT and CoreConnectionPNames.SO_TIMEOUT");
+            RestAssured.config = RestAssured.config().httpClient(
+                    httpClientConfig().setParam("http.connection.timeout", responseTimeout * 1000)
+            );
+            RestAssured.config = RestAssured.config().httpClient(
+                    httpClientConfig().setParam("http.socket.timeout", responseTimeout * 1000)
+            );
+
         }
 
         RestAssured.config = RestAssured.config().decoderConfig(
@@ -469,7 +478,7 @@ public class HooksScenario {
                         name = name.substring(0, 255);
                     }
                     StepCore.attachScreenshotToReport(name, screenshot);
-                } catch (NullPointerException e){
+                } catch ( NullPointerException e ){
                     Log.warn("Driver not usable. Can't take screenshot");
                     StringWriter sw = new StringWriter();
                     e.printStackTrace(new PrintWriter(sw));
@@ -482,18 +491,19 @@ public class HooksScenario {
         WiniumDriver App = ctx.Object.get("App", WiniumDriver.class);
         //take screenshot if scenario fails
         if (App != null) {
+            //this may fail if app open one a remote host and we try to take screenshot even though RDP session is not open
             if ( scenario.isFailed() ) {
                 Log.debug("Try to take a screenshot");
                 //reload winium core
                 try {
-                    WiniumCore = ctx.Object.get("WiniumCore", WiniumCore.class);
+                    WiniumCore WiniumCore = new WiniumCore(ctx);
                     byte[] screenshot = WiniumCore.takeScreenshot();
                     String name = StringUtils.remove(scenario.getName(), "-");
                     if (name.length() > 256) {
                         name = name.substring(0, 255);
                     }
                     StepCore.attachScreenshotToReport(name, screenshot);
-                } catch (NullPointerException e){
+                } catch ( NullPointerException | WebDriverException e ){
                     Log.warn("Driver not usable. Can't take screenshot");
                     StringWriter sw = new StringWriter();
                     e.printStackTrace(new PrintWriter(sw));
@@ -517,9 +527,19 @@ public class HooksScenario {
         //close Winium driver connection
         Boolean closeWiniumAppDriver = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.CloseAppAfterScenario");
         if ( closeWiniumAppDriver ) {
+            Boolean isLocalDriver = ctx.Object.get("WiniumDriverStartedOnLocalHost", Boolean.class);
+            if ( isLocalDriver!= null ){
+                if ( isLocalDriver ){
+                    Log.debug("Driver cleanup started");
+                    ExecutorCore ExecutorCore = ctx.Object.get("ExecutorCore", ExecutorCore.class);
+                    ExecutorCore.closeWiniumResources();
+                    Log.debug("Driver cleanup done");
+                }
+            }
+
             Log.debug("Driver cleanup started");
-            WiniumCore = ctx.Object.get("WiniumCore", WiniumCore.class);
-            WiniumCore.closeWiniumResources();
+            WinRSCore WinRSCore = ctx.Object.get("WinRSCore", WinRSCore.class);
+            WinRSCore.closeWiniumResources();
             Log.debug("Driver cleanup done");
         }
 
