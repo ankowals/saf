@@ -1,5 +1,0 @@
-DEPTNO, DNAME, LOC
-[0-9]{2}, ACCOUNTING, NEW YORK
-20, [A-Z]+, DALLAS
-\d+, SALES, CHICAGO
-${Expected.lastId}, OPERATIONS, ${ctx.Expected.lastCity}

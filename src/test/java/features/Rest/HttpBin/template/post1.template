@@ -1,7 +1,0 @@
-{ params: {
-    a: "a",
-    b: 2,
-    c: ${ctx.TestData.simpleExample}
-    },
-  params2: "to jest drugi parametr"
-}

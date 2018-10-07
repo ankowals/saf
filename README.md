@@ -59,10 +59,6 @@ Where are we?
 	Currently working on
 	
 	(in progress) a way to execute tests related to  
-		(done) - rest json/xml (soap) => RestAssured integrated 
-		(done) - gui (web/native) => Selenium WebDriver integrated for chrome, ff and ie, autoIT can be called via ExecutorCore, Winium integrated
-		(done) - sql => jdbc integrated for oracle/mssql
-		(done) - pdf validation => pdfbox2 integrated 
 		(to do) - mobile => Appium integration
 
 		(to do) a way to downlaod any 3rd party symptoms from SUT like logs, trace files (create step def to run tcpdump on unix hosts or tshark/rawCap on windows hosts)
@@ -73,23 +69,11 @@ Where are we?
 	----------------------------------	
 		
 	ToDo before 1.0:		
-		1) integrate Appium
-		2) prepare a step to write to pdf and read pdf from online resource
-		3) add Xml parser? or better add link to GPath/XmlPath description used with RestAssured?		   
-		4) prepare step to start and stop tcpdump on a unix host on define interface with define filter and download trace files			   
-		5) prepare step to trigger IE via autoIT script to handle windows authentication with Selenium (autoIT script available)	
-		6) move documentation to pdf file and wiki, add screenshots of test executed in cmd as well as in IDE, add screenshots of tests reports as well as tests logs
-		7) make sure that all steps/methods from libCore are documented
-		8) generate libCore documentation and add it to the repo
-		9) change the names from execution ctx, ctx object to global/scenario variables?
-		10) add git usage documentation (documnetation almost complete) and xpath creation documentation (documentation available)
-		11) move winRS steps to libCore, move cloudDirector steps to libCore
-
-	ToDo for 2.0:
-		0) supervise appiumDriver/restClient/webDriver/JdbcDriver/sshClient resources and make sure that all open will be closed in scenario or global hooks -> in other words implement pool design pattern for web/appium/db drivers and ssh/winRM resources
-		1) migrate to cucumber-jvm 2.x
-		2) migrate to allure 2.x
-		3) modify directory structure to get rid of src/main or src/test and use it with maven
+		1) integrate Appium	   			   
+		2) prepare step to trigger IE via autoIT script to handle windows authentication with Selenium (autoIT script available)	
+		3) move documentation to pdf file and wiki, add screenshots of test executed in cmd as well as in IDE, add screenshots of tests reports as well as tests logs
+		4) add git usage documentation (documnetation almost complete) and xpath creation documentation (documentation available)
+		5) describe how to extract table content and parse it to a list of maps using jsoup lib
 
 	----------------------------------	
 
@@ -107,7 +91,7 @@ What is done?
 	(done) a way to automatically deploy the framework under windows (dependency management) => via maven
 	(done) a way to share the code/tests between testers to increae re-usability (version control system) => via this git repo, 
 	(done) a way to support PageObject model for web automation purposes => via BasePage implementation
-	(done) a way to share common data between steps (dependency injection) => pico container integration
+	(done) a way to share common data between steps => instead of dependency injection and pico container integration static factory pattern is used (CustomFormatter plugin)
 	(done) a way to manage multiple projects (version control system) => separate repo per project maybe git submodules can be used?
 	(done) a way to write simmple step defs (for example usage of try-catch blocks is ugly) => via PageCore, FileCore, StepCore, SqlCore, Macro, Storage, Environment and others models
 	(done) a way to manage templates => via CoreStep model
@@ -120,7 +104,6 @@ What is done?
 		(done) ssh/scp/sftp support => sshj library integrated and expectit-core library integrated
 		(done) winRM support => winRm4j library integrated and winRS can be called via ExecutorCore	
 	(done) a way to schedule test execution (see Jenkins/TeamCity) => Jenkins integration description available in the readme file
-	
 	
 ----------------------------------
 
@@ -154,48 +137,46 @@ How can we use test automation framework?
 
 Please find below list of libraries/plugins/software used for automation and their current versions. 
 
-	Name, Version,  License
-
-	Java JDK, 1.8, Oracle Binary Code License 
-	Maven, 3.5.2, Apache License Version 2.0 
-	IntelliJ IDEA CE, 2017.2, Apache License Version 2.0 
-	Cucumber for Java Plugin for IntelliJ, 173.3302, Apache License Version 2.0 
-	Cucmber-junit, 1.2.5, MIT License 
-	Cucumber-picocontainer, 1.2.5, MIT License 
-	Selenium-java, 3.5.1, Apache License Version 2.0 
-	Log4j-core, 2.8.2, Apache License Version 2.0 
-	Log4j-iostreams, 2.8.2, Apache License Version 2.0 
-	Slf4j-nop, 1.7.25, MIT License 
-	Rest-assured, 3.0.3, Apache License Version 2.0 
-	Json-path, 3.0.3, Apache License Version 2.0 
-	Xml-path, 3.0.3, Apache License Version 2.0 
-	Commons-lang, 2.4, Apache License Version 2.0 
-	Commons-io, 2.2, Apache License Version 2.0 
-	Commons-dbutils, 1.7, Apache License Version 2.0 
-	Commons-exec, 1.3, Apache License Version 2.0 
-	Pdfbox, 2.0.7, Apache License Version 2.0 
-	Opencsv, 4.0, Apache License Version 2.0 
-	Sshj, 0.23.0, Apache License Version 2.0 
-	Expectit-core, 0.8.3, Apache License Version 2.0 
-	Winrm4j, 0.5.0, Apache License Version 2.0 
-	Allure-cucumber-jvm-adaptor, 1.6.2, Apache License Version 2.0 
-	Maven-surefire-plugin, 2.20, Apache License Version 2.0 
-	aspectjweaver, 1.8.10, Eclipse Public License - v 1.0 
-	Maven-compiler-pluign, 3.7.0, Apache License Version 2.0 
-	Jetty-maven-pluign, 9.2.10.v20150310, Apache License Version 2.0 
-	Allure-maven-plugin, 2.5, Apache License Version 2.0 
-	Winium-webdriver, 0.1.0-1, Mozilla Public License 2.0 
-	Winium-elements-desktop, 0.2.0-1, Mozilla Public License 2.0 
-	SikuliXApi, 1.1.2, MIT License 
-
-optionally
-
-	Jtds (jdbcDriver), 1.3.1, GNU LGPL 
-	Chrome.Driver, 2.39, BSD 3-Clause "New" or "Revised" License 
-	Winium.Desktop.Driver, 1.6.0, Mozilla Public License 2.0 
-	7zip, 9.2.0, GNU LGPL + BSD 3-clause 
-	Jenkins (standard install plugin set + PostBuildScript, Sidebar Link plugins), 2.109, MIT License 
-	Artifactory, 6.0.2, GNU Affero GPL v3 
+Name, Version,  License 
+Java JDK, 1.8, Oracle Binary Code License 
+Maven, 3.5.2, Apache License Version 2.0 
+IntelliJ IDEA CE, 2018.2.3, Apache License Version 2.0 
+Cucumber for Java Plugin for IntelliJ, 182.3934, Apache License Version 2.0 
+cucumber-java, 3.0.2, MIT License 
+cucumber-junit, 3.0.2, MIT License 
+Selenium-java, 3.14.0, Apache License Version 2.0 
+Log4j-core, 2.11.1, Apache License Version 2.0 
+Log4j-iostreams, 2.11.1, Apache License Version 2.0 
+Slf4j-nop, 1.7.25, MIT License 
+Rest-assured, 3.1.1, Apache License Version 2.0 
+Json-path, 3.1.1, Apache License Version 2.0 
+Xml-path, 3.1.1, Apache License Version 2.0 
+commons-lang3, 3.8, Apache License Version 2.0 
+commons-io, 2.6, Apache License Version 2.0 
+commons-dbutils, 1.7, Apache License Version 2.0 
+commons-exec, 1.3, Apache License Version 2.0 
+pdfbox, 2.0.11, Apache License Version 2.0 
+opencsv, 4.2, Apache License Version 2.0 
+sshj, 0.26.0, Apache License Version 2.0 
+expectit-core, 0.9.0, Apache License Version 2.0 
+winrm4j, 0.5.0, Apache License Version 2.0 
+allure-cucumber3-jvm, 2.7.0, Apache License Version 2.0 
+allure-maven, 2.9, Apache License Version 2.0 
+winium-webdriver, 0.1.0-1, Mozilla Public License 2.0 
+winium-elements-desktop, 0.2.0-1, Mozilla Public License 2.0 
+sikuliXApi, 1.1.1, MIT License
+gson, 2.8.5, Apache License Version 2.0
+Maven-surefire-plugin, 2.20, Apache License Version 2.0 
+aspectjweaver, 1.8.10, Eclipse Public License - v 1.0 
+Maven-compiler-pluign, 3.7.0, Apache License Version 2.0 
+Jetty-maven-pluign, 9.2.10.v20150310, Apache License Version 2.0 
+Allure-maven-plugin, 2.5, Apache License Version 2.0 
+Jtds (jdbcDriver), 1.3.1, GNU LGPL 
+Chrome.Driver, 2.42, BSD 3-Clause "New" or "Revised" License 
+Winium.Desktop.Driver, 1.6.0, Mozilla Public License 2.0 
+7zip, 9.2.0, GNU LGPL + BSD 3-clause 
+Jenkins (standard install plugin set + PostBuildScript, Sidebar Link plugins), 2.138.1, MIT License 
+Artifactory, 6.0.2, GNU Affero GPL v3 
 
 
 ----------------------------------
@@ -203,10 +184,10 @@ optionally
 
 Minimum requirements
 
-	windows 8, 
-	Java JDK 8, 
-	Maven 3.5, 
-	Chrome web browser
+windows 8, 
+Java JDK 8, 
+Maven 3.5, 
+Chrome web browser
 
 
 -------------------------
@@ -266,11 +247,11 @@ Set basic project environment properties in setting.xml file
 			...  
 		</properties> 
  
-	3 add private maven repository to active profile in setting.xml or in pom.xml if required
-	4 Instruct maven to import setting.xml configuration. 
+	3 optionally add private maven repository to active profile in setting.xml or in pom.xml (see how to add private maven repository chapter for more details)
+	
+	REMARK: at any point in time user can instruct maven to import setting.xml configuration. 
 		Go File -> Settings… 	
 		Override user settings file for maven under Settings -> Build, Execution, Deployment -> Maven 
-	
 	
 ----------------------------------
 
@@ -287,8 +268,9 @@ How to import project in IntelliJ?
 	8 enter the name of project and click Finish
 	9 go to Run -> Edit Configurations... and configure 'Cucumber for Java' plugin to use additional formatter 
 	10 add new environment variable cucumber.options under Default configuration of the plugin. 
-		It’s value shall be --plugin org.jetbrains.plugins.cucumber.java.run.CucumberJvmSMFormatter --monochrome --plugin libs.libCore.modules.CustomFormatter  
+		It’s value shall be --plugin org.jetbrains.plugins.cucumber.java.run.CucumberJvm3SMFormatter --monochrome --plugin libs.libCore.modules.CustomFormatter  
 
+	REMARK: without additional formatter tests will not execute correctly! Please make sure that steps described in point 9 and 10 will be executed!
 	
 ----------------------------------
 
@@ -299,33 +281,31 @@ Dir structure shall be like this
 	Project
 
 		- src
-			- test
-				-java
+			- config
+				- environment
+				- framework
+				- testdata
+				project.config
+			- features
+				- Web
+					- feature1
+					- feature2
+					...
+				- Rest
+					...
+			- libs
+				- libCore
 					- config
-						- environment
-						- framework
-						- testdata
-						project.config
-					- features
-						- Web
-							- feature1
-							- feature2
-							...
-						- Rest
-						...
-					- libs
-						- libCore
-							- config
-							- modules
-							- steps
-							- resources
-						- libProject1
-						- libProject2
-						...
+					- modules
+					- steps
 					- resources
-						chromedriver.exe
-						ojdbc6.jar
-						...
+				- libProject1
+				- libProject2
+				...
+			- resources
+				chromedriver.exe
+				ojdbc6.jar
+				...
 		- target
 		pom.xml
 		setting.xml
@@ -333,8 +313,8 @@ Dir structure shall be like this
 
 
 
-Dir src/test/java/libs/<lib name>/modules contains methods needed to run the test. 
-Dir src/test/java/libs/<lib name>/steps contains step defs defintion and implementation.
+Dir src/libs/<lib name>/modules contains methods needed to run the test. 
+Dir src/libs/<lib name>/steps contains step defs defintion and implementation.
 
 
 
@@ -344,11 +324,11 @@ Other subdriectories contains project specific stuff like page obejct models etc
 
 
 
-Dir src/test/java/resources contains additional resources used by tests like drivers, 3rd party apps etc.
+Dir src/resources contains additional resources used by tests like drivers, 3rd party apps etc.
 
-Dir src/test/java/config contains configuration files (*.config) 
+Dir src/config contains configuration files (*.config) 
 
-Dir src/test/java/features contains features files (cotntainers for tests).
+Dir src/features contains features files (cotntainers for tests).
 
 Dir traget/ will be used to store results of test execution like for example test report.
 
@@ -373,7 +353,7 @@ Features act as containers for Scenarios.
 
 Please keep 1 Feature per 1 file.
 
-Feature file name shall be same like Feature name. Feature name has to be unique.
+Feature file name can and usually shall be same like Feature name. Feature name has to be unique.
 
 Scenario names shall be unique per feature.
 
@@ -463,7 +443,7 @@ For logging purposes log4j2 library is used. For BDD cucumber-jvm and junit libr
 
 Configuration files are in json format. We need to parse the data available inside. For json parsing gson library is used.
 
-When steps are executed we need to pass the same instance of a class to them, for example webdriver instance, test data storage, output of step def execution etc. To make it possible we are using so called dependency injection. Without it for example each step will open a new browser window. For dependency injection pico-container library is used.
+When steps are executed we need to pass the same instance of a class to them, for example webdriver instance, test data storage, output of step def execution etc. To make it possible we are using CustomFormatter plugin. Without it for example each step will open a new browser window.
 
 For web automation Selenium WebDriver library is used. For windows native apps automation Winium library is used. For api automation RestAssured library is used. To read Csv files openCSV library is used. 
 
@@ -507,7 +487,6 @@ Every times tester’s workstation will ask to download new artifact first jcent
 In addition user can create so called local repositories. This means user has a possibility to upload particular artifacts to such local repository and it can be used in internal network only. Please use Deploy button to add local artifacts/repos. 
  
 To make use of internal repository managed by artifactory we need to re-configure maven settings on tester’s workstation. Pom.xml or setting.xml file can be updated to include following entries. 
-
 	<repositories> 
 		<repository>
 			<snapshots>
@@ -546,7 +525,6 @@ Where <host_name> is the name of the computer where our internal repository is l
 REMARK: jcentral repository can be made offline. This means that only artifacts from its cache are going to be served. In case something is missing an error will be thrown but no connection to maven central repository will be created. Cache will not be removed when Artifactory will be killed! 
  
 To make jcentral repository local only. Please follow steps below. 
-
 	1 Login as admin to Artifactory 
 	2 Open Admin menu and go to Remote Repositories 
 	3 Open jcenter 
@@ -592,15 +570,15 @@ To generate a report from test please execute 'mvn site -s setting.xml'. After t
 
 It is possible to overwrite active_env property from the command line. In that case project specific config as specified by the CMD argument will be used during test execution. To do so please execute a test for example like below
 
-	mvn clean test -s setting.xml -fae -Dactive_env="bookByIsbn" -Dcucumber.options="--tags @bookByIsbn"
+	mvn clean test -s setting.xml -fae -Dctx.Environment.Active.name="bookByIsbn" -Dcucumber.options="--tags @bookByIsbn"
 
 In this particular case a default environment (SUT) configuration will be loaded and later on it will be overwritten by config available in a file src\test\java\config\environment\bookByIsbn.config. Cucumber option --tags can be used to run only a subset of tests that are tagged with @bookByIsbn tag.
 
 It is possible to set browser width and height via command line argument. To do so please execute test using command like below
 
-	mvn clean test -s setting.xml -fae -Dactive_env="demoOnline" -DwidthXheight="800 x 640" -Dcucumber.options="--tags @demoOnline"
+	mvn clean test -s setting.xml -fae -Dctx.Environment.Active.name="demoOnline" -Dctx.Environment.Active.Web.size="800 x 640" -Dcucumber.options="--tags @demoOnline"
 
-Argument -DwidthXheight= will be used to set browser dimensions.
+Argument -Dctx.Environment.Active.Web.size will be used to set browser dimensions.
 
 
 REMARK: it is possible to pass TestData/Environment/Expected data valus via CLi. In such case they will overwrite values taken from configuration file. To do so please use -Dctx.TestData.key=value flag. For example
@@ -631,7 +609,7 @@ How to run it from Jenkins?
 Goal of this instruction is to setup a Jenknins instance so user can schedule test execution and check the resutls.
 Description below allows to setup a new project with a job that can be started and which results can be viewed in the web browser.
 
-Steps to setup Jenkins
+	Steps to setup Jenkins
 
 	1 Download latest Jenkins for Windows from https://jenkins.io/
 	2 Install it
@@ -673,8 +651,8 @@ Steps to setup Jenkins
 		echo run tests
 
 		cd %PROJECTDIR%
-		call mvn test -s setting.xml -fae -Dactive_env="%ACTIVEENV%" -Dcucumber.options="--tags @test1" && call mvn -s setting.xml site
-		call mvn test -s setting.xml -fae -Dactive_env="%ACTIVEENV%" -Dcucumber.options="--tags @test2" && call mvn -s setting.xml site
+		call mvn test -s setting.xml -fae -Dctx.Environment.Active.name="%ACTIVEENV%" -Dcucumber.options="--tags @test1" && call mvn -s setting.xml site
+		call mvn test -s setting.xml -fae -Dctx.Environment.Active.name="%ACTIVEENV%" -Dcucumber.options="--tags @test2" && call mvn -s setting.xml site
 		
 		
 	19 Add build step "Execute Windows batch command"
@@ -864,7 +842,7 @@ Details of what is happening during test execution
 
 
 
-Cucumber runner is available in src/test/java/libs/libCore/modules/TestRunner.class
+Cucumber runner is available in src/libs/libCore/modules/TestRunner.class
 It contains cucumber options like glue path (path to steps definitions), features path and allure report plugin.
 There shall be no need to change it parameters.
 
@@ -876,8 +854,8 @@ There shall be no need to change it parameters.
 
 	@RunWith(Cucumber.class)
 	@CucumberOptions(
-		plugin = {"ru.yandex.qatools.allure.cucumberjvm.AllureReporter", "libs.libCore.modules.CustomFormatter"},
-		features = "src/test/java/features",
+		plugin = {"io.qameta.allure.cucumber3jvm.AllureCucumber3Jvm", "libs.libCore.modules.CustomFormatter"},
+		features = "src/features",
 		glue = "libs")
 	public class TestRunner {}
 
@@ -888,28 +866,39 @@ In scenario @Before hook we create context, read framework and SUT configurtion,
 We will also find local configuration files and load them for usage in steps. There is no need to do that in seperate steps or Background scenario.
 In an @After hook we try to close the resources like for example web driver, Sql connection or take a screenshot if test failed.
 As a last step we are attaching log from the scenario to the test report.
-Hooks implementation can be found under src/test/java/libs/libCore/modules/HooksScenario.class.
+Hooks implementation can be found under src/libs/libCore/modules/CustomFormatter.class.
 
 
 
 After @Before method execution cucumber-jvm will execute each step.
 
-Steps shall be implemented under src/test/java/libs/<lib name>/steps directory. Please use seperete package for your project steps and group them to make files management easier when project grows.
+
+Steps shall be implemented under src/libs/<lib name>/steps directory. Please use seperete package for your project steps and group them to make files management easier when project grows.
 
 There is also possibility to execute some actions before the whole test suite (a set of feature files) will be executed. There are 2 additional global hooks available. So called beforeAll and afterAll hook. They can be used to initialize logger, print system properties or try to close the resources like web drivers etc.
-Global hooks implementation can be found under src/test/java/libs/libCore/modules/HooksGlobal.class.
+Global hooks implementation can be found under src/libs/libCore/modules/CustomFormatter.class.
+
+
+REMARK: Please note that cucumber-jvm hooks (methods annotated with @Before, @After, @BeforeStep, @AfterStep) are not used any more. Instead hooks are implemented in CustomFormatter plugin.
+
 
 
 Each new scenario start will be indicated in the log as follows
 
 
 
-	[INFO ] 2017-09-11 12:32:27.558 [main] Log - *** Feature id: get-book-by-isbn ***
-	[INFO ] 2017-09-11 12:32:27.563 [main] Log - ***
-	[INFO ] 2017-09-11 12:32:27.563 [main] Log - ***
-	[INFO ] 2017-09-11 12:32:27.563 [main] Log - *** Scenario with name: User calls web service to get a book by its ISBN started! ***
-	[INFO ] 2017-09-11 12:32:27.563 [main] Log - ***
-	[INFO ] 2017-09-11 12:32:27.564 [main] Log - ***
+2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
+2018-09-19 20:32:19.318 [INFO ] *** Feature id: C:/Users/akowa/Documents/Projects/Cucumber2/src/features/Web/DemoOnlineShop/DemoOnlineShop.feature ***
+2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
+2018-09-19 20:32:19.318 [INFO ] 
+2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
+2018-09-19 20:32:19.318 [INFO ] *** Feature with name: DemoOnlineShop started! ***
+2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
+2018-09-19 20:32:19.318 [INFO ] 
+2018-09-19 20:32:19.318 [INFO ] 
+2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
+2018-09-19 20:32:19.318 [INFO ] *** Scenario with name: Verify sum of 2 items equals total price started! ***
+2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
 
 
 
@@ -917,8 +906,10 @@ Each new scenario start will be indicated in the log as follows
 
 
 
-	[INFO ] 2017-09-11 12:32:27.564 [main] Log - Started resources initialisation
-	[INFO ] 2017-09-11 12:32:27.566 [main] Log - <- checking environment configuration ->
+2018-09-19 20:32:19.318 [INFO ] Started resources initialisation
+2018-09-19 20:32:19.333 [DEBUG] Ctx object FileCore of type class libs.libCore.modules.FileCore created or modified
+2018-09-19 20:32:19.333 [DEBUG] Ctx object Config of type class libs.libCore.modules.ConfigReader created or modified
+2018-09-19 20:32:19.333 [DEBUG] Ctx object Storage of type class libs.libCore.modules.Storage created or modified
 
 
 
@@ -930,11 +921,11 @@ Environment
 
 
 
-During this phase files available in /src/test/java/config will be checked for framework and SUT configuration.
+During this phase files available in /src/config will be checked for framework and SUT configuration.
 They contain global environment configuration as well as global test data configuration. Each setting can be overwritten later on during test execution by local test configuration.
 Recommendation is to use project specific file to keep there System Under Test settings and framework settings shall stay in separate file.
 
-Property Environment.Active.name available in src/test/java/config/environment/active.config indicates which SUT configuration shall be used. For example we can have in default.properties
+Property Environment.Active.name available in src/config/environment/active.config indicates which SUT configuration shall be used. For example we can have in default.properties
 
 
 
@@ -947,7 +938,7 @@ Property Environment.Active.name available in src/test/java/config/environment/a
 	}
 
 
-And in src/test/java/config/environment/reqResIn.config
+And in src/config/environment/reqResIn.config
 
 
 
@@ -974,10 +965,10 @@ Project specific configuration will overwrite settings that are defined in Defau
 
 	Environment={
 	    Default : {
-		Rest : {
-		    url : "http://default.com"
-		}
-	     }
+			Rest : {
+				url : "http://default.com"
+			}
+	    }
 	}
 
 
@@ -986,7 +977,7 @@ Assuming that active configuration points to
 	Environment={
 
 	    Active : {
-		name : "reqResIn"
+			name : "reqResIn"
 	    }
 
 	}
@@ -998,9 +989,9 @@ Assuming that project specific configuration is
 
 	    reqResIn : {
 
-		Rest : {
-		    url_get_suffix : "/api/users/"
-		}
+			Rest : {
+				url_get_suffix : "/api/users/"
+			}
 
 	    }
 
@@ -1011,17 +1002,17 @@ Final configuration that can be used in tests is
 	Environment={
 
 	    Active : {
-		name : "reqResIn",
-		Rest : {
-		    url : "http://default.com",
-		    url_get_suffix : "/api/users/"
-		}		
+			name : "reqResIn",
+			Rest : {
+				url : "http://default.com",
+				url_get_suffix : "/api/users/"
+			}		
 	    }
 
 	}
 
 
-File src/test/java/config/environment/default.config contains global Default configuration.
+File src/config/environment/default.config contains global Default configuration.
 
 	Environment={
 
@@ -1047,7 +1038,7 @@ File src/test/java/config/environment/default.config contains global Default con
 	}
 
 This configuration will be used in case there is no other active configuration specified.
-Please note that this configuration is divided into 2 parts. Second part contains configuration specific for the framework like paths to the drivers etc. It can be found in src/test/java/config/framework/framework.config. All settings can be put into one file but usually it is easier to manage complex configurations if they are logically splited between few files.
+Please note that this configuration is divided into 2 parts. Second part contains configuration specific for the framework like paths to the drivers etc. It can be found in src/config/framework/framework.config. All settings can be put into one file but usually it is easier to manage complex configurations if they are logically splited between few files.
 
 	Environment:{
 
@@ -1059,19 +1050,19 @@ Please note that this configuration is divided into 2 parts. Second part contain
 		WebDrivers: {
 		    CloseBrowserAfterScenario: true,
 		    Chrome: {
-			path: "src\\test\\java\\resources\\webDrivers\\chromedriver.exe"
+				path: "src\\test\\java\\resources\\webDrivers\\chromedriver.exe"
 		    },
 		    FireFox: {
-			path: "src\\test\\java\\resources\\webDrivers\\geckodriver.exe"
+				path: "src\\test\\java\\resources\\webDrivers\\geckodriver.exe"
 		    },
 		    InternetExplorer: {
-			path: "src\\test\\java\\resources\\webDrivers\\IEDriverServer.exe"
+				path: "src\\test\\java\\resources\\webDrivers\\IEDriverServer.exe"
 		    }
 		},
 
 		JdbcDrivers: {
 		    Oracle: {
-			path: "src\\test\\java\\resources\\jdbcDrivers\\ojdbc6.jar"
+				path: "src\\test\\java\\resources\\jdbcDrivers\\ojdbc6.jar"
 		    }
 		},
 
@@ -1104,7 +1095,7 @@ Entity apps can be used to group together any 3rd party apps that can be called 
 
 In this way multiple systems under test can be configured.
 
-Please note that in libs/libCore/config user can find default configruation that can be overwriten by global project config available in  src/test/java/config/project.config file. For this reason please do not change anything in libs/libCore/config files.
+Please note that in libs/libCore/config user can find default configruation that can be overwriten by global project config available in src/config/project.config file. For this reason please do not change anything in libs/libCore/config files.
 
 Now it is time to read test data configuration from *.config files.
 Everything that is written below applies also to environment configuration files behaviour.
@@ -1112,8 +1103,7 @@ Everything that is written below applies also to environment configuration files
 From now on in case there is a need to access any configuration parameter one can use in the step def Storage.get() method. For example
 
     @When("^xml post request (.*?) with soap action header (.*?) is sent$")
-    public void xml_post_request_is_sent(String name, String actionHeader) throws Throwable {
-        Log.info("* Step started xml_post_request_is_sent");
+    public void xml_post_request_is_sent(String name, String actionHeader) {
 
         String url = Storage.get("Environment.Active.Rest.url");
 	...
@@ -1121,7 +1111,7 @@ From now on in case there is a need to access any configuration parameter one ca
 Storage.get("Environment.Active.Rest.url") method returns url value from active configuration. Please note that is is assigned to variable of type String. In case Storage.get() returns other type of data than String we may encounter ClassCastException.
 	
 
-REMARK: Please note that it is possible to pass variables into the config files. Content of storage is re-evaluated in ScenarioHooks before test runs. Please see an example below.
+	REMARK: Please note that it is possible to pass variables into the config files. Content of storage is re-evaluated in CustomFormatter before scenario run. Please see an example below.
 			Having 2 entities like TestData.Entity1.Key1 and Environment.Active.WinRM.VM1.host user can create new third config entity dummyEntity.
 			
 			TestData: {
@@ -1144,18 +1134,20 @@ REMARK: Please note that it is possible to pass variables into the config files.
 				key1: "${ctx.TestData.Entity1.Key1} is going to be used together with ${ctx.Environment.Active.WinRM.VM1.host}"
 				}	
 				
+	REMARK: Each entity visible below can be placed in a seperate configuration file!			
+				
 How to add environment information to test report?
 
 To show anything in Environment section of test report please create following entitiy in Environment configuration.
 
-	Environment:{
-	    Default: {
-		WriteToReport: {
-		    Key1: "This is dummy text",
-		    Key2: "${ctx.TestData.This.Is.Dummy.Value.Taken.From.Config}"
-				}
+Environment:{
+    Default: {
+        WriteToReport: {
+            Key1: "This is dummy text",
+            Key2: "${ctx.TestData.This.Is.Dummy.Value.Taken.From.Config}"
 			}
 		}
+	}
 
 
 
@@ -1169,7 +1161,14 @@ To show links into issue or test in scenario report please add following section
 			TestTrackerUrlPattern: "https://jira.my.company.com/browse",
 			}
 		}
-			
+
+Please add approperiate tag into the feature file, for example where @issue contains defect number or @tmsLink contains test case id from test management software
+
+		@issue=<ISSUE-NUMBER> @tmsLink=<TEST-CASE-ID>
+		Scenario: affected scenario name		
+		
+REMARK: For other tags and more information please see https://docs.qameta.io/allure/#_cucumber_jvm		
+		
 			
 ----------------------------------
 
@@ -1179,32 +1178,32 @@ TestData
 
 
 
-Global project configuration is available under src/test/java/config/project.config directory.
+Global project configuration is available under src/config/project.config directory.
 Files included in it are checked and evaluated. New storage is created based on their content.
 An example of project.config file is below
 
-	#include "config/framework/framework.config"
-	#include "config/environment/winrm.config"
-	#include "config/environment/default.config"
-	#include "config/environment/active.config"
-	#include "libs/libProject1/config/testdata.config"
-	#include "libs/libProject2/config/testdata.config"
-	#include "config/testdata/cloud.config"
-	#include "config/testdata/database.config"
-	#include "config/testdata/release.config"
-	#include "config/testdata/testdata.config"
-	#include "config/testdata/expected.config"
+#include "config/framework/framework.config"
+#include "config/environment/winrm.config"
+#include "config/environment/default.config"
+#include "config/environment/active.config"
+#include "libs/libProject1/config/testdata.config"
+#include "libs/libProject2/config/testdata.config"
+#include "config/testdata/cloud.config"
+#include "config/testdata/database.config"
+#include "config/testdata/release.config"
+#include "config/testdata/testdata.config"
+#include "config/testdata/expected.config"
 
-	TestData:{}
+TestData:{}
 
 Additional configuration files will be read in the order they are mentioned in project.config. In such way default configuration from other libraries can be included.
 
 Please remember that order of processing is as follows 
 	- first config files under libs/libCore/config
-	- then project.config under src/test/java/config/
+	- then project.config under src/config/
 	- then local config files in feature file directory
 	
-An example of test data configuration is below (content of src/test/java/config/testdata/testdata.config file)
+An example of test data configuration is below (content of src/config/testdata/testdata.config file)
 
 	TestData={
 	    "search_sentence" : "this is the default entry!",
@@ -1252,7 +1251,7 @@ An example of a log is below
 
 Configuration files can include conent of other configuration files. To do so please use #include directive and provide reltive path to the other config file. Path shall be relative to project directory. An example is visible below.
 
-Content of file src/test/java/features/Web/test1/test1.config is
+Content of file src/features/Web/test1/test1.config is
 
 	#include "features/Web/test4/test45.config"
 	
@@ -1313,18 +1312,18 @@ Macro definitions are kept in a *.config file under Macro object. For example
 		    type: date,
 		    prefix: "Tadam->",
 		    suffix: "<-madaT"
-		}
+			}
 	    }
 
 
 
-File /src/test/java/libs/libCore/modules/Macro.class contains methods to calculate macros based on their definitions and evaluate test storage.
+File /src/libs/libCore/modules/Macro.class contains methods to calculate macros based on their definitions and evaluate test storage.
 
 Global test data and macro configuration can be overwritten by local configuration files available under the same directory as a feature file.
 
 
 
-For example directory /src/test/java/features/Rest/GetBookByISBN/config can contain 2 files
+For example directory /src/features/Rest/GetBookByISBN/config can contain 2 files
 
 
 
@@ -1400,7 +1399,7 @@ Macro defined as above (and overwritten by local config) after evaluation will b
 
 
 As can be seen different macro defintions are supported.
-Macro can be used to return a unix timestamp or a date in specified format.
+Macro can be used to return a unix timestamp or a date in specified format or a random value or a value of a week/month start/end date.
 They can be concatenated with a specific prefix or suffix. 
 Macro values are always returned as strings. 
 
@@ -1412,6 +1411,16 @@ To use previously defined macros one can put into the test data storage such mac
 	    NOW_TimeStamp : mcr.testMacro3
 	    }
 
+Following macro types are supported currently
+           
+	date,
+    timestamp,
+    random,
+    startOfWeek,
+    endOfWeek,
+    startOfMonth,
+    endOfMonth		
+		
 Data types supported in test data configuration are
 
 	String,
@@ -1514,12 +1523,12 @@ it shall match test result like below
 	30, SALES, CHICAGO
 	40, OPERATIONS, BOSTON
 
-Each step execution is marked in a log with a "* Step started" string to make it easier to find it. For example
+Each step execution is marked in a log with a "* Step started" string to make it easier to find it. There is no need to call any logging method for it explicitly in the step definition. This will be done in before step hook by CustomFormatter plugin. For example
 
 
-
-	[DEBUG] 2017-09-11 12:32:28.208 [main] Log - * Step started a_user_retrieves_the_book_by_isbn
-
+2018-09-19 20:32:21.059 [INFO ] +-------------------------------------------------------------+
+2018-09-19 20:32:21.059 [INFO ] * Step started open browser
+2018-09-19 20:32:21.059 [INFO ] +-------------------------------------------------------------+
 
 
 --------------------------------
@@ -1530,23 +1539,19 @@ How to write step and share data between steps?
 
 
 
-Thanks to dependency injection there is a way to share objects between steps and modules. In SharedContext.class available under /src/test/java/libs/libCore/modules so called Context Object was defined.
+Thanks to CustomFormatter plugin usage there is a way to share objects between steps and modules. In ThreadContext.class available under /src/libs/libCore/modules so called Context Object was defined.
+There are 3 types of Context Global and Scenario context. Global context is created at the beginning of test run and exists as long as jvm exists. It is created main thread only. It can be used to pass data between features.
+Scenario context is created when new scenario execution starts and it is destroyed when scenario execution ends. It is created per thread. It can be used pass data between steps in same scenario.
 
-To grant access to it please make sure that your Steps class extends BaseStep class and create a constructor like below
+To grant access to it please make sure that your Steps class extends BaseStep class
 
 	public class DemoOnlieSteps extends BaseSteps {
 
-	    private SharedContext ctx;
-
-	    // PicoContainer injects class SharedContext
-	    public DemoOnlieSteps (SharedContext ctx) {
-		this.ctx = ctx;
-	    }
 	    
 	 }
 	 
 Where DemoOnlineSteps is a class that contains project specific steps to handle web automation for particular page.
-In this way we can pass same instance of ctx between steps and modules. With this approach we can use methods defined for objects available in ctx variable.
+In this way we can pass same instance of scnearioCtx and globalCtx between steps and modules. With this approach we can use methods defined for objects available in ctx variable.
 BaseSteps class define a set of helpers modules to make writing new step defs much easier. They are called as below
 Macro, StepCore, PageCore, SqlCore, Storage, FileCore, ExecutorCore, PdfCore, SshCore, WinRMCore, WinRSCore, WiniumCore, CloudDirectorCore. They contain a set of methods that can be used to do common things in steps like creating files, evaluating macros, reading environment configuration, evaluating templates, attaching files to the report etc.
 
@@ -1554,37 +1559,39 @@ For example lets have a look at 2 steps below
 
     @Given("^a book exists with an isbn$")
     public void a_book_exists_with_isbn() {
-        Log.info("* Step started a_book_exists_with_isbn");
-	
         String isbn = Storage.get("TestData.isbn");
         RequestSpecification request = given().param("q", "isbn:" + isbn);
-        ctx.Object.put("request",RequestSpecification.class, request);
+        scenarioCtx.put("request",RequestSpecification.class, request);
     }
 
     @When("^a user retrieves the book by isbn$")
     public void a_user_retrieves_the_book_by_isbn(){
-        Log.info("* Step started a_user_retrieves_the_book_by_isbn");
-	
-        String url = Environment.readProperty("REST_url");
-        RequestSpecification request = ctx.Object.get("request",RequestSpecification.class);
-        Response response = request.when().log().all().get(url);
-        ctx.Object.put("response",Response.class, response);
-        StepCore.attachMessageToReport("Json response", response.prettyPrint().toString());
-
+        
+		String url = Storage.get("Environment.Active.Rest.url");
+		RequestSpecification request = scenarioCtx.get("request",RequestSpecification.class);
+        
+		Response response = request.when().log().all().get(url);
+        ValidatableResponse response2 = response.then();
+		
+        scenarioCtx.put("response",Response.class, response);
+        scenarioCtx.put("response",ValidatableResponse.class, response2);
+        scenarioCtx.put("json",ValidatableResponse.class, response2);
+        
+		StepCore.attachMessageToReport("Json response", response.prettyPrint());
     }
     
-To retrieve test data storage one can write HashMap<String, Object> testDataMap = ctx.Object.get("TestData",HashMap.class);
+To retrieve test data storage one can write HashMap<String, Object> testDataMap = scenarioCtx.get("TestData",HashMap.class);
 From now on testDataMap and its values can be used in the step.
 Other and much simpler way to retrieve a particular value from the storage is String isbn = Storage.get("TestData.isbn");
 Nested objects can be provided using dots like for example Storage.get("TestData.isbn.some_nested_key[0]") etc.
 
-ctx.Object is a bucket to which we can throw anything and later on we can retrieve it. This is useful to share data between steps that are defined in different class. For example
+scenarioCtx  and globalCtx are buckets to which we can throw anything and later on we can retrieve it. This is useful to share data between steps that are defined in different class. For example
 
-	ctx.Object.put("request",RequestSpecification.class, request);
+	scenarioCtx.put("request",RequestSpecification.class, request);
 
-This metohd puts an object of type RequestSpecification to ctx.Object bucket with name "request". Later on another step can retrieve it like below
+This metohd puts an object of type RequestSpecification to scenarioCtx bucket with name "request". Later on another step can retrieve it like below
 
-	RequestSpecification request = ctx.Object.get("request",RequestSpecification.class);
+	RequestSpecification request = scenarioCtx.get("request",RequestSpecification.class);
 
 StepCore contains a set of helper functions that can be used when writing step defs. For example there are functions that can be used to add something as an attachment to the test report.
 
@@ -1592,13 +1599,12 @@ There is also one more method that can be used to check if step input is a varia
 
     @Then("^the status code is (.*)$")
     public void verify_status_code(String input){
-        Log.info("* Step started verify_status_code");
 
         Integer code = StepCore.checkIfInputIsVariable(input);
 
-        Response response = ctx.Object.get("response",Response.class);
+        Response response = scenarioCtx.get("response",Response.class);
         ValidatableResponse json = response.then().statusCode(code);
-        ctx.Object.put("json",ValidatableResponse.class, json);
+        scenarioCtx.put("json",ValidatableResponse.class, json);
     }
 
 In the feature file one can write
@@ -1618,7 +1624,7 @@ or
 In both cases step shall pass.
 Please note that step def input parameter is of type String. method checkIfInputIsVariable can return an object of different type (for example Int, Long, Double, String, Boolean). Please do not hardcode Maps or Lists directly in the feature files, rather define them in a config file and use such config pointer in the feature. For example instead of writing "Then expected result is {key1:1, key2:2}" write "Then expected result is Expected.resultMap" 
 
-It is assumed that user knowns what type is expected otherwise we can get type missmatch exception.
+It is assumed that user knowns what type is expected otherwise we can get type missmatch exception. It is also possible to use a more general type of Object.
 
 If there is a need to read any environment property one can use in a step Storage module. An example below
 
@@ -1639,21 +1645,10 @@ In case a step shall handle multiple input parameters please use tables in a fea
 
 Later on each input parameter and its value can be retrieved in a loop. See an example below.
 
-    /**
-     * Verifies that response includes some fields {} and their value contains {}
-     * Input requires a table
-     *
-     * Uses following objects:
-     *  ctx.Object.json
-     *
-     * @param responseFields - Map<String, String>, table that contains key and expected value pairs to verify
-     *
-     */
 	@And("^response includes the following in any order$")
 	    public void response_contains_in_any_order(Map<String,String> responseFields){
-		Log.info("* StepCore started response_contains_in_any_order");
 
-		ValidatableResponse json = ctx.Object.get("json",ValidatableResponse.class);
+		ValidatableResponse json = scenarioCtx.get("json",ValidatableResponse.class);
 		for (Map.Entry<String, String> field : responseFields.entrySet()) {
 		    Object expectedValue = StepCore.checkIfInputIsVariable(field.getValue());
 		    String type = expectedValue.getClass().getName();
@@ -1682,10 +1677,6 @@ Later on each input parameter and its value can be retrieved in a loop. See an e
 		}
 	    }
 
-To indicate which method runs in a log file please always add Log.info("* Step started step_method_name");
-
-In this way later on it is easy to find each executed step in the log file. It is enough just to look for "* Step started" keyword
-
 Please use javadoc to document each step in the library. An example below
 
     /**
@@ -1693,7 +1684,7 @@ Please use javadoc to document each step in the library. An example below
      * Creates new object ValidatableResponse and stores it as json ctx.obj
      *
      * Uses following objects:
-     *  ctx.Object.response
+     *  scenarioCtx.response
      *
      * @param input - String, status code or value from storage
      *
@@ -1707,21 +1698,23 @@ Please use javadoc to document each step in the library. An example below
 
         Response response = ctx.Object.get("response",Response.class);
         ValidatableResponse json = response.then().statusCode(code);
-        ctx.Object.put("json",ValidatableResponse.class, json);
+        scenarioCtx.put("json",ValidatableResponse.class, json);
     }
     
-Please use StepCore module for template management/compariosn, to attache file to the report etc.    
+This gives tester a chance to discover new steps in the library by looking into it html documentation.	
+	
+Please use StepCore module for template management/compariosn, to attach file to the report etc.    
 Please use FileCore module for any operation that shall be done on files.
 Please use ExecutorCore module for any commands that shall be executed on the local host.
 Please use SqlCore for any command that shall be executed in the dB under test.
 Please use PageCore for any action that shall be done on the web page.
 Please use Macro for macro evaluations.
 Please use Storage to read/write new values to the storage.
-Please use ctx.Object to pass objects between step defs.
+Please use scenarioCtx to pass objects between step defs.
 Please use PdfCore module for pdf manipulation.
 Please use SshCore module for ssh/scp/sftp execution.
-Please use winRmCore module for winrm execution.
-Please use winRSCore module for remote windows management via winRS client
+Please use WinRmCore module for winrm execution.
+Please use WinRSCore module for remote windows management via winRS client
 Please use CloudDriectoreCore module for virtual machine management via vmware cloud director
 Please use WiniumCore module for any action that shall be done in a windows application written for win8 and below (windows 10 sdk is supported by appium)
 
@@ -1749,7 +1742,8 @@ Steps that are involved will create a file that can contain the storage with ide
 Later on such storage can be retrived using the identifier and used during scenario execution.
 File will be created in temporary directory on a file system. Usually it is C:\Users\<user name>\AppData\Local\Temp\FK_Prototype_Persistent_Storage_File.json
 
-Users also have a possibility to pass data between scenarios and features using so called execution context. This is not recommended and usually there exists a better way to write the test than using such feature, for example add Background scenario or enhance Given steps. 
+Users also have a possibility to pass data between scenarios and features using so called globalCtx. This is not recommended because it creates dependencies between tests and usually there exists a better way to write the test than using such feature, for example add Background scenario or enhance Given steps. 
+An usecase where it can be usefull is to use globalCtx like a simple cache. For example where we need to connect to remote SUT to retrieve a data. Instead of making a call to a remote host in each scenario/step we can do it once put the result into globalCtx and retirve it from it at any time. In this way we can reduce number of remote calls to SUT if required.
 To use this capability please see an example below.
 
 	@reqResIn
@@ -1759,70 +1753,50 @@ To use this capability please see an example below.
 
 	    Given service is available
 	    When json post request createUser is sent
-	    Then extract user id as userId of type String
+	    Then extract user id as userId
 
 	  Scenario: Trigger a Get request to get a single user and validate the response
 
 	    Given service is available
-	    When json get single user with id userId of type String request is sent
+	    When json get single user with id userId request is sent
 	    Then verify that rest response body has
 	      | key                        | action            | expected        |
 	      | data.id                    | equalTo           | Expected.userId |
 
-Step 'extract user id as userId of type String' extracts user id in first scenario and stores its value in the execution context (implemented using singelton pattern with lazy intializaton and synchronization).
+Step 'extract user id as userId' extracts user id in first scenario and stores its value in the globalCtx context (implemented using ThreadContext and static factory pattern, Context and CustomFormatter plugin).
       
-    /**
-     * extract user id from the response
-     * Creates new object UserId and stores it as UserId ctx.obj
-     *
-     * Uses following objects:
-     *  ctx.Object.response
-     *
-     */
-    @Then("^extract user id as (.+) of type (.+)$")
-    public void extract_user_id(String identifier, String type){
-        Log.info("* Step started extract_user_id");
-
-        ValidatableResponse response = ctx.Object.get("response",ValidatableResponse.class);
+    @Then("^extract user id as (.+)$")
+    public void extract_user_id(String identifier) {
+        ValidatableResponse response = scenarioCtx.get("response",ValidatableResponse.class);
         String userId = response.extract().path("id");
 
         if ( userId == null || Integer.parseInt(userId) <= 0 ) {
             Log.error("UserId was not found in the response!");
         }
 
-        Class clazz = ExecutionContext.executionContextObject().setType("java.lang." + type);
-        ExecutionContext.executionContextObject().put(identifier,clazz,userId);
-    }      
+        globalCtx.put(identifier,String.class,userId);
+        Storage.set("Expected.userId", userId);
+    }
  
 In this case user id will be stored as a string. Class type has to be provided by the user using method like below
 
-	Class clazz = ExecutionContext.executionContextObject().setType("java.lang." + type);
+	Class clazz = Class.forName("java.lang." + type);
  
-To store the value please use method like below
+To store the value one can use method like below
 
-        ExecutionContext.executionContextObject().put(identifier,clazz,userId);
+       globalCtx.put(identifier,clazz,userId);
+	   
+REMARK: Please note that Class.forName throws an ClassNotFoundException we can either surround it with try/catch or better declare that step can throw Throwable. Usually throw declaration is not needed.
  
 It can be retrieved later on in the next Scenario or different Feature. See an example of step def implementation below.
 
-    /**
-     * Triggers http get request with variable path
-     * ValidatableResponse is available as a context Object with name response.
-     *
-     * Uses following objects:
-     *  ctx.Object.response
-     *  Environment.REST_url
-     *  Environment.Rest_url_get_path
-     *
-     */
-    @When("^json get single user with id (.+) of type (.+) request is sent$")
-    public void json_get_request_is_sent(String id, String type) throws Throwable {
-        Log.info("* Step started json_get_single_user_with_id_is_sent");
+    @When("^json get single user with id (.+) request is sent$")
+    public void json_get_request_is_sent(String id) {
 
         String url = Storage.get("Environment.Active.Rest.url");
         String path = Storage.get("Environment.Active.Rest.url_get_suffix");
 
-        Class clazz = ExecutionContext.executionContextObject().setType("java.lang." + type);
-        String userId = ExecutionContext.executionContextObject().get(id,clazz);
+        String userId = globalCtx.get(id, String.class);
 
         Log.debug("userId is " + userId);
         url = url + path + userId;
@@ -1832,7 +1806,7 @@ It can be retrieved later on in the next Scenario or different Feature. See an e
                 .with()
                 .contentType("application/json");
 
-        //trigger request and log it (it will be added as an attachment to the report)
+        //trigger request and log it (it will be added as attachment to the report)
         Response response = request
                 .when()
                 .log()
@@ -1841,17 +1815,14 @@ It can be retrieved later on in the next Scenario or different Feature. See an e
 
         //store response as ctx object so it can be verified by other steps and attach it to report
         ValidatableResponse vResp = response.then();
-        ctx.Object.put("response",ValidatableResponse.class, vResp);
+        scenarioCtx.put("response",ValidatableResponse.class, vResp);
         StepCore.attachMessageToReport("Json response", response.prettyPrint());
     }
  
- Methods below are used to retrieve the value
+Method below are used to retrieve the value
  
-        Class clazz = ExecutionContext.executionContextObject().setType("java.lang." + type);
-        String userId = ExecutionContext.executionContextObject().get(id,clazz);
- 
-Please keep in mind that it is not recommended to use this feautre as it creates dependencies between tests (Scenarios) that shall be avoided as much as possible. 
-
+  
+        String userId = globalCtx.get(id, String.class);
 
 
 --------------------------------
@@ -1861,44 +1832,46 @@ Please keep in mind that it is not recommended to use this feautre as it creates
 How to write Page Object Model for web automation purposes?
 
 
-Let us have a look at an example of a MainPage that can be used for web automation purposes. It comes from /src/test/java/libs/libDemoOnlineStore/modules.
+Let us have a look at an example of a MainPage that can be used for web automation purposes. It comes from /src/libs/libDemoOnlineStore/modules.
+
 
 	public class MainPage extends BasePage {
 
-	    public MainPage(SharedContext ctx) {
-		super(ctx);
-		if(! isLoaded("ONLINE STORE | Toolsqa Dummy Test site")){
-		    load();
+		public MainPage() {
+			super();
+			load();
 		}
-	    }
 
-	    //selectors
-	    private static final By allProductsSelector = By.xpath("(//*[@id='main-nav']/ul/li)[last()]");
+		//selectors
+		private static final By allProductsSelector = By.xpath("(//*[@id='main-nav']/ul/li)[last()]");
 
-	    public MainPage load(){
-		String url = Environment.readProperty("WEB_url");
-		PageCore.open(url);
+		private void load(){
+			String url = Storage.get("Environment.Active.Web.url");
+			PageCore.open(url);
+			PageCore.waitForPageToLoad();
+			if(! isLoaded("ONLINE STORE | Toolsqa Dummy Test site")){
+				Log.error("Main page not loaded!");
+			}
+		}
 
-		return new MainPage(ctx);
-	    }
+		/**
+		 * Navigates to all products page
+		 *
+		 * @return      ProductPage
+		 *
+		 */
+		public ProductPage goToAllProduct(){
+			Log.debug("Click 'All Products' button");
+			WebElement allProductButton = PageCore.findElement(allProductsSelector);
+			allProductButton.click();
 
-	    /**
-	     * Navigates to all products page
-	     *
-	     * @return      ProductPage
-	     *
-	     */
-	    public ProductPage goToAllProduct(){
-		Log.debug("Click 'All Products' button");
-		WebElement allProductButton = PageCore.findElement(allProductsSelector);
-		allProductButton.click();
+			PageCore.waitUntilTitleContains("Product Category | ONLINE STORE");
 
-		PageCore.waitUntilTitleContains("Product Category | ONLINE STORE");
-
-		return new ProductPage(ctx);
-	    }
+			return new ProductPage();
+		}
 
 	}
+
 
 Each class that contains methods to be executed on a specific web page shall contain Page in its name for example MainPage.class, ProductPage.class etc
 
@@ -1916,112 +1889,89 @@ To access the driver just call PageCore.findElement... Use previously defined se
 
 To use chaining in the step methods we shall return their class constructor or other Page constructor, for example 
 
-	return new ProductPage(ctx);
+	return new ProductPage();
 	
 With this approach steps class can be build like in an example below
 
 	public class DemoOnlieSteps extends BaseSteps {
 
-	    // PicoContainer injects class SharedContext
-	    public DemoOnlieSteps (SharedContext ctx) {
-		super(ctx);
-	    }
+		//create global variables for this class
+		MainPage main;
+		ProductPage product;
+		CheckoutPage checkout;
 
-	    //create global variables for this class
-	    MainPage main;
-	    ProductPage product;
-	    CheckoutPage checkout;
-
-	    /**
-	     * Opens web page with url taken from environment configuration
-	     *
-	     * Uses following objects:
-	     * env.WEB_url
-	     *
-	     */
-	    @When("^open main page$")
-	    public void i_open_main_page() throws Throwable {
-		Log.info("* StepCore started i_open_main_page");
-		//instantiate MainPage to open url in the browser
-		main = new MainPage(ctx);
-		main.load();
-	    }
-
-	    /**
-	     * Navigates to all products page
-	     */
-	    @And("^navigate to all products page$")
-	    public void navigate_to_all_products() throws Throwable{
-		Log.info("* StepCore started navigate_to_all_products");
-		product = main.goToAllProduct();
-	    }
-
-	    /**
-	     * Adds product {} to the cart.
-	     *
-	     * @param productName  name or value from storage
-	     *
-	     */
-	    @And("^add product (.*) to cart$")
-	    public void add_product_to_cart(String productName) throws Throwable{
-		Log.info("* StepCore started add_product_to_cart");
-
-		String input = StepCore.checkIfInputIsVariable(productName);
-		product.addToCart(input);
-	    }
-
-	    /**
-	     * Adds product {} to the cart and navigates to checkout page.
-	     *
-	     * @param productName  name or value from storage
-	     *
-	     */
-	    @And("^add product (.*) to cart and go to checkout$")
-	    public void add_product_to_cart_and_checkout(String productName) throws Throwable{
-		Log.info("* StepCore started add_product_to_cart_and_checkout");
-
-		String input = StepCore.checkIfInputIsVariable(productName);
-		checkout = product.addToCartAndCheckout(input);
-	    }
-
-
-	    /**
-	     * Verifies that SubTotal field equals sub of total price per product type
-	     * on Checkout page.
-	     *
-	     * Attaches screenshot to the report
-	     */
-	    @Then("^verify that SubTotal value equals sum of totals per product type$")
-	    public void verify_sum_of_totals_per_product_type_equals_subTotal() throws Throwable{
-		Log.info("* StepCore started verify_sum_of_totals_per_product_type_equals_subTotal");
-
-		String totalPrice = checkout.getTotalPrice();
-		ArrayList<String> totalPerProductType = checkout.getTotalPricePerProduct();
-
-		Double sum = 0d;
-		for(String price : totalPerProductType){
-		    sum = sum + Double.valueOf(price);
+		/**
+		 * Opens web page with url taken from environment configuration
+		 *
+		 * Uses following objects:
+		 * env.WEB_url
+		 *
+		 */
+		@When("^open main page$")
+		public void i_open_main_page() {
+			//instantiate MainPage to open url in the browser
+			main = new MainPage();
 		}
 
-		byte[] screenshot = PageCore.takeScreenshot();
-		StepCore.attachScreenshotToReport("Checkout_Products_Price_View", screenshot);
-
-		Log.debug("Sum per product type is " + sum);
-		Log.debug("Sub-Total is " + totalPrice);
-
-		try {
-		    assertEquals("Sub-Total value is different than sum of price per product type",
-			    Double.valueOf(totalPrice),
-			    sum);
-		} catch ( AssertionError e ) {
-		    Log.error("", e);
+		/**
+		 * Navigates to all products page
+		 */
+		@And("^navigate to all products page$")
+		public void navigate_to_all_products() {
+			product = main.goToAllProduct();
 		}
 
-		// or instead of assertEquals we can write simple code below
-		//if ( ! Double.valueOf(totalPrice).equals(sum) ) {
-		//    Log.error("Sub-Total value is different than sum of price per product type");
-		//}
-	    }
+		/**
+		 * Adds product {} to the cart.
+		 *
+		 * @param productName  name or value from storage
+		 *
+		 */
+		@And("^add product (.*) to cart$")
+		public void add_product_to_cart(String productName) {
+			String input = StepCore.checkIfInputIsVariable(productName);
+			product.addToCart(input);
+		}
+
+		/**
+		 * navigates to Checkout page
+		 */
+		@And("^navigate to checkout page$")
+		public void navigate_to_checkout_page() {
+			checkout = product.goToCheckout();
+		}
+
+
+		/**
+		 * Verifies that SubTotal field equals sub of total price per product type
+		 * on Checkout page.
+		 *
+		 * Attaches screenshot to the report
+		 */
+		@Then("^verify that SubTotal value equals sum of totals per product type$")
+		public void verify_sum_of_totals_per_product_type_equals_subTotal() {
+			String totalPrice = checkout.getTotalPrice();
+			ArrayList<String> totalPerProductType = checkout.getTotalPricePerProduct();
+
+			Double sum = 0d;
+			for(String price : totalPerProductType){
+				sum = sum + Double.valueOf(price);
+			}
+
+			byte[] screenshot = PageCore.takeScreenshot();
+			StepCore.attachScreenshotToReport("Checkout_Products_Price_View", screenshot);
+
+			Log.debug("Sum per product type is " + sum);
+			Log.debug("Sub-Total is " + totalPrice);
+
+			assertEquals("Sub-Total value is different than sum of price per product type",
+				Double.valueOf(totalPrice),
+				sum);
+
+			if ( ! Double.valueOf(totalPrice).equals(sum) ) {
+				Log.error("Sub-Total value is different than sum of price per product type");
+			}
+		}
 	}
 	
 Again we need to pass ctx object to the constructor and later on we can just call methods defined in each Page model.
@@ -2063,21 +2013,10 @@ Please note that the web browser has to be explicitly open using step open brows
      * Opens browser of particular type as defined in the environment configuration
      */
     @Given("^open browser$")
-    public void open_browser() throws Throwable {
-        Log.info("* Step started open_browser");
-
-	//create new selenium web driver
-        EventFiringWebDriver driver = new DriverFactory(ctx).create();
-        ctx.Object.put("Page", EventFiringWebDriver.class, driver);
-
-	//initiate PageCore module
-        PageCore pageCore = new PageCore(ctx);
-        ctx.Object.put("PageCore", PageCore.class, pageCore);
-        Log.debug("Web driver created");
-    }
+    public void open_browser(){...}
 
 As can be see the main purpose of this step is to create new selenium web driver that can be used in tests.
-Browser type can be provided via configuration. For details please see parameters mentioned below in src/test/java/config/framework/framework.config as well as in src/test/java/config/environment/default.config
+Browser type can be provided via configuration. For details please see parameters mentioned below in src/config/framework/framework.config as well as in src/config/environment/default.config
 
 	Environment={
 
@@ -2123,15 +2062,14 @@ It is also possible to provide browser width and height. To indicate max dimensi
 
 How to write POM for windows UI automation?
 
-In exactly same way like in case of POM. Except we do not need to uase BasePage any more.
+In exactly same way like in case of web POM. Except we do not need to uase BasePage any more instead we can use BaseApp.
 We can use WiniumCore to search/await or interact with any elements of the Gui.
 
 What is different in comparison to web automation? Main difference is that apps can run on local host or remote host. In case remote host is in use we need to setup and remove connection (RDP/VNC) that will open windows os desktop.
 This can also be done using WiniumCore and WinRSCore combaintation. Please see an example below.
 
 	@Given("^on remote host (.+) login to an app as user (.+) with password (.+)$")
-	public void on_remote_host_login_to__an_app(String node, String user, String pass) throws Throwable {
-		Log.info("* Step started on_remote_host_login_to__an_app");
+	public void on_remote_host_login_to__an_app(String node, String user, String pass) {
 
 		String pathToApp = "C:\\path_to_my_app\\start_app.exe";
 
@@ -2144,16 +2082,42 @@ This can also be done using WiniumCore and WinRSCore combaintation. Please see a
 
 		WiniumCore.startApp(node, pathToApp, "");
 
-		login = new AnAppLoginPage(ctx);
+		login = new AnAppLoginPage();
 		main = login.loginToAnApp(user, pass);
 
 	}
 
-	Please note that startApp method gets a node parameter which poinst to remote host configured in WinRM.config. If an app shall be started on the tester's workstation "localhost" or empty string "" shall be passed.
+	Please note that startApp method gets a node parameter which poinst to remote host configured in WinRM.config. If an app shall be started on the tester's workstation please use step like below
+	
+	 /**
+     * Opens a gui app on a windows host without additional arguments
+     *
+     * @param pathToApp String, path to the executable file
+     */
+    @Given("^open an app from (.+) with args (.+)")
+    public void open_an_app_from(String pathToApp, String args) {
+        ExecutorCore.startApp(pathToApp, args);
+        StepCore.sleep(2);
+    }
+	
+	In case an app shall be open on a remote host following step can be used
+	
+	 /**
+     * Opens a gui app on a windows remote host without additional arguments
+     *
+     * @param node String,
+     * @param pathToApp String, path to the executable file
+     */
+    @Given("^on remote host (.+) open an app from (.+)")
+    public void on_remote_host_open_an_app_from(String node, String pathToApp) {
+        WinRSCore.startApp(node, pathToApp, "");
+    }
+	
+	
 	Any additional parameters that shall be passed to an *.exe file can be providedas a third input for startApp method.
 	
 Second thing that is different in comparison to web ui automation is the fact that we have to inspect UI elements using a dedicated application called inspector. It is part of windows sdk and can be downloaded from https://developer.microsoft.com/en-us/windows/downloads/sdk-archive.
-Please use version released for windows 8.1 For windows 10 Appium instead of Winium shall be used.
+Please use version released for windows 8.1 For windows 10 it is better to use Appium instead of Winium.
 After installation with default settings inspect.exe can be found in C:\Program Files (x86)\Windows Kits\8.1\bin\x86 directory.
 
 As locators user can use xpaths, automation ids, classes etc... exactly like in case of web UI automation.	
@@ -2204,7 +2168,7 @@ Please find below an example of step used to build rest post request with json b
      * ValidatableResponse is available as a context Object with name response.
      *
      * Uses following objects:
-     *  ctx.Object.response
+     *  scenarioCtx.response
      *  Environment.Active.Rest.url
      *  Environment.Active.Rest.url_post_suffix
      *
@@ -2212,18 +2176,17 @@ Please find below an example of step used to build rest post request with json b
      */
     @When("^json post request (.*?) is sent$")
     public void json_post_request_is_sent(String name) {
-        Log.info("* Step started json_post_request_is_sent");
 
-	//read url base
+		//read url base
         String url = Storage.get("Environment.Active.Rest.url");
         
-	//read url path
-	String path = Storage.get("Environment.Active.Rest.url_post_suffix");
+		//read url path
+		String path = Storage.get("Environment.Active.Rest.url_post_suffix");
 
-	//build url from base and path because it can be different for each kind of request post/put/get/delete etc.
+		//build url from base and path because it can be different for each kind of request post/put/get/delete etc.
         url = url + path;
 
-	//inject values to the the template
+		//inject values to the the template
         File file = StepCore.evaluateTemplate(name);
 
         //build request specification and use file template as a body content, add http headers if any are required here
@@ -2241,7 +2204,7 @@ Please find below an example of step used to build rest post request with json b
 
         //store response as ctx object so it can be verified by other steps and attach it to the report
         ValidatableResponse vResp = response.then(); 
-	ctx.Object.put("response",ValidatableResponse.class, vResp);
+		scenarioCtx.put("response",ValidatableResponse.class, vResp);
         StepCore.attachMessageToReport("Json response", response.prettyPrint().toString());
     }
 
@@ -2267,7 +2230,7 @@ In case of soap we can build the request in this way
      * ValidatableResponse is available as a context Object with name response.
      *
      * Uses following objects:
-     *  ctx.Object.response
+     *  scenarioCtx.response
      *  Environment.Active.Rest.url
      *
      * @param name, String, name of the template that contains http body of the request
@@ -2275,17 +2238,16 @@ In case of soap we can build the request in this way
      */
     @When("^xml post request (.*?) with soap action header (.*?) is sent$")
     public void xml_post_request_is_sent(String name, String actionHeader) {
-        Log.info("* Step started xml_post_request_is_sent");
 
-	//in case multiple services are present each will have its own url available
+		//in case multiple services are present each will have its own url available
         String url = Storage.get("Environment.Active.Rest.url");
         
-	//inject values to the template
-	File file = StepCore.evaluateTemplate(name);
+		//inject values to the template
+		File file = StepCore.evaluateTemplate(name);
         String sFile = FileCore.readToString(file);
 	 
-	//add action header or any other http headers if required
-	String sAction = StepCore.checkIfInputIsVariable(actionHeader);
+		//add action header or any other http headers if required
+		String sAction = StepCore.checkIfInputIsVariable(actionHeader);
        
         //build specification and use file template as a body content
         RequestSpecification request = given()
@@ -2303,7 +2265,7 @@ In case of soap we can build the request in this way
 
         //store response as ctx object so it can be verified by other steps and attach it to report
         ValidatableResponse vResp = response.then();
-        ctx.Object.put("response",ValidatableResponse.class, vResp);
+        scenarioCtx.put("response",ValidatableResponse.class, vResp);
         StepCore.attachMessageToReport("Xml response", response.prettyPrint().toString());
     }
 
@@ -2340,22 +2302,11 @@ In case we would like to trigger any other request like get we have to change th
      */
     @Given("^service is available$")
     public void service_is_available() {
-        Log.info("* Step started service_is_available");
 
         String url = Storage.get("Environment.Active.Rest.url");
         Long statusCode = Storage.get("Expected.statusOK");
         Integer expectedCode = statusCode.intValue();
-        try {
-            given()
-                .when()
-                .log()
-                .all()
-                .get(url)
-                    .then()
-                    .statusCode(expectedCode);
-        } catch (AssertionError e) {
-            Log.error("", e);
-        }
+        given().when().log().all().get(url).then().statusCode(expectedCode);
     }
 
 
@@ -2439,19 +2390,11 @@ Another example is available below
 		
 Step "verify that rest response has" is part of CoreSteps and implements just few checks that seems to be most useful. Other checks can be added in the future when needed. It is interesteing because it uses a data table to pass multiple parameters to it. It is implemented as follows.
 
-    /**
-     * Verifies that particular key xml/json body response contains expected value
-     * Multiple different comparisons can be executed. Following actions are supported
-     * equalTo, containsString, containsInAnyOrder, greaterThan, lessThan
-     *
-     * @param table, DataTable, it shall contains 3 columns key, action, expected
-     */
     @Then("^verify that rest response has$")
     public void verify_that_response_has(List<Map<String, String>> table) {
-        Log.info("* Step started verify_that_response_has");
 
-	//get json or xml response
-        Response response = ctx.Object.get("response",Response.class);
+		//get json or xml response
+        Response response = scenarioCtx.get("response",Response.class);
         ValidatableResponse vResp = response.then();
 
         //get rows
@@ -2534,7 +2477,7 @@ Following configuration is used
             );
         }
 
-User can change it if needed for a particular project. To do so please edit following parameters in configuration file, for example under src/test/java/config/environment/default.config. Default settings are visible below.
+User can change it if needed for a particular project. To do so please edit following parameters in configuration file, for example under src/config/environment/default.config. Default settings are visible below.
 
 	Environment:{
 
@@ -2625,7 +2568,6 @@ Now we just need to write a step that will read the content of csv and load it t
 
     @When("^data from (.*?) csv file is loaded to table (.*?)$")
     public void data_from_csv_file_is_loaded(String fileName, String tableName){
-        Log.info("* Step started data_from_csv_file_is_loaded");
 
         File input = new File(FileCore.getCurrentFeatureDirPath() + "/input/" +fileName+".csv");
         SqlCore.insertFromFile(input,tableName,true, "TestData."+fileName+"TypeMapping");
@@ -2637,18 +2579,11 @@ Before we can load the data dB connection have to be open. For this we will use 
      * Opens jdbc connection to database
      */
     @Given("^open db$")
-    public void open_db() throws Throwable {
-        Log.info("* Step started open_db");
-
-        Connection connection = new DBConnector(ctx).create();
-        ctx.Object.put("Sql", Connection.class, connection);
-
-        SqlCore sqlCore = new SqlCore(ctx);
-        ctx.Object.put("SqlCore", SqlCore.class, sqlCore);
-        Log.debug("Connected to the data base");
+    public void open_db() {
+        ...
     }
     
-It will open a new resource (connection) towards selected dB. Db can be set via environment configruation. See parameters mentioned below in src/test/java/config/framework/framework.config as well as src/test/java/config/environment/default.config
+It will open a new resource (connection) towards selected dB. Db can be set via environment configruation. See parameters mentioned below in src/config/framework/framework.config as well as src/config/environment/default.config
  
 	Environment={
 
@@ -2676,14 +2611,13 @@ Now let's try to execute a simple select statement to extract previously inserte
 
     @When("^simple select is executed$")
     public void simple_select_is_executed_with_db_utils(){
-        Log.info("* Step started simple_select_is_executed");
 
         List<Map<String,Object>> list = SqlCore.selectList("SELECT * FROM Dept");
 
         SqlCore.printList(list);
         File results = SqlCore.writeListToFile(list,"SqlResult","txt");
 
-        ctx.Object.put("SqlResults",File.class, results);
+        scenarioCtx.put("SqlResults",File.class, results);
     }
     
 Results will be stored as ctx Object SqlResults for validation pruposes which can be done by other step def. They will be printed to the console and to a file for the purpose of template comparison.
@@ -2691,8 +2625,7 @@ To make writing of such steps as simple as possible please use SqlCore module.
 Becuase our data set is very small we will use template compariosn
 
     @Then("^validate that result is like (.*)$")
-    public void validate_that_result_is_like(String templateName) throws Throwable {
-        Log.info("* Step started validate_that_result_is_like");
+    public void validate_that_result_is_like(String templateName) {
 
         File toCompare = ctx.Object.get("SqlResults",File.class);
         String path = toCompare.getAbsolutePath();
@@ -2751,8 +2684,7 @@ where file structure is like
 Our "execute sample command" step def can look like
 
     @Given("^execute sample command$")
-    public void execute_sample_command() throws Throwable {
-        Log.info("* Step started execute_sample_command");
+    public void execute_sample_command() {
 
         String cmd = "java -version";
 
@@ -2789,8 +2721,7 @@ File structure is
 Steps that are used can look like follows
 
     @Given("^new text file is created$")
-    public void new_text_file_is_created() throws Throwable {
-        Log.info("* Step started new_text_file_is_created");
+    public void new_text_file_is_created() {
 
         String cmd = "powershell.exe " +
                 "\"$stream = [System.IO.StreamWriter] " +
@@ -2801,7 +2732,7 @@ Steps that are used can look like follows
 
         File workingDir = FileCore.createTempDir();
         String sWorkingDirPath = workingDir.getAbsolutePath();
-        ctx.Object.put("WorkingDir", String.class, sWorkingDirPath);
+        scenarioCtx.put("WorkingDir", String.class, sWorkingDirPath);
 
         ByteArrayOutputStream out = ExecutorCore.execute(cmd, workingDir, 10, true);
 
@@ -2812,10 +2743,9 @@ Steps that are used can look like follows
 As can be seen step "new test file is created" will create w temporary directory and call a powershell script inside. It will create a new file with 100000 lines inside.
 
     @When("^read the file$")
-    public void read_the_file() throws Throwable {
-        Log.info("* Step started read_the_file");
+    public void read_the_file(){
 
-        String path = ctx.Object.get("WorkingDir", String.class);
+        String path = scenarioCtx.get("WorkingDir", String.class);
         String cmd = "powershell.exe 'Get-Content -Path " + path + "\\t2.txt'";
 
         File workingDir = FileCore.createTempDir();
@@ -2847,8 +2777,7 @@ ExecutorCore can be used to run 3rd party apps like autoIT framework which can b
 Step def can be implemented like below.
 
     @And("^pause execution$")
-    public void pause_execution() throws Throwable {
-        Log.info("* Step started pause execution");
+    public void pause_execution() {
 
         File workingDir = FileCore.createTempDir();
         String autoItPath = Storage.get("Environment.Active.apps.autoIt");
@@ -2868,8 +2797,7 @@ Step def can be implemented like below.
 Another possibility is to use ExecutorCore to trigger winRS, a command line winRM client from Microsoft. Let us have a look at an example step def that shows how this can be done.
 
     @Given("^execute via WinRS on node (.+)$")
-    public void execute_via_WinRS_on_node(String node) throws Throwable {
-        Log.info("* Step started execute_via_WinRS_on_node");
+    public void execute_via_WinRS_on_node(String node) {
 
         File workingDir = FileCore.createTempDir();
 
@@ -2911,8 +2839,7 @@ Step that reads pdf file can look like this
      * @param pathToFile, String, path to pdf file
      */
     @Given("^read pdf file from (.+)$")
-    public void read_pdf_file_from(String pathToFile) throws Throwable {
-        Log.info("* Step started read_pdf_file_from");
+    public void read_pdf_file_from(String pathToFile) {
 
         String path = StepCore.checkIfInputIsVariable(pathToFile);
 
@@ -2951,7 +2878,7 @@ Usage of ssh/scp/sftp
 
 
 User can use ssh to execute commands on remote unix hosts. Scp can be used to transfer files between tester's workstation and sytsem under test as well as sftp/ftp.
-To use this feature we have to define ssh nodes in the configruation. Configuration is flat. This means that for each node we shall have a seperate entry in the config file. See an excerpt from /src/test/java/config/environment/ssh.config below.
+To use this feature we have to define ssh nodes in the configruation. Configuration is flat. This means that for each node we shall have a seperate entry in the config file. See an excerpt from /src/config/environment/ssh.config below.
 
 	Ssh: {
 	    node1: {
@@ -2983,8 +2910,7 @@ Feature file is
 Step implementation is available below
 
     @When("^list files in users home directory$")
-    public void list_files_in_users_home_directory() throws Throwable {
-        Log.info("* Step started list_files_in_users_home_directory");
+    public void list_files_in_users_home_directory() {
 
         String singleCmd = "ls";
 
@@ -3013,8 +2939,7 @@ Feature file is
 Where step can be implemeted like below
 
     @When("^switch user to root$")
-    public void switch_user_to_root() throws Throwable {
-        Log.info("* Step started switch_user_to_root");
+    public void switch_user_to_root() {
 
         String userChangeCmd = "su - root";
         String passOfUserCmd = "vagrant";
@@ -3049,8 +2974,7 @@ Feature file is
 Step can be implemented like below.
 
     @When("^check that file exists on remote node$")
-    public void check_that_file_exists_on_remote_node() throws Throwable {
-        Log.info("* Step started check_that_file_exists_on_remote_node");
+    public void check_that_file_exists_on_remote_node() {
 
         Log.debug("Check that node is alive");
         Boolean isAlive = SshCore.checkThatNodeIsAlive("node1");
@@ -3090,7 +3014,7 @@ Usage of winRM
 To manage windows hosts one can use capabiliteis of winRM. From the end user point of view it works similar to ssh on unix. It allows to execute command on remote hosts and transfer files.
 
 
-To use this feature we have to define winRM nodes in the configruation. Configuration is flat. This means that for each node we shall have a seperate entry in the config file. See an excerpt from /src/test/java/config/environment/winrm.config below.
+To use this feature we have to define winRM nodes in the configruation. Configuration is flat. This means that for each node we shall have a seperate entry in the config file. See an excerpt from /src/config/environment/winrm.config below.
 
 	WinRM: {
 	    node1: {
@@ -3111,8 +3035,7 @@ Currently winRMCore supports just few authentication methods like NTLM, Basic an
 Let us have a look how we can implement a simple step def that uses winRM capabilities.
 
     @Given("^windows host (.+) is alive$")
-    public void windows_host_is_alive(String hostName) throws Throwable {
-        Log.info("* Step started windows_host_is_alive");
+    public void windows_host_is_alive(String hostName) {
 
         String cmd = "Write-Host " + hostName + " is alive";
 
@@ -3142,8 +3065,7 @@ Please note that there are methods available that can create a script from a str
 See an example below to better understand how to mount a network share and copy a file from it.
 
     @Given("^mount path (.+) as network drive (.+) via WinRS on remote node (.+)$")
-    public void mount_path_as_network_drive_via_WinRS_on_remote_node(String path, String drive, String host) throws Throwable {
-        Log.info("* Step started mount_path_as_network_drive_via_WinRS_on_remote_node");
+    public void mount_path_as_network_drive_via_WinRS_on_remote_node(String path, String drive, String host) {
 
         path = "\\\\localhost\\c$\\Users\\vagrant\\Music";
 
@@ -3293,16 +3215,20 @@ First we need to set a variable which contains path to the images we would like 
 
 Now we can instansiate Screen object like below.
 
-	Screen screen = new Screen();
-	Log.debug("About to click into the image Icon1.png");
-	Integer sw = screen.getBounds().width;
-	Integer sh = screen.getBounds().height;
-	Log.debug("Screen size is " + sw + " x " + sh);
-	screen.setRect(sw-sw/3,0,sw/3, sh).highlight().wait(new Pattern(pathToImages + "Icon1.png").similar(0.7f), 5);
-	screen.setRect(sw-sw/3,0,sw/3, sh).highlight().hover(new Pattern(pathToImages + "Icon1.png").similar(0.7f));	
-	StepCore.sleep(1);
-	screen.setRect(sw-sw/3,0,sw/3, sh).highlight().doubleClick();
-	StepCore.sleep(1);
+		Screen screen = new Screen();
+
+		Log.debug("About to click into the image Icon1.png");
+	
+		Integer sw = screen.getBounds().width;
+		Integer sh = screen.getBounds().height;
+		Log.debug("Screen size is " + sw + " x " + sh);
+		
+		screen.setRect(sw-sw/3,0,sw/3, sh).highlight().wait(new Pattern(pathToImages + "Icon1.png").similar(0.7f), 5);
+		screen.setRect(sw-sw/3,0,sw/3, sh).highlight().hover(new Pattern(pathToImages + "Icon1.png").similar(0.7f));
+		
+		StepCore.sleep(1);
+		screen.setRect(sw-sw/3,0,sw/3, sh).highlight().doubleClick();
+		StepCore.sleep(1);
 
 As can be seen we can extract information about screen size and use it to reduce screen part which shall be checked by sikuli.
 It is nice to indicate that screen part to the user using red border. 
