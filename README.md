@@ -137,46 +137,46 @@ How can we use test automation framework?
 
 Please find below list of libraries/plugins/software used for automation and their current versions. 
 
-Name, Version,  License 
-Java JDK, 1.8, Oracle Binary Code License 
-Maven, 3.5.2, Apache License Version 2.0 
-IntelliJ IDEA CE, 2018.2.3, Apache License Version 2.0 
-Cucumber for Java Plugin for IntelliJ, 182.3934, Apache License Version 2.0 
-cucumber-java, 3.0.2, MIT License 
-cucumber-junit, 3.0.2, MIT License 
-Selenium-java, 3.14.0, Apache License Version 2.0 
-Log4j-core, 2.11.1, Apache License Version 2.0 
-Log4j-iostreams, 2.11.1, Apache License Version 2.0 
-Slf4j-nop, 1.7.25, MIT License 
-Rest-assured, 3.1.1, Apache License Version 2.0 
-Json-path, 3.1.1, Apache License Version 2.0 
-Xml-path, 3.1.1, Apache License Version 2.0 
-commons-lang3, 3.8, Apache License Version 2.0 
-commons-io, 2.6, Apache License Version 2.0 
-commons-dbutils, 1.7, Apache License Version 2.0 
-commons-exec, 1.3, Apache License Version 2.0 
-pdfbox, 2.0.11, Apache License Version 2.0 
-opencsv, 4.2, Apache License Version 2.0 
-sshj, 0.26.0, Apache License Version 2.0 
-expectit-core, 0.9.0, Apache License Version 2.0 
-winrm4j, 0.5.0, Apache License Version 2.0 
-allure-cucumber3-jvm, 2.7.0, Apache License Version 2.0 
-allure-maven, 2.9, Apache License Version 2.0 
-winium-webdriver, 0.1.0-1, Mozilla Public License 2.0 
-winium-elements-desktop, 0.2.0-1, Mozilla Public License 2.0 
-sikuliXApi, 1.1.1, MIT License
-gson, 2.8.5, Apache License Version 2.0
-Maven-surefire-plugin, 2.20, Apache License Version 2.0 
-aspectjweaver, 1.8.10, Eclipse Public License - v 1.0 
-Maven-compiler-pluign, 3.7.0, Apache License Version 2.0 
-Jetty-maven-pluign, 9.2.10.v20150310, Apache License Version 2.0 
-Allure-maven-plugin, 2.5, Apache License Version 2.0 
-Jtds (jdbcDriver), 1.3.1, GNU LGPL 
-Chrome.Driver, 2.42, BSD 3-Clause "New" or "Revised" License 
-Winium.Desktop.Driver, 1.6.0, Mozilla Public License 2.0 
-7zip, 9.2.0, GNU LGPL + BSD 3-clause 
-Jenkins (standard install plugin set + PostBuildScript, Sidebar Link plugins), 2.138.1, MIT License 
-Artifactory, 6.0.2, GNU Affero GPL v3 
+	Name, Version,  License 
+	Java JDK, 1.8, Oracle Binary Code License 
+	Maven, 3.5.2, Apache License Version 2.0 
+	IntelliJ IDEA CE, 2018.2.3, Apache License Version 2.0 
+	Cucumber for Java Plugin for IntelliJ, 182.3934, Apache License Version 2.0 
+	cucumber-java, 3.0.2, MIT License 
+	cucumber-junit, 3.0.2, MIT License 
+	Selenium-java, 3.14.0, Apache License Version 2.0 
+	Log4j-core, 2.11.1, Apache License Version 2.0 
+	Log4j-iostreams, 2.11.1, Apache License Version 2.0 
+	Slf4j-nop, 1.7.25, MIT License 
+	Rest-assured, 3.1.1, Apache License Version 2.0 
+	Json-path, 3.1.1, Apache License Version 2.0 
+	Xml-path, 3.1.1, Apache License Version 2.0 
+	commons-lang3, 3.8, Apache License Version 2.0 
+	commons-io, 2.6, Apache License Version 2.0 
+	commons-dbutils, 1.7, Apache License Version 2.0 
+	commons-exec, 1.3, Apache License Version 2.0 
+	pdfbox, 2.0.11, Apache License Version 2.0 
+	opencsv, 4.2, Apache License Version 2.0 
+	sshj, 0.26.0, Apache License Version 2.0 
+	expectit-core, 0.9.0, Apache License Version 2.0 
+	winrm4j, 0.5.0, Apache License Version 2.0 
+	allure-cucumber3-jvm, 2.7.0, Apache License Version 2.0 
+	allure-maven, 2.9, Apache License Version 2.0 
+	winium-webdriver, 0.1.0-1, Mozilla Public License 2.0 
+	winium-elements-desktop, 0.2.0-1, Mozilla Public License 2.0 
+	sikuliXApi, 1.1.1, MIT License
+	gson, 2.8.5, Apache License Version 2.0
+	Maven-surefire-plugin, 2.20, Apache License Version 2.0 
+	aspectjweaver, 1.8.10, Eclipse Public License - v 1.0 
+	Maven-compiler-pluign, 3.7.0, Apache License Version 2.0 
+	Jetty-maven-pluign, 9.2.10.v20150310, Apache License Version 2.0 
+	Allure-maven-plugin, 2.5, Apache License Version 2.0 
+	Jtds (jdbcDriver), 1.3.1, GNU LGPL 
+	Chrome.Driver, 2.42, BSD 3-Clause "New" or "Revised" License 
+	Winium.Desktop.Driver, 1.6.0, Mozilla Public License 2.0 
+	7zip, 9.2.0, GNU LGPL + BSD 3-clause 
+	Jenkins (standard install plugin set + PostBuildScript, Sidebar Link plugins), 2.138.1, MIT License 
+	Artifactory, 6.0.2, GNU Affero GPL v3 
 
 
 ----------------------------------
@@ -568,7 +568,7 @@ If test runs fine via mvn test command but not using IntelliJ this indicates mis
 
 To generate a report from test please execute 'mvn site -s setting.xml'. After this command execute 'mvn jetty:run -s setting.xml' to run jetty. Check the report in the browser under http://localhost:port (default port is 8082).
 
-It is possible to overwrite active_env property from the command line. In that case project specific config as specified by the CMD argument will be used during test execution. To do so please execute a test for example like below
+It is possible to overwrite active environment name property property from the command line. In that case project specific config as specified by the CMD argument will be used during test execution. To do so please execute a test for example like below
 
 	mvn clean test -s setting.xml -fae -Dctx.Environment.Active.name="bookByIsbn" -Dcucumber.options="--tags @bookByIsbn"
 
@@ -811,7 +811,7 @@ Expected data is defind as config/expected.config
 
 Test structure is
 
-	resources/features/Rest/GetBookByIsbn/
+		features/Rest/GetBookByIsbn/
 						config/
 							testdata.config
 							expected.config
