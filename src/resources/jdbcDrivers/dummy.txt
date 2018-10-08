@@ -1,1 +1,1 @@
-put here any jdbc drivers that shall be used
+add here jdbc drivers

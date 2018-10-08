@@ -3,8 +3,8 @@ Feature: test1
   Search for a specific sentence using google
 
   Background:
-    Given configuration data from "Web\test1\test1.config" is loaded
-      And macro evaluation is done
+    Given load configuration data from "Web\test1\test1.config"
+      And evaluate macros
 
   @storageTest
   Scenario: Test search 1

@@ -34,7 +34,7 @@ public class ReqResInSteps extends BaseSteps {
      * Triggers http get request with variable path
      * ValidatableResponse is available as a context Object with name response.
      */
-    @When("^json get single user with id (.+) is sent$")
+    @When("^json get request single user with id (.+) is sent$")
     public void json_get_request_is_sent(String id){
         String url = Storage.get("Environment.Active.Rest.url");
         String path = Storage.get("Environment.Active.Rest.url_get_suffix");

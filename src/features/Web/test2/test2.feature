@@ -3,8 +3,8 @@ Feature: test2
   Second search for a specific sentence using google
 
   Background:
-    Given configuration data from "Web\test2\test2.config" is loaded
-      And macro evaluation is done
+    Given load configuration data from "Web\test2\test2.config"
+    And evaluate macros
 
   Scenario: Test search 2
     Given open browser

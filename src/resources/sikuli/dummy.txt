@@ -1,1 +1,1 @@
-put here any images used by Sikuli
+add here images that can be used by Sikuli

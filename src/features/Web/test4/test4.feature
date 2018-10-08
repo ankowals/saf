@@ -6,8 +6,8 @@ Feature: test4
   @SeverityLevel.BLOCKER @TestCaseId("example-99")
   Scenario: Test search 4
     Given open browser
-      And configuration data from "Web\test4\test4.config" is loaded
-      And macro evaluation is done
+      And load configuration data from "Web\test4\test4.config"
+      And evaluate macros
     When I open google page
     Then I check for input element
        And I search for text TestData.wartosc_dla_wyszukiwarki
@@ -16,8 +16,8 @@ Feature: test4
   @smoke
   Scenario: Test search 5
     Given open browser
-      And configuration data from "Web\test4\test45.config" is loaded
-      And macro evaluation is done
+      And load configuration data from "Web\test4\test45.config"
+      And evaluate macros
     When I open google page
     Then I check for input element
       And I search for text

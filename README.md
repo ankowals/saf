@@ -68,12 +68,11 @@ Where are we?
 	
 	----------------------------------	
 		
-	ToDo before 1.0:		
-		1) integrate Appium	   			   
-		2) prepare step to trigger IE via autoIT script to handle windows authentication with Selenium (autoIT script available)	
-		3) move documentation to pdf file and wiki, add screenshots of test executed in cmd as well as in IDE, add screenshots of tests reports as well as tests logs
-		4) add git usage documentation (documnetation almost complete) and xpath creation documentation (documentation available)
-		5) describe how to extract table content and parse it to a list of maps using jsoup lib
+	ToDo before 1.0:		   			   
+		1) prepare step to trigger IE via autoIT script to handle windows authentication with Selenium (autoIT script available)	
+		2) move documentation to pdf file and wiki, add screenshots of test executed in cmd as well as in IDE, add screenshots of tests reports as well as tests logs
+		3) add git usage documentation (documnetation almost complete) and xpath creation documentation (documentation available)
+		4) describe how to extract table content and parse it to a list of maps using jsoup lib
 
 	----------------------------------	
 
