@@ -123,39 +123,6 @@ public class Storage {
         return Storage;
     }
 
-     /**
-     * returns type of value
-     * helper function
-     *
-     * @param value object value
-     *
-     * @return type of value
-     */
-    private <T> Class<?> getType(T value){
-        if(value.getClass().getName().contains("String")){
-            return String.class;
-        }
-        if(value.getClass().getName().contains("Double")){
-            return Double.class;
-        }
-        if(value.getClass().getName().contains("Integer")){
-            return Integer.class;
-        }
-        if(value.getClass().getName().contains("Long")){
-            return Long.class;
-        }
-        if(value.getClass().getName().contains("ArrayList")){
-            return ArrayList.class;
-        }
-        if(value.getClass().getName().contains("HashMap")){
-            return HashMap.class;
-        }
-        if(value.getClass().getName().contains("Boolean")){
-            return Boolean.class;
-        }
-        Log.error("Type of object " + value.getClass().getName() + " not supported!");
-        return null;
-    }
 
     /**
      * Prints current content of a storage with name {} to the log file

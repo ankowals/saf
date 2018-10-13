@@ -60,6 +60,7 @@ Where are we?
 	
 	(in progress) a way to execute tests related to  
 		(to do) - mobile => Appium integration
+		(to do) - better Sikuli integration for image based automation
 
 		(to do) a way to downlaod any 3rd party symptoms from SUT like logs, trace files (create step def to run tcpdump on unix hosts or tshark/rawCap on windows hosts)
 		(to do) a way to monitor and indicate quality of committed tests (see SonarQube for example )
@@ -71,7 +72,7 @@ Where are we?
 	ToDo before 1.0:		   			   
 		1) prepare step to trigger IE via autoIT script to handle windows authentication with Selenium (autoIT script available)	
 		2) move documentation to pdf file and wiki, add screenshots of test executed in cmd as well as in IDE, add screenshots of tests reports as well as tests logs
-		3) add git usage documentation (documnetation almost complete) and xpath creation documentation (documentation available)
+		3) add git usage documentation (documentation almost complete) and xpath creation documentation (documentation available)
 		4) describe how to extract table content and parse it to a list of maps using jsoup lib
 
 	----------------------------------	
@@ -101,7 +102,7 @@ What is done?
 	(done) a way to manage resources (make sure that open connections will be closed when test is over) => via RestAssured config and closing of ssh, winrm, jdbc, web driver in scenario hooks
 	(done) a way to execute any command on remote host over ssh/winRM
 		(done) ssh/scp/sftp support => sshj library integrated and expectit-core library integrated
-		(done) winRM support => winRm4j library integrated and winRS can be called via ExecutorCore	
+		(done) winRM support => winRm4j library integrated and winRS can be called via ExecutorCore and WinRSCore	
 	(done) a way to schedule test execution (see Jenkins/TeamCity) => Jenkins integration description available in the readme file
 	
 ----------------------------------
@@ -123,12 +124,12 @@ How can we use test automation framework?
 	to use automated equipment for any not strictly test related activities like for example automate mobile phones to detect changes in the offer from a telco operator:)
 	
 	load generation/performance checks are out of scope
-	parallel test execution is out of scope for now
+	parallel test execution is out of scope for now (shall be simple to add with Cucumber 4.x)
 	
-	For parallel test execution one can use capabilities of framework or better use multiple VMs to deploy multiple SUTs, framework instances (copies of the same project), scheduler instances etc... 
+	For parallel test execution one can use capabilities of framework or better use multiple VMs to deploy multiple SUTs or framework instances (copies of the same project), CI instances/jobs instances etc... 
 	in that case it has to be ensured that tests are separated from each other 
 		- subsequent test does not depend on the result of previous test 
-		- tests are using separate test data/config data (do not operate on the same config data at the same time to avoid concurrent modification)
+		- tests are using separate test data/config data (do not operate on the same config data at the same time to avoid concurrent modification, using unique identifiers in test data)
 
 
 ----------------------------------
@@ -219,11 +220,11 @@ Optionally user can execute steps below. Especially for web automation case or j
 	7 install git ( download from https://git-scm.com/download/win )
 	8 clone the repo for example to C:\Documents\Projects\SAF	
 	9 download Selenium Chrome driver and other drivers if needed ( download from https://sites.google.com/a/chromium.org/chromedriver/downloads )
-	10 put web drivers in <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
+	10 put web drivers in <project dir>\src\resources, for example in C:\Documents\Projects\SAF\src\resources
 	11 download JDBC oracle driver and other drivers if needed ( download from http://www.oracle.com/technetwork/apps-tech/jdbc-112010-090769.html ) 
-	12 put odbc drivers in <project dir>\src\test\java\resources, for example in C:\Documents\Projects\SAF\src\test\java\resources
-	13 Fix relative path (relative to project dir) to web drivers in \src\test\java\config\framework\framework.config
-	14 Fix relative path (relative to project dir) path to jdbc drivers in \src\test\java\config\framework\framework.config
+	12 put odbc drivers in <project dir>\src\resources, for example in C:\Documents\Projects\SAF\src\resources
+	13 Fix relative path (relative to project dir) to web drivers in \src\config\framework\framework.config
+	14 Fix relative path (relative to project dir) path to jdbc drivers in \src\config\framework\framework.config
 	15 Install autoIt ( download from https://www.autoitscript.com/site/autoit/downloads/ )
 
 
@@ -247,10 +248,11 @@ Set basic project environment properties in setting.xml file
 		</properties> 
  
 	3 optionally add private maven repository to active profile in setting.xml or in pom.xml (see how to add private maven repository chapter for more details)
+
 	
-	REMARK: at any point in time user can instruct maven to import setting.xml configuration. 
-		Go File -> Settings… 	
-		Override user settings file for maven under Settings -> Build, Execution, Deployment -> Maven 
+REMARK: at any point in time user can instruct maven to import setting.xml configuration. 
+	Go File -> Settings… 	
+	Override user settings file for maven under Settings -> Build, Execution, Deployment -> Maven 
 	
 ----------------------------------
 
@@ -269,7 +271,8 @@ How to import project in IntelliJ?
 	10 add new environment variable cucumber.options under Default configuration of the plugin. 
 		It’s value shall be --plugin org.jetbrains.plugins.cucumber.java.run.CucumberJvm3SMFormatter --monochrome --plugin libs.libCore.modules.CustomFormatter  
 
-	REMARK: without additional formatter tests will not execute correctly! Please make sure that steps described in point 9 and 10 will be executed!
+		
+REMARK: without CustomFormatter plugin tests will not execute correctly! Please make sure that steps described in point 9 and 10 will be executed!
 	
 ----------------------------------
 
@@ -295,9 +298,11 @@ Dir structure shall be like this
 			- libs
 				- libCore
 					- config
+					- doc
 					- modules
-					- steps
 					- resources
+					- steps
+					- templates
 				- libProject1
 				- libProject2
 				...
@@ -312,8 +317,9 @@ Dir structure shall be like this
 
 
 
-Dir src/libs/<lib name>/modules contains methods needed to run the test. 
-Dir src/libs/<lib name>/steps contains step defs defintion and implementation.
+Dir src/libs/LIB_NAME/modules contains methods needed to run the test. 
+
+Dir src/libs/LIB_NAME/steps contains step defs defintion and implementation.
 
 
 
@@ -329,10 +335,12 @@ Dir src/config contains configuration files (*.config)
 
 Dir src/features contains features files (cotntainers for tests).
 
-Dir traget/ will be used to store results of test execution like for example test report.
+Dir traget will be used to store results of test execution like for example test report.
 
 File pom.xml contains project properties and dependencies.  It shall not be changed by the end users.
-File setting.xml contains end user project environment properties. This file can be moved outside project dir but in such case a full path to it shall be provided when calling mvn command
+
+File setting.xml contains end user project environment properties. This file can be moved outside project dir but in such case a full path to it shall be provided when calling mvn command.
+
 File project.config contains project test configuration
 
 
@@ -486,44 +494,46 @@ Every times tester’s workstation will ask to download new artifact first jcent
 In addition user can create so called local repositories. This means user has a possibility to upload particular artifacts to such local repository and it can be used in internal network only. Please use Deploy button to add local artifacts/repos. 
  
 To make use of internal repository managed by artifactory we need to re-configure maven settings on tester’s workstation. Pom.xml or setting.xml file can be updated to include following entries. 
-	<repositories> 
-		<repository>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>         
-			<id>central</id>         
-			<name>libs-release</name>         
-			<url>http://<host_name>:8081/artifactory/libs-release</url>     
-		</repository>     
-		<repository>         
-			<snapshots />         
-			<id>snapshots</id>         
-			<name>libs-snapshot</name>         
-			<url>http://<host_name>:8081/artifactory/libs-snapshot</url>     
-		</repository> 
-	</repositories> 
-	<pluginRepositories>     
-		<pluginRepository>
-			<snapshots>
-				<enabled>false</enabled> 
-			</snapshots>         
-			<id>central</id>         
-			<name>libs-release</name>         
-			<url>http://<host_name>:8081/artifactory/libs-release</url>     
-		</pluginRepository>     
-		<pluginRepository>         
-			<snapshots />         
-			<id>snapshots</id>         
-			<name>libs-snapshot</name>         
-			<url>http://<host_name>:8081/artifactory/libs-snapshot</url>     
-		</pluginRepository> 
-	</pluginRepositories> 
+
+		<repositories> 
+			<repository>
+				<snapshots>
+					<enabled>false</enabled>
+				</snapshots>         
+				<id>central</id>         
+				<name>libs-release</name>         
+				<url>http://<host_name>:8081/artifactory/libs-release</url>     
+			</repository>     
+			<repository>         
+				<snapshots />         
+				<id>snapshots</id>         
+				<name>libs-snapshot</name>         
+				<url>http://<host_name>:8081/artifactory/libs-snapshot</url>     
+			</repository> 
+		</repositories> 
+		<pluginRepositories>     
+			<pluginRepository>
+				<snapshots>
+					<enabled>false</enabled> 
+				</snapshots>         
+				<id>central</id>         
+				<name>libs-release</name>         
+				<url>http://<host_name>:8081/artifactory/libs-release</url>     
+			</pluginRepository>     
+			<pluginRepository>         
+				<snapshots />         
+				<id>snapshots</id>         
+				<name>libs-snapshot</name>         
+				<url>http://<host_name>:8081/artifactory/libs-snapshot</url>     
+			</pluginRepository> 
+		</pluginRepositories> 
  
-Where <host_name> is the name of the computer where our internal repository is located. No other changes to pom.xml/setting.xml are needed. From now one maven will try to fetch artifacts from this internal repository. 
+Where host_name is the name of the computer where our internal repository is located. No other changes to pom.xml/setting.xml are needed. From now one maven will try to fetch artifacts from this internal repository. 
  
 REMARK: jcentral repository can be made offline. This means that only artifacts from its cache are going to be served. In case something is missing an error will be thrown but no connection to maven central repository will be created. Cache will not be removed when Artifactory will be killed! 
  
-To make jcentral repository local only. Please follow steps below. 
+To make jcentral repository local only. Please follow steps below.
+ 
 	1 Login as admin to Artifactory 
 	2 Open Admin menu and go to Remote Repositories 
 	3 Open jcenter 
@@ -531,7 +541,6 @@ To make jcentral repository local only. Please follow steps below.
  
  
 REMARK: Global offline mode exists as well. In this case remote repositories serve as caches only and do not proxy remote artifacts. It can be enabled by going into Admin tab under Configuration | General 
-
 
 
 --------------------------------
@@ -691,7 +700,7 @@ Description below allows to setup a new project with a job that can be started a
 
 How to allow desktop interaction?
 
-By default Jenkins run as a service under Windows host. This means it can be managed by going to services.msc. Unfortunately this will not allow for desktop interaction. This means that when a browser is open via Jenkins job or RDP session is open by Jenkins job user will not see it on the host. 
+By default Jenkins runs as a service under Windows host. This means it can be managed by going to services.msc. Unfortunately this will not allow for desktop interaction. This means that when a browser is open via Jenkins job or RDP session is open by Jenkins job user will not see it on the host. 
  
 In general this is great because it allows to use this host when jobs are getting executed without a fear that user actions like mouse clicking or typing will influence test execution. Unfortunately Sikuli usage requires desktop integration. Currently it is used to handle flash based elements in Navigator UI of Wfc. 
  
@@ -767,7 +776,7 @@ Feature files or scenarios can be tagged. Use tags ("@tagName") and cucumber opt
 
 
 
-To pass data from configruation file use test data storage name and pass field after dot. For example TestData.statusOK. Of course step def needs to support this.
+To pass data from configruation file use test data storage name and pass field after dot. For example TestData.statusOK. Of course step def needs to support this (more details below).
 
 To pass multiple parameters to the test one can use tables. Of course step def needs to support it.
 As can be seen test data/expected data can be either hardcoded in the feature file or taken from a configruation file. 
@@ -872,7 +881,7 @@ Hooks implementation can be found under src/libs/libCore/modules/CustomFormatter
 After @Before method execution cucumber-jvm will execute each step.
 
 
-Steps shall be implemented under src/libs/<lib name>/steps directory. Please use seperete package for your project steps and group them to make files management easier when project grows.
+Steps shall be implemented under src/libs/LIB_NAME/steps directory. Please use seperete package for your project steps and group them to make files management easier when project grows.
 
 There is also possibility to execute some actions before the whole test suite (a set of feature files) will be executed. There are 2 additional global hooks available. So called beforeAll and afterAll hook. They can be used to initialize logger, print system properties or try to close the resources like web drivers etc.
 Global hooks implementation can be found under src/libs/libCore/modules/CustomFormatter.class.
@@ -886,18 +895,18 @@ Each new scenario start will be indicated in the log as follows
 
 
 
-2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
-2018-09-19 20:32:19.318 [INFO ] *** Feature id: C:/Users/akowa/Documents/Projects/Cucumber2/src/features/Web/DemoOnlineShop/DemoOnlineShop.feature ***
-2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
-2018-09-19 20:32:19.318 [INFO ] 
-2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
-2018-09-19 20:32:19.318 [INFO ] *** Feature with name: DemoOnlineShop started! ***
-2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
-2018-09-19 20:32:19.318 [INFO ] 
-2018-09-19 20:32:19.318 [INFO ] 
-2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
-2018-09-19 20:32:19.318 [INFO ] *** Scenario with name: Verify sum of 2 items equals total price started! ***
-2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
+	2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
+	2018-09-19 20:32:19.318 [INFO ] *** Feature id: C:/Users/akowa/Documents/Projects/Cucumber2/src/features/Web/DemoOnlineShop/DemoOnlineShop.feature ***
+	2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
+	2018-09-19 20:32:19.318 [INFO ] 
+	2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
+	2018-09-19 20:32:19.318 [INFO ] *** Feature with name: DemoOnlineShop started! ***
+	2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
+	2018-09-19 20:32:19.318 [INFO ] 
+	2018-09-19 20:32:19.318 [INFO ] 
+	2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
+	2018-09-19 20:32:19.318 [INFO ] *** Scenario with name: Verify sum of 2 items equals total price started! ***
+	2018-09-19 20:32:19.318 [INFO ] +-------------------------------------------------------------+
 
 
 
@@ -905,10 +914,10 @@ Each new scenario start will be indicated in the log as follows
 
 
 
-2018-09-19 20:32:19.318 [INFO ] Started resources initialisation
-2018-09-19 20:32:19.333 [DEBUG] Ctx object FileCore of type class libs.libCore.modules.FileCore created or modified
-2018-09-19 20:32:19.333 [DEBUG] Ctx object Config of type class libs.libCore.modules.ConfigReader created or modified
-2018-09-19 20:32:19.333 [DEBUG] Ctx object Storage of type class libs.libCore.modules.Storage created or modified
+	2018-09-19 20:32:19.318 [INFO ] Started resources initialisation
+	2018-09-19 20:32:19.333 [DEBUG] Ctx object FileCore of type class libs.libCore.modules.FileCore created or modified
+	2018-09-19 20:32:19.333 [DEBUG] Ctx object Config of type class libs.libCore.modules.ConfigReader created or modified
+	2018-09-19 20:32:19.333 [DEBUG] Ctx object Storage of type class libs.libCore.modules.Storage created or modified
 
 
 
@@ -1110,8 +1119,8 @@ From now on in case there is a need to access any configuration parameter one ca
 Storage.get("Environment.Active.Rest.url") method returns url value from active configuration. Please note that is is assigned to variable of type String. In case Storage.get() returns other type of data than String we may encounter ClassCastException.
 	
 
-	REMARK: Please note that it is possible to pass variables into the config files. Content of storage is re-evaluated in CustomFormatter before scenario run. Please see an example below.
-			Having 2 entities like TestData.Entity1.Key1 and Environment.Active.WinRM.VM1.host user can create new third config entity dummyEntity.
+REMARK: Please note that it is possible to pass variables into the config files. Content of storage is re-evaluated in CustomFormatter before scenario run. Please see an example below.
+Having 2 entities like TestData.Entity1.Key1 and Environment.Active.WinRM.VM1.host user can create new third config entity dummyEntity.
 			
 			TestData: {
 				Entity1: {
@@ -1133,24 +1142,31 @@ Storage.get("Environment.Active.Rest.url") method returns url value from active 
 				key1: "${ctx.TestData.Entity1.Key1} is going to be used together with ${ctx.Environment.Active.WinRM.VM1.host}"
 				}	
 				
-	REMARK: Each entity visible below can be placed in a seperate configuration file!			
+REMARK: Each entity visible below can be placed in a seperate configuration file!			
+
+
 				
 How to add environment information to test report?
 
+
+
 To show anything in Environment section of test report please create following entitiy in Environment configuration.
 
-Environment:{
-    Default: {
-        WriteToReport: {
-            Key1: "This is dummy text",
-            Key2: "${ctx.TestData.This.Is.Dummy.Value.Taken.From.Config}"
+
+	Environment:{
+		Default: {
+			WriteToReport: {
+				Key1: "This is dummy text",
+				Key2: "${ctx.TestData.This.Is.Dummy.Value.Taken.From.Config}"
+				}
 			}
 		}
-	}
 
 
 
 How to add link to issue/test description available in test/issue management solution into the test report?
+
+
 
 To show links into issue or test in scenario report please add following section into the Environment configuration
 
@@ -1181,25 +1197,27 @@ Global project configuration is available under src/config/project.config direct
 Files included in it are checked and evaluated. New storage is created based on their content.
 An example of project.config file is below
 
-#include "config/framework/framework.config"
-#include "config/environment/winrm.config"
-#include "config/environment/default.config"
-#include "config/environment/active.config"
-#include "libs/libProject1/config/testdata.config"
-#include "libs/libProject2/config/testdata.config"
-#include "config/testdata/cloud.config"
-#include "config/testdata/database.config"
-#include "config/testdata/release.config"
-#include "config/testdata/testdata.config"
-#include "config/testdata/expected.config"
 
-TestData:{}
+	#include "config/framework/framework.config"
+	#include "config/environment/winrm.config"
+	#include "config/environment/default.config"
+	#include "config/environment/active.config"
+	#include "libs/libProject1/config/testdata.config"
+	#include "libs/libProject2/config/testdata.config"
+	#include "config/testdata/cloud.config"
+	#include "config/testdata/database.config"
+	#include "config/testdata/release.config"
+	#include "config/testdata/testdata.config"
+	#include "config/testdata/expected.config"
 
+	TestData:{}
+
+	
 Additional configuration files will be read in the order they are mentioned in project.config. In such way default configuration from other libraries can be included.
 
 Please remember that order of processing is as follows 
 	- first config files under libs/libCore/config
-	- then project.config under src/config/
+	- then project.config under src/config
 	- then local config files in feature file directory
 	
 An example of test data configuration is below (content of src/config/testdata/testdata.config file)
@@ -1525,9 +1543,9 @@ it shall match test result like below
 Each step execution is marked in a log with a "* Step started" string to make it easier to find it. There is no need to call any logging method for it explicitly in the step definition. This will be done in before step hook by CustomFormatter plugin. For example
 
 
-2018-09-19 20:32:21.059 [INFO ] +-------------------------------------------------------------+
-2018-09-19 20:32:21.059 [INFO ] * Step started open browser
-2018-09-19 20:32:21.059 [INFO ] +-------------------------------------------------------------+
+	2018-09-19 20:32:21.059 [INFO ] +-------------------------------------------------------------+
+	2018-09-19 20:32:21.059 [INFO ] * Step started open browser
+	2018-09-19 20:32:21.059 [INFO ] +-------------------------------------------------------------+
 
 
 --------------------------------
@@ -1652,29 +1670,18 @@ Later on each input parameter and its value can be retrieved in a loop. See an e
 		    Object expectedValue = StepCore.checkIfInputIsVariable(field.getValue());
 		    String type = expectedValue.getClass().getName();
 		    if(type.contains("Long")){
-			Long lExpVal = (Long) expectedValue;
-			Log.debug("Expected is " + field.getKey() + "=" + lExpVal.intValue());
-			Log.debug("Current is " + json.extract().path(field.getKey()));
-
-			try {
-			    json.body(field.getKey(), containsInAnyOrder(lExpVal.intValue()));
-			} catch (AssertionError e) {
-			    Log.error("", e);
-			}
-		    }
+				Long lExpVal = (Long) expectedValue;
+				Log.debug("Expected is " + field.getKey() + "=" + lExpVal.intValue());
+				Log.debug("Current is " + json.extract().path(field.getKey()));
+				json.body(field.getKey(), containsInAnyOrder(lExpVal.intValue()));
 		    else {
-			String sExpVal = (String) expectedValue;
-			Log.debug("Expected is " + field.getKey() + "=" + sExpVal);
-			Log.debug("Current is " + json.extract().path (field.getKey()));
-
-			try {
+				String sExpVal = (String) expectedValue;
+				Log.debug("Expected is " + field.getKey() + "=" + sExpVal);
+				Log.debug("Current is " + json.extract().path (field.getKey()));
 			    json.body(field.getKey(), containsInAnyOrder(sExpVal));
-			} catch (AssertionError e) {
-			    Log.error("", e);
-			}
 		    }
 		}
-	    }
+	}
 
 Please use javadoc to document each step in the library. An example below
 
@@ -1702,20 +1709,33 @@ Please use javadoc to document each step in the library. An example below
     
 This gives tester a chance to discover new steps in the library by looking into it html documentation.	
 	
-Please use StepCore module for template management/compariosn, to attach file to the report etc.    
+Please use StepCore module for template management/compariosn, to attach file to the report etc. 
+   
 Please use FileCore module for any operation that shall be done on files.
+
 Please use ExecutorCore module for any commands that shall be executed on the local host.
+
 Please use SqlCore for any command that shall be executed in the dB under test.
+
 Please use PageCore for any action that shall be done on the web page.
+
 Please use Macro for macro evaluations.
+
 Please use Storage to read/write new values to the storage.
+
 Please use scenarioCtx to pass objects between step defs.
+
 Please use PdfCore module for pdf manipulation.
+
 Please use SshCore module for ssh/scp/sftp execution.
+
 Please use WinRmCore module for winrm execution.
+
 Please use WinRSCore module for remote windows management via winRS client
+
 Please use CloudDriectoreCore module for virtual machine management via vmware cloud director
-Please use WiniumCore module for any action that shall be done in a windows application written for win8 and below (windows 10 sdk is supported by appium)
+
+Please use WiniumCore module for any action that shall be done in a windows application written for win8 and below (although windows 10 sdk is supported by winium it maybe better to use appium)
 
 It is also possible to write test data into a file. In this way it can be read later on and used during other test execution. Even though this creates dependecies between tests it maybe useful some times. Please consider following example we run a long lasting test. Action that has to be trigger takes 10 minutes to execute. In this case there is no point to wait for its results. Instead it maybe desired to divide the test into 2 parts (feature files). One will be called to trigger the action. Second one can contain validation steps.
 Second feature can be executed few minutes later and in the meantime other test can run.
@@ -1739,7 +1759,7 @@ Steps that are involved will create a file that can contain the storage with ide
 	id2={key2:"value2", ...}
 
 Later on such storage can be retrived using the identifier and used during scenario execution.
-File will be created in temporary directory on a file system. Usually it is C:\Users\<user name>\AppData\Local\Temp\FK_Prototype_Persistent_Storage_File.json
+File will be created in temporary directory on a file system. Usually it is C:\Users\<user name>\AppData\Local\Temp\SAF_Persistent_Storage_File.json
 
 Users also have a possibility to pass data between scenarios and features using so called globalCtx. This is not recommended because it creates dependencies between tests and usually there exists a better way to write the test than using such feature, for example add Background scenario or enhance Given steps. 
 An usecase where it can be usefull is to use globalCtx like a simple cache. For example where we need to connect to remote SUT to retrieve a data. Instead of making a call to a remote host in each scenario/step we can do it once put the result into globalCtx and retirve it from it at any time. In this way we can reduce number of remote calls to SUT if required.
@@ -1777,16 +1797,11 @@ Step 'extract user id as userId' extracts user id in first scenario and stores i
         Storage.set("Expected.userId", userId);
     }
  
-In this case user id will be stored as a string. Class type has to be provided by the user using method like below
+In this case user id will be stored as a string. Class type has to be provided.
+To store the value in a global cache one can use method like below
 
-	Class clazz = Class.forName("java.lang." + type);
- 
-To store the value one can use method like below
+       globalCtx.put(identifier,String.class,userId);
 
-       globalCtx.put(identifier,clazz,userId);
-	   
-REMARK: Please note that Class.forName throws an ClassNotFoundException we can either surround it with try/catch or better declare that step can throw Throwable. Usually throw declaration is not needed.
- 
 It can be retrieved later on in the next Scenario or different Feature. See an example of step def implementation below.
 
     @When("^json get single user with id (.+) request is sent$")
@@ -1972,8 +1987,6 @@ With this approach steps class can be build like in an example below
 			}
 		}
 	}
-	
-Again we need to pass ctx object to the constructor and later on we can just call methods defined in each Page model.
 
 
 Steps prepared in this way can be used to write a test. See an example below. File structure is
@@ -2006,7 +2019,7 @@ testdata content is
 	    product2 : "Magic Mouse"
 	}
 
-Please note that the web browser has to be explicitly open using step open browser. It is part of the CoreSteps and its content is
+Please note that the web browser has to be explicitly open using step open browser. It is part of the CoreSteps and its content can be found there.
 
     /**
      * Opens browser of particular type as defined in the environment configuration
@@ -2014,7 +2027,7 @@ Please note that the web browser has to be explicitly open using step open brows
     @Given("^open browser$")
     public void open_browser(){...}
 
-As can be see the main purpose of this step is to create new selenium web driver that can be used in tests.
+The main purpose of this step is to create new selenium web driver that can be used in tests.
 Browser type can be provided via configuration. For details please see parameters mentioned below in src/config/framework/framework.config as well as in src/config/environment/default.config
 
 	Environment={
@@ -2024,13 +2037,13 @@ Browser type can be provided via configuration. For details please see parameter
 		WebDrivers : {
 		    CloseBrowserAfterScenario : true,
 		    Chrome : {
-			path : "src\\test\\java\\resources\\chromedriver.exe"
+			path : "src\\resources\\chromedriver.exe"
 		    },
 		    FireFox : {
-			path : "src\\test\\java\\resources\\geckodriver.exe"
+			path : "src\\resources\\geckodriver.exe"
 		    },
 		    InternetExplorer : {
-			path : "src\\test\\java\\resources\\IEDriverServer.exe"
+			path : "src\\resources\\IEDriverServer.exe"
 		    }
 		}
 		...
@@ -2051,7 +2064,7 @@ Browser type can be provided via configuration. For details please see parameter
 	...
 
 
-We have to provide path to a webDriver, browser type that shall be used in test and implicit timeout that will be used to report an exception if particular element will not be found on the page for amount of seconds defined.
+We have to provide a path to a webDriver, browser type that shall be used in test and implicit timeout that will be used to report an exception if particular element will not be found on the page for amount of seconds defined.
 Url that will be open can be defined as Environment.Default.Web.url.
 It is also possible to provide browser width and height. To indicate max dimensions please use keyword "Max" else define them as String with format "width x height", for example "1024 x 960".
 
@@ -2086,7 +2099,7 @@ This can also be done using WiniumCore and WinRSCore combaintation. Please see a
 
 	}
 
-	Please note that startApp method gets a node parameter which poinst to remote host configured in WinRM.config. If an app shall be started on the tester's workstation please use step like below
+Please note that startApp method gets a node parameter which poinst to remote host configured in WinRM.config. If an app shall be started on the tester's workstation please use step like below
 	
 	 /**
      * Opens a gui app on a windows host without additional arguments
@@ -2099,7 +2112,7 @@ This can also be done using WiniumCore and WinRSCore combaintation. Please see a
         StepCore.sleep(2);
     }
 	
-	In case an app shall be open on a remote host following step can be used
+In case an app shall be open on a remote host following step can be used
 	
 	 /**
      * Opens a gui app on a windows remote host without additional arguments
@@ -2113,10 +2126,10 @@ This can also be done using WiniumCore and WinRSCore combaintation. Please see a
     }
 	
 	
-	Any additional parameters that shall be passed to an *.exe file can be providedas a third input for startApp method.
+Any additional parameters that shall be passed to an *.exe file can be providedas a third input for startApp method.
 	
 Second thing that is different in comparison to web ui automation is the fact that we have to inspect UI elements using a dedicated application called inspector. It is part of windows sdk and can be downloaded from https://developer.microsoft.com/en-us/windows/downloads/sdk-archive.
-Please use version released for windows 8.1 For windows 10 it is better to use Appium instead of Winium.
+Please use SDK version appropriate for particular winOS, for example windows 8.1. For windows 10 it is better to use Appium instead of Winium.
 After installation with default settings inspect.exe can be found in C:\Program Files (x86)\Windows Kits\8.1\bin\x86 directory.
 
 As locators user can use xpaths, automation ids, classes etc... exactly like in case of web UI automation.	
@@ -2562,7 +2575,7 @@ content of the expectedOutput template is
 	\d+, SALES, CHICAGO
 	${Expected.lastId}, OPERATIONS, ${ctx.Expected.lastCity}
 
-As can be seen it uses regexp and variable parts so we need to evaluate it before comparison will be done.
+As can be seen it uses regex and variable parts so we need to evaluate it before comparison will be done.
 Now we just need to write a step that will read the content of csv and load it to our dB. Such step can look like this
 
     @When("^data from (.*?) csv file is loaded to table (.*?)$")
@@ -2619,14 +2632,14 @@ Now let's try to execute a simple select statement to extract previously inserte
         scenarioCtx.put("SqlResults",File.class, results);
     }
     
-Results will be stored as ctx Object SqlResults for validation pruposes which can be done by other step def. They will be printed to the console and to a file for the purpose of template comparison.
+Results will be stored as scenarioCtx object SqlResults for validation pruposes which can be done by other step def. They will be printed to the console and to a file for the purpose of template comparison.
 To make writing of such steps as simple as possible please use SqlCore module.
 Becuase our data set is very small we will use template compariosn
 
     @Then("^validate that result is like (.*)$")
     public void validate_that_result_is_like(String templateName) {
 
-        File toCompare = ctx.Object.get("SqlResults",File.class);
+        File toCompare = scenarioCtx.get("SqlResults",File.class);
         String path = toCompare.getAbsolutePath();
 
         StepCore.attachFileToReport("SqlQueryResult.txt","text/plain",path);
@@ -2647,7 +2660,7 @@ In case table a was modified by some ETL we can backup it by executing
 	
 After that we can compare content of a table before and after modification using previously privide query. Of course it is also possible to use select column1, column2... instead of select * if all we want to do is to compare just selected columns.
 
-DB connection will be automatically closed in @After hook.
+DB connection will be automatically closed in @After hook (implemented in CustomFormatter plugin).
 
 
 

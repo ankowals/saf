@@ -13,6 +13,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,7 +28,6 @@ public class WinRSCore {
     private Storage Storage;
     private CloudDirectorCore CloudDirectorCore;
 
-    // PicoContainer injects class SharedContext
     public WinRSCore() {
         this.scenarioCtx = ThreadContext.getContext("Scenario");
         this.globalCtx = ThreadContext.getContext("Global");
@@ -38,8 +38,65 @@ public class WinRSCore {
         this.CloudDirectorCore = scenarioCtx.get("CloudDirectorCore",CloudDirectorCore.class);
     }
 
+    /**
+     * Verifies connection details to be used by WinRS client. Checks if all are defined and not null
+     *
+     * @param node String, node name from winrm configuration of the remote that shall be used
+     * @return Map, Verified properties of a connection
+     */
+    private Map<String, String> verifyConnectionDetails(String node){
 
-    public String getIpOfHost(String name){
+        //check if connection details were already verified
+        Map<String, String> connectionDetails = globalCtx.get("WinRsConnectionDetails_" + node, Map.class);
+        if ( connectionDetails != null ){
+            return connectionDetails;
+        }
+
+        connectionDetails = new HashMap();
+
+        String address = Storage.get("Environment.Active.WinRM." + node + ".host");
+        Integer port = Storage.get("Environment.Active.WinRM." + node + ".port");
+        String user = Storage.get("Environment.Active.WinRM." + node + ".user");
+        String domain = Storage.get("Environment.Active.WinRM." + node + ".domain");
+        String passwd = Storage.get("Environment.Active.WinRM." + node + ".password");
+
+        if ( address == null ){
+            Log.error("Configuration for Environment.Active.WinRM." + node + ".host not found or null!");
+        }
+        if ( port == null ){
+            Log.error("Configuration for Environment.Active.WinRM." + node + ".port not found or null!");
+        }
+        if ( user == null ){
+            Log.error("Configuration for Environment.Active.WinRM." + node + ".user not found or null!");
+        }
+        if ( domain == null ){
+            Log.error("Configuration for Environment.Active.WinRM." + node + ".domain not found or null!");
+        }
+        if ( passwd == null ){
+            Log.error("Configuration for Environment.Active.WinRM." + node + ".password not found or null!");
+        }
+
+        connectionDetails.put("address", address);
+        connectionDetails.put("port", Integer.toString(port));
+        connectionDetails.put("user", user);
+        connectionDetails.put("domain", domain);
+        connectionDetails.put("password", passwd);
+
+        //set global variable per node
+        globalCtx.put("WinRsConnectionDetails_" + node, Map.class, connectionDetails);
+
+        return connectionDetails;
+
+    }
+
+
+    /**
+     * Retrieves ip address of a host using DNS query
+     *
+     * @param name String, FQDN of a remote host
+     * @return String, ip version 4 of a remote host
+     */
+    private String getIpOfHost(String name){
         Log.debug("Checking ip address of host " + name);
 
         //validate if name is an ip address if so no need to do anything else
@@ -85,7 +142,7 @@ public class WinRSCore {
 
         if ( result.contains("DNS name does not exist") ){
             Log.warn("Can't resolve fqdn to an ip address");
-            ip = "";
+            result = "";
         }
 
 
@@ -157,27 +214,13 @@ public class WinRSCore {
     public String executeSingleCommandOnVM (String cmd, String node, Integer timeout){
         File workingDir = FileCore.getTempDir();
 
-        String address = Storage.get("Environment.Active.WinRM." + node + ".host");
-        Integer port = Storage.get("Environment.Active.WinRM." + node + ".port");
-        String user = Storage.get("Environment.Active.WinRM." + node + ".user");
-        String domain = Storage.get("Environment.Active.WinRM." + node + ".domain");
-        String passwd = Storage.get("Environment.Active.WinRM." + node + ".password");
+        Map<String, String> conn = verifyConnectionDetails(node);
 
-        if ( address == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".host not found or null!");
-        }
-        if ( port == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".port not found or null!");
-        }
-        if ( user == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".user not found or null!");
-        }
-        if ( domain == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".domain not found or null!");
-        }
-        if ( passwd == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".password not found or null!");
-        }
+        String address = conn.get("address");
+        String port = conn.get("port");
+        String domain = conn.get("domain");
+        String user = conn.get("user");
+        String passwd = conn.get("password");
 
         address = getIpOfHost(address);
 
@@ -185,9 +228,7 @@ public class WinRSCore {
         cmd =  invocation + " " + cmd;
 
         ByteArrayOutputStream out = ExecutorCore.execute(cmd, workingDir, timeout, true);
-        String result = new String(out.toByteArray(), Charset.defaultCharset());
-
-        return result;
+        return new String(out.toByteArray(), Charset.defaultCharset());
     }
 
 
@@ -203,13 +244,10 @@ public class WinRSCore {
      * @return String
      */
     public String executeBatchFileOnVM(List<String> cmdList, String node, Integer timeout){
-
         String cmd = joinCommands(cmdList, "\r\n", true);
         String script = "temp.bat";
         transferScript(node, cmd, script);
-        String result = executeSingleCommandOnVM("call " + script, node, timeout);
-
-        return result;
+        return executeSingleCommandOnVM("call " + script, node, timeout);
     }
 
 
@@ -226,13 +264,11 @@ public class WinRSCore {
      */
     public String executeSqlFileOnVM(List<String> cmdList, String node, Integer timeout) {
 
-        String address = Storage.get("Environment.Active.WinRM." + node + ".host");
         String dbUser = Storage.get("TestData.MsSql.User");
         String dbpass = Storage.get("TestData.MsSql.Pass");
 
-        if ( address == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".host not found or null!");
-        }
+        Map<String, String> conn = verifyConnectionDetails(node);
+        String address = conn.get("address");
 
         address = getIpOfHost(address);
 
@@ -244,9 +280,7 @@ public class WinRSCore {
         String cmd = joinCommands(cmdList, "\r\n", true);
         String script = "temp.sql";
         transferScript(node, cmd, script);
-        String result = executeSingleCommandOnVM(" SQLCMD -b -S " + address + " -U " + dbUser + " -P " + dbpass + " -i " + script, node, timeout);
-
-        return result;
+        return executeSingleCommandOnVM(" SQLCMD -b -S " + address + " -U " + dbUser + " -P " + dbpass + " -i " + script, node, timeout);
     }
 
 
@@ -260,27 +294,12 @@ public class WinRSCore {
     public String getUserDir(String node){
         File workingDir = FileCore.getTempDir();
 
-        String address = Storage.get("Environment.Active.WinRM." + node + ".host");
-        Integer port = Storage.get("Environment.Active.WinRM." + node + ".port");
-        String user = Storage.get("Environment.Active.WinRM." + node + ".user");
-        String domain = Storage.get("Environment.Active.WinRM." + node + ".domain");
-        String passwd = Storage.get("Environment.Active.WinRM." + node + ".password");
-
-        if ( address == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".host not found or null!");
-        }
-        if ( port == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".port not found or null!");
-        }
-        if ( user == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".user not found or null!");
-        }
-        if ( domain == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".domain not found or null!");
-        }
-        if ( passwd == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".password not found or null!");
-        }
+        Map<String, String> conn = verifyConnectionDetails(node);
+        String address = conn.get("address");
+        String port = conn.get("port");
+        String domain = conn.get("domain");
+        String user = conn.get("user");
+        String passwd = conn.get("password");
 
         //check if user dir per node is known else retrieve it from node
         String userDir = globalCtx.get("userDir_" + node, String.class);
@@ -391,11 +410,8 @@ public class WinRSCore {
      */
     public void awaitForHostAvailability(String node){
 
-        String address = Storage.get("Environment.Active.WinRM." + node + ".host");
-
-        if ( address == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".host not found or null!");
-        }
+        Map<String, String> conn = verifyConnectionDetails(node);
+        String address = conn.get("address");
 
         address = getIpOfHost(address);
 
@@ -440,6 +456,12 @@ public class WinRSCore {
     }
 
 
+    /**
+     * Checks if reboot via cloudDirector api can be done. Useful in case of connectivity issues.
+     *
+     * @param address String, FQDN of remote host
+     * @return Boolean
+     */
     private Boolean detectRebootViaCloudDirector(String address){
 
         //validate if address is fqdn or ip
@@ -487,6 +509,9 @@ public class WinRSCore {
     }
 
 
+    /**
+     * Disconnects and connects back network via CloudDirector. Useful to restart connection in case of problems.
+     */
     private void reconnectNetworkToVmViaCloudDirector(){
         Log.debug("Going to disconnect network connection");
 
@@ -527,6 +552,10 @@ public class WinRSCore {
         CloudDirectorCore.logout();
     }
 
+
+    /**
+     * Reboots remote host via CLoudDirector api in case connection via WinRM is not possible.
+     */
     private void rebootVmViaCloudDirector(){
 
         Log.debug("Going to reboot host via cloudDirector api");
@@ -558,8 +587,6 @@ public class WinRSCore {
         CloudDirectorCore.rebootVm(newVmUrl);
         CloudDirectorCore.logout();
     }
-
-
 
 
     /**
@@ -694,27 +721,12 @@ public class WinRSCore {
     public void transferScript(String node, String content, String name){
         File workingDir = FileCore.getTempDir();
 
-        String address = Storage.get("Environment.Active.WinRM." + node + ".host");
-        Integer port = Storage.get("Environment.Active.WinRM." + node + ".port");
-        String user = Storage.get("Environment.Active.WinRM." + node + ".user");
-        String domain = Storage.get("Environment.Active.WinRM." + node + ".domain");
-        String passwd = Storage.get("Environment.Active.WinRM." + node + ".password");
+        Map<String, String> conn = verifyConnectionDetails(node);
 
-        if ( address == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".host not found or null!");
-        }
-        if ( port == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".port not found or null!");
-        }
-        if ( user == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".user not found or null!");
-        }
-        if ( domain == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".domain not found or null!");
-        }
-        if ( passwd == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".password not found or null!");
-        }
+        String address = conn.get("address");
+        String domain = conn.get("domain");
+        String user = conn.get("user");
+        String passwd = conn.get("password");
 
         address = getIpOfHost(address);
         awaitForHostAvailability(node);
@@ -783,27 +795,11 @@ public class WinRSCore {
 
         File workingDir = FileCore.getTempDir();
 
-        String address = Storage.get("Environment.Active.WinRM." + node + ".host");
-        Integer port = Storage.get("Environment.Active.WinRM." + node + ".port");
-        String user = Storage.get("Environment.Active.WinRM." + node + ".user");
-        String domain = Storage.get("Environment.Active.WinRM." + node + ".domain");
-        String passwd = Storage.get("Environment.Active.WinRM." + node + ".password");
-
-        if ( address == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".host not found or null!");
-        }
-        if ( port == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".port not found or null!");
-        }
-        if ( user == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".user not found or null!");
-        }
-        if ( domain == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".domain not found or null!");
-        }
-        if ( passwd == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".password not found or null!");
-        }
+        Map<String, String> conn = verifyConnectionDetails(node);
+        String address = conn.get("address");
+        String domain = conn.get("domain");
+        String user = conn.get("user");
+        String passwd = conn.get("password");
 
         address = getIpOfHost(address);
 
@@ -869,27 +865,11 @@ public class WinRSCore {
 
         File workingDir = FileCore.createTempDir();
 
-        String address = Storage.get("Environment.Active.WinRM." + node + ".host");
-        Integer port = Storage.get("Environment.Active.WinRM." + node + ".port");
-        String user = Storage.get("Environment.Active.WinRM." + node + ".user");
-        String domain = Storage.get("Environment.Active.WinRM." + node + ".domain");
-        String passwd = Storage.get("Environment.Active.WinRM." + node + ".password");
-
-        if ( address == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".host not found or null!");
-        }
-        if ( port == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".port not found or null!");
-        }
-        if ( user == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".user not found or null!");
-        }
-        if ( domain == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".domain not found or null!");
-        }
-        if ( passwd == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".password not found or null!");
-        }
+        Map<String, String> conn = verifyConnectionDetails(node);
+        String address = conn.get("address");
+        String domain = conn.get("domain");
+        String user = conn.get("user");
+        String passwd = conn.get("password");
 
         address = getIpOfHost(address);
 
@@ -1001,10 +981,10 @@ public class WinRSCore {
                 "$stream=$file.Open([System.IO.FileMode]::Open, " +
                 "[System.IO.FileAccess]::ReadWrite, " +
                 "[System.IO.FileShare]::None);" +
-                "if($stream){$stream.Close();Write-Host 'Yupi file not locked'}";
+                "if($stream){$stream.Close();Write-Host 'File not locked'}";
         String results = executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, 120);
 
-        if (results.contains("Yupi file not locked")){
+        if (results.contains("File not locked")){
             isLocked = false;
         }
 
@@ -1015,7 +995,7 @@ public class WinRSCore {
 
     /**
      * Runs script (batch file or powershell script) locally on a remote host as a scheduled task.
-     * Returns processId of a scheduled task which can be used ofr supervision purposes
+     * Returns processId of a scheduled task which can be used for supervision purposes
      *
      * @param node String, node name from winrm configuration of the remote that shall be used
      * @param pathToScript String, path to script
@@ -1024,19 +1004,10 @@ public class WinRSCore {
      */
     public String runScriptAsScheduledTask (String node, String pathToScript){
 
-        String domain = Storage.get("Environment.Active.WinRM." + node + ".domain");
-        String user = Storage.get("Environment.Active.WinRM." + node + ".user");
-        String password = Storage.get("Environment.Active.WinRM." + node + ".password");
-
-        if ( domain == null ){
-            Log.error("Environment.Active.WinRM." + node + ".domain not set or null");
-        }
-        if ( user == null ){
-            Log.error("Environment.Active.WinRM." + node + ".user not set or null");
-        }
-        if ( password == null ){
-            Log.error("Environment.Active.WinRM." + node + ".password not set or null");
-        }
+        Map<String, String> conn = verifyConnectionDetails(node);
+        String domain = conn.get("domain");
+        String user = conn.get("user");
+        String password = conn.get("password");
 
         String userDir = getUserDir(node);
         String stdErr = userDir + "\\" + "tempTask.stdErr";
@@ -1102,7 +1073,7 @@ public class WinRSCore {
 
         String processId = "";
         Integer i = 0;
-        while( i < 11) {
+        while( i < 2 ) {
             Log.debug("Extracting process id of a scheduled task TempAutomationTask");
             String tmp = pathToScript.replaceAll("\\\\", "\\\\\\\\");
             cmd = "$proc = Get-CimInstance Win32_Process | Where {$_.CommandLine -match 'Command " + tmp + "' -or $_.CommandLine -match ' & .*" + tmp + "'} | Select Caption, CommandLine, ProcessId;" +
@@ -1118,34 +1089,16 @@ public class WinRSCore {
             i++;
         }
 
-        if ( i == 11 ){
-
-            Log.warn("Probably an error happen during script execution. Printing stdErr output");
-            executeSingleCommandOnVM("type " + stdErr, node, 60);
-            Log.warn("Probably an error happen during script execution. Printing stdOut output");
-            executeSingleCommandOnVM("type " + stdOut, node, 60);
-
-            Log.warn("Killing scheduled task TempAutomationTask due to an error in script execution");
-            script = "tempTask.ps1";
-            cmd = "schtasks /END /TN 'TempAutomationTask'";
-            transferScript(node, cmd, script);
-
-            result = executeSingleCommandOnVM("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File \"" + script + "\"", node, 120);
-            if ( ! result.contains("SUCCESS:") ){
-                Log.warn("Failed to kill scheduled task TempAutomationTask");
+        //if script was executed immediately we may struggle to find a processId.
+        //in this case if stdErr is empty we assume execution was successful and return empty processId
+        //supervision shall not be used
+        if ( processId.equals("")){
+            Log.debug("Checking StdErr");
+            String stdErrOutput = executeSingleCommandOnVM("type " + stdErr, node, 60);
+            if ( stdErrOutput.equals("") ){
+                Log.warn("Script execution didn't return any error but processId was not found! " +
+                        "Going to return empty processId");
             }
-
-            Log.warn("Deleting scheduled task TempAutomationTask due to an error in script execution");
-            cmd = "schtasks /DELETE /TN 'TempAutomationTask' /F";
-            transferScript(node, cmd, script);
-
-            result = executeSingleCommandOnVM("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File \"" + script + "\"", node, 120);
-            if ( ! result.contains("SUCCESS:") ){
-                Log.warn("Failed to remove scheduled task TempAutomationTask");
-            }
-
-            Log.error("Task process not found! Script didn't run. Please check its content. " +
-                    "Maybe an error happen during execution?");
         }
 
         return processId;
@@ -1161,19 +1114,10 @@ public class WinRSCore {
      */
     public void minimizeAllWindows (String node, String taskName){
 
-        String domain = Storage.get("Environment.Active.WinRM." + node + ".domain");
-        String user = Storage.get("Environment.Active.WinRM." + node + ".user");
-        String password = Storage.get("Environment.Active.WinRM." + node + ".password");
-
-        if ( domain == null ){
-            Log.error("Environment.Active.WinRM." + node + ".domain not set or null");
-        }
-        if ( user == null ){
-            Log.error("Environment.Active.WinRM." + node + ".user not set or null");
-        }
-        if ( password == null ){
-            Log.error("Environment.Active.WinRM." + node + ".password not set or null");
-        }
+        Map<String, String> conn = verifyConnectionDetails(node);
+        String domain = conn.get("domain");
+        String user = conn.get("user");
+        String password = conn.get("password");
 
         String userDir = getUserDir(node);
 
@@ -1264,9 +1208,21 @@ public class WinRSCore {
      */
     public Boolean superviseScheduledTaskExecution(String node, String processId, Integer timeout){
 
-        if (timeout < 0) {
+        if ( timeout < 0 || processId.equals("") ) {
+            if ( timeout < 0 ) {
+                Log.warn("Killing scheduled task TempAutomationTask due to timeout");
+            } else {
+                String userDir = getUserDir(node);
+                String stdErr = userDir + "\\" + "tempTask.stdErr";
+                String stdOut = userDir + "\\" + "tempTask.stdOut";
 
-            Log.warn("Killing scheduled task TempAutomationTask due to timeout");
+                Log.warn("Probably an error happen during script execution. Printing stdErr output");
+                executeSingleCommandOnVM("type " + stdErr, node, 60);
+                Log.warn("Probably an error happen during script execution. Printing stdOut output");
+                executeSingleCommandOnVM("type " + stdOut, node, 60);
+                Log.warn("Killing scheduled task TempAutomationTask");
+            }
+
             String script = "tempTask.ps1";
             String cmd = "schtasks /END /TN 'TempAutomationTask';";
             transferScript(node, cmd, script);
@@ -1276,7 +1232,7 @@ public class WinRSCore {
                 Log.warn("Failed to kill scheduled task TempAutomationTask");
             }
 
-            Log.warn("Deleting scheduled task TempAutomationTask due to timeout");
+            Log.warn("Deleting scheduled task TempAutomationTask");
             cmd = "schtasks /DELETE /TN 'TempAutomationTask' /F;";
             transferScript(node, cmd, script);
 
@@ -1285,14 +1241,18 @@ public class WinRSCore {
                 Log.warn("Failed to remove scheduled task TempAutomationTask");
             }
 
-            Log.error("Timeout reached for scheduled task execution supervision!");
+            if ( timeout < 0 ) {
+                Log.error("Timeout reached for scheduled task execution supervision!");
+            } else {
+                Log.error("Task process id not found! Script didn't run. Please check its content. " +
+                        "Maybe an error happen during execution?");
+            }
         }
 
         String cmd = "Get-Process -Id " + processId;
         String result = executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, 120);
 
         if ( result.contains("Cannot find a process") ){
-
             Log.debug("Removing scheduled task TempAutomationTask");
 
             String script = "tempTask.ps1";
@@ -1325,26 +1285,10 @@ public class WinRSCore {
      */
     private String uploadAndStartWiniumDriver(String node){
 
-        String address = Storage.get("Environment.Active.WinRM." + node + ".host");
-        String user = Storage.get("Environment.Active.WinRM." + node + ".user");
-        String domain = Storage.get("Environment.Active.WinRM." + node + ".domain");
-        String passwd = Storage.get("Environment.Active.WinRM." + node + ".password");
-
-        if (address == null) {
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".host not found or null!");
-        }
-        if (user == null) {
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".user not found or null!");
-        }
-        if (domain == null) {
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".domain not found or null!");
-        }
-        if (passwd == null) {
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".password not found or null!");
-        }
+        Map<String, String> conn = verifyConnectionDetails(node);
+        String address = conn.get("address");
 
         address = getIpOfHost(address);
-
         String userDir = getUserDir(node);
 
         Boolean isAvailable = checkThatFileExists(node, userDir + "\\Winium.Desktop.Driver.exe");
@@ -1383,8 +1327,6 @@ public class WinRSCore {
             executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, 120);
 */
             Log.debug("Running WiniumDriver on node " + node);
-            //String script = "WiniumDriverStarter.bat";
-            //cmd = "call " + userDir + "\\Winium.Desktop.Driver.exe --port " + port;
             String script = "WiniumDriverStarter.ps1";
             cmd = "If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] \"Administrator\"))" +
                     "{$arguments = \"& '\" + $myinvocation.mycommand.definition + \"'\";Start-Process powershell -WindowStyle Hidden -Verb runAs -ArgumentList $arguments;Break};" +
@@ -1397,10 +1339,6 @@ public class WinRSCore {
             StepCore.sleep(5);
 
             Log.debug("Checking if WiniumDesktopDriver was started");
-            /*
-            cmd = "Get-CimInstance Win32_Process | Where {$_.Caption -match 'Winium.Desktop.Driver.exe'} | Select Caption, CommandLine, ProcessId | Format-list";
-            result = executeSingleCommandOnVM("Powershell.exe \"" + cmd + "\"", node, 120);
-            */
             Integer i = 0;
             while ( i < 90 ){
                 cmd = "netstat -an | findstr \"" + port + "\"";
@@ -1435,10 +1373,8 @@ public class WinRSCore {
     public void startApp(String node, String pathToApp, String args){
 
         Log.debug("Going to start an app on a remote host " + node);
-        String host = Storage.get("Environment.Active.WinRM." + node + ".host");
-        if ( host == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".host not found or null!");
-        }
+        Map<String, String> conn = verifyConnectionDetails(node);
+        String host = conn.get("address");
 
         host = getIpOfHost(host);
 
@@ -1590,23 +1526,11 @@ public class WinRSCore {
     public String openRdpSession(String node, Boolean forceLogOff){
         File workingDir = FileCore.getTempDir();
 
-        String address = Storage.get("Environment.Active.WinRM." + node + ".host");
-        String user = Storage.get("Environment.Active.WinRM." + node + ".user");
-        String domain = Storage.get("Environment.Active.WinRM." + node + ".domain");
-        String passwd = Storage.get("Environment.Active.WinRM." + node + ".password");
-
-        if (address == null) {
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".host not found or null!");
-        }
-        if (user == null) {
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".user not found or null!");
-        }
-        if (domain == null) {
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".domain not found or null!");
-        }
-        if (passwd == null) {
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".password not found or null!");
-        }
+        Map<String, String> conn = verifyConnectionDetails(node);
+        String address = conn.get("address");
+        String domain = conn.get("domain");
+        String user = conn.get("user");
+        String passwd = conn.get("password");
 
         address = getIpOfHost(address);
 
@@ -1773,6 +1697,12 @@ public class WinRSCore {
     }
 
 
+    /**
+     * Checks if an RDP session is open towards particular node
+     *
+     * @param rdpProcessId String, processID of an RDP session
+     * @return Boolean
+     */
     public Boolean checkIfRdpSessionIsOpen(String rdpProcessId){
         Log.debug("Checking RDP session with process id  " + rdpProcessId);
 
@@ -1960,6 +1890,13 @@ public class WinRSCore {
     }
 
 
+    /**
+     * Returns a list of exact names of available services. Can be a partial name
+     *
+     * @param node String, node name from winrm configuration of the remote that shall be used
+     * @param serviceName String, name of the service, can be regex, for example Tomcat can return Tomcat8 or Tomcat7
+     * @return List
+     */
     public List<String> getServiceList(String node, String serviceName){
         Log.debug("Creating list of services");
         String cmd = "Get-Service '" + serviceName + "' | Select Name";
@@ -1979,17 +1916,21 @@ public class WinRSCore {
     }
 
 
+    /**
+     * Closes all open windows on a remote host
+     *
+     * @param node String, node name from winrm configuration of the remote that shall be used
+     */
     public void closeAllOpenWindows(String node){
         Log.debug("Closing all open windows");
 
         String cmd = "(New-Object -comObject Shell.Application).Windows() | foreach-object {$_.quit()};" +
-                "(Get-Process | Where-Object {$_.MainWindowTitle -ne \"\"}).CloseMainWindow()";
+                "(Get-Process | Where-Object {$_.MainWindowTitle -ne \"\"}).CloseMainWindow();Start-sleep 3;";
 
         String script = "temp.ps1";
         transferScript(node, cmd, script);
         String userDir = getUserDir(node);
         runScriptAsScheduledTask(node, userDir + "\\" + script);
-
     }
 
 }
