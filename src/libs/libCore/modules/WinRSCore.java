@@ -215,7 +215,6 @@ public class WinRSCore {
         File workingDir = FileCore.getTempDir();
 
         Map<String, String> conn = verifyConnectionDetails(node);
-
         String address = conn.get("address");
         String port = conn.get("port");
         String domain = conn.get("domain");
@@ -1209,19 +1208,15 @@ public class WinRSCore {
     public Boolean superviseScheduledTaskExecution(String node, String processId, Integer timeout){
 
         if ( timeout < 0 || processId.equals("") ) {
-            if ( timeout < 0 ) {
-                Log.warn("Killing scheduled task TempAutomationTask due to timeout");
-            } else {
-                String userDir = getUserDir(node);
-                String stdErr = userDir + "\\" + "tempTask.stdErr";
-                String stdOut = userDir + "\\" + "tempTask.stdOut";
+            String userDir = getUserDir(node);
+            String stdErr = userDir + "\\" + "tempTask.stdErr";
+            String stdOut = userDir + "\\" + "tempTask.stdOut";
 
-                Log.warn("Probably an error happen during script execution. Printing stdErr output");
-                executeSingleCommandOnVM("type " + stdErr, node, 60);
-                Log.warn("Probably an error happen during script execution. Printing stdOut output");
-                executeSingleCommandOnVM("type " + stdOut, node, 60);
-                Log.warn("Killing scheduled task TempAutomationTask");
-            }
+            Log.warn("Probably an error happen during script execution. Printing stdErr output");
+            executeSingleCommandOnVM("type " + stdErr, node, 60);
+            Log.warn("Probably an error happen during script execution. Printing stdOut output");
+            executeSingleCommandOnVM("type " + stdOut, node, 60);
+            Log.warn("Killing scheduled task TempAutomationTask");
 
             String script = "tempTask.ps1";
             String cmd = "schtasks /END /TN 'TempAutomationTask';";
