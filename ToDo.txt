@@ -1,0 +1,14 @@
+Refactor of Strage and ConfigReader to get rid of hadouken coding
+Test SqlCore usage after refactoring
+Test not happy use cases of Web automation
+Test cloudDirector api after refactoring
+Add support for Winium -> implement new desktop driver pool
+Add support for winRM -> implement new winRM4j client pool
+Add support for winRS and add steps removed from CloudDirectorCoreSteps
+Create StringCore and expose basic String manipulation methods
+Update AssertCore and add more assertions
+Integrate Sikuli -> create SikuliCore
+Integrate Appium -> create AppiumCore
+Update documentation in ReadMe.md, create wiki and add screeshots
+
+Update InteliiJ Cucumber for Java plugin and Allure adaptor to support cucumber 4

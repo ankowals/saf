@@ -1,24 +1,33 @@
 package libs.libRemoteExecution.steps;
 
+import cucumber.api.java.en.Given;
 import cucumber.api.java.en.When;
 import libs.libCore.modules.BaseSteps;
 import libs.libCore.modules.Log;
-import libs.libCore.modules.SSHResult;
 import java.io.File;
 
 public class RemoteExecutionSteps extends BaseSteps {
 
+
+    @Given("^host (.+) is alive$")
+    public void host_is_alive(String host) {
+        String cmd = "echo " + host + " is alive";
+        SshCore.execute(host, cmd, 10);
+        Log.debug("Result is " + SshCore.getStdOut());
+        Log.debug("Exit code is " + SshCore.getExitCode());
+
+        String output = SshCore.getStdOut().replaceAll("(\\r|\\n)", "").trim();
+        if ( ! output.equalsIgnoreCase(cmd.substring(5)) ) {
+            Log.error("host " + host + " is not accessible");
+        }
+    }
+
     @When("^list files in users home directory$")
     public void list_files_in_users_home_directory(){
         String singleCmd = "ls";
-
-        Log.debug("Create new client and connect to node1");
-        SshCore.createClient("node1");
-        Log.debug("Command to execute vis ssh is " + singleCmd);
-        SSHResult result = SshCore.execute(singleCmd, 10);
-        Log.debug("Result is " + result.getStdout());
-        Log.debug("Exit code is " + result.getExitCode());
-        SshCore.closeClient();
+        SshCore.execute("node1", singleCmd, 10);
+        Log.debug("Result is " + SshCore.getStdOut());
+        Log.debug("Exit code is " + SshCore.getExitCode());
     }
 
 
@@ -28,51 +37,42 @@ public class RemoteExecutionSteps extends BaseSteps {
         String passOfUserCmd = "vagrant";
         String validateCmd = "whoami";
 
-        Log.debug("Create new client and connect to node1");
-        SshCore.createClient("node1");
-        SshCore.startShell(20);
-        SshCore.executeInShell("", "$");
-        Log.debug("Command to execute vis ssh is " + userChangeCmd);
-        SshCore.executeInShell(userChangeCmd, "Password");
-        Log.debug("Command to execute vis ssh is " + passOfUserCmd);
-        SshCore.executeInShell(passOfUserCmd, "root@");
-        Log.debug("Command to execute vis ssh is " + validateCmd);
-        SshCore.executeInShell(validateCmd, "root");
-        SshCore.closeShell();
-        SshCore.closeClient();
+        String node = "node1";
+        SshCore.startShell(node, 40);
+        SshCore.executeInShell(node, "", "$");
+        SshCore.executeInShell(node, userChangeCmd, "Password");
+        SshCore.executeInShell(node, passOfUserCmd, "root@");
+        SshCore.executeInShell(node, validateCmd, "root");
+        SshCore.stopShell(node);
     }
 
     @When("^check command exit status code when in shell$")
     public void check_command_exit_status_code_when_in_shell(){
-        Log.debug("Create new client and connect to node1");
-        SshCore.createClient("node1");
-        SshCore.startShell(10);
-        SshCore.executeInShell("", "$");
-        SSHResult result = SshCore.executeInShell("test -e postinstall.sh;echo $?", "0");
-        Log.debug(result.getStdout().replaceAll("(\\r|\\n)", "").trim());
-        SshCore.closeShell();
-        SshCore.closeClient();
+        String node = "node1";
+        SshCore.startShell(node, 10);
+        SshCore.executeInShell(node,"", "$");
+        SshCore.executeInShell(node, "test -e postinstall.sh;echo $?", "0");
+        Log.debug(SshCore.getStdOut().replaceAll("(\\r|\\n)", "").trim());
+        SshCore.stopShell(node);
     }
 
     @When("^check that file exists on remote node$")
     public void check_that_file_exists_on_remote_node(){
-        Log.debug("Check that node is alive");
-        Boolean isAlive = SshCore.checkThatNodeIsAlive("node1");
-
+        String node = "node1";
+        Boolean isAlive = SshCore.checkThatNodeIsAlive(node);
         if ( ! isAlive ) {
             Log.error("Host node1 is not available");
         }
 
         Log.debug("Check that file is present on the remote host");
         String pathToFile = "postinstall.sh";
-        Boolean isAvailable = SshCore.checkThatFileExists("node1", pathToFile);
-
+        Boolean isAvailable = SshCore.checkThatFileExists(node, pathToFile);
         if ( ! isAvailable ){
-            Log.error("File postinstall.sh was not found");
+            Log.error("File " + pathToFile + " not found!");
         }
 
         Log.debug("Download file via scp");
-        File file = SshCore.downloadFileViaScp("node1","postinstall.sh","C:\\Users\\akowa\\Documents\\Projects\\FK_Prototype");
+        File file = SshCore.downloadFileViaScp(node,pathToFile,FileCore.getCurrentFeatureDirPath());
         Log.debug("Path to file is " + file.getAbsolutePath());
     }
 

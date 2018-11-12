@@ -11,16 +11,16 @@ import java.util.regex.Pattern;
 @SuppressWarnings("unchecked")
 public class Storage {
 
-    private Context scenarioCtx;
+    private Context context;
     private FileCore FileCore;
-    private ConfigReader Config;
+    private ConfigReader ConfigReader;
     private static final String TMP_DIR_PATH = System.getProperty("java.io.tmpdir");
     private static final File STORAGE_FILE = new File(TMP_DIR_PATH + "//" + "SAF_Persistent_Storage_File.json");
 
-    public Storage() {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
-        this.FileCore = scenarioCtx.get("FileCore",FileCore.class);
-        this.Config = scenarioCtx.get("Config", ConfigReader.class);
+    public Storage(Context context, FileCore fileCore, ConfigReader configReader) {
+        this.context = context;
+        this.FileCore = fileCore;
+        this.ConfigReader = configReader;
     }
 
     /**
@@ -38,7 +38,7 @@ public class Storage {
         String[] t_textKey = textKey.split("[.]");
         String StorageName = t_textKey[idx];
 
-        HashMap<String, Object> Storage = scenarioCtx.get(StorageName, HashMap.class);
+        HashMap<String, Object> Storage = context.get(StorageName, HashMap.class);
 
         if ( Storage == null ) {
             Log.error("Can't set " + textKey + " to " + value + ". Storage does not exists or null!");
@@ -130,16 +130,13 @@ public class Storage {
      * @param name of the storage
      */
     public void print(String name) {
-        Log.debug("Going to view the current state of " + name + " storage");
-        HashMap<String, Object> dataMap = scenarioCtx.get(name,HashMap.class);
+        HashMap<String, Object> dataMap = get(name);
         if ( dataMap != null ) {
-            Log.info("--- start ---");
             for (Map.Entry<String, Object> entry : dataMap.entrySet()) {
                 String[] tmp = entry.getValue().getClass().getName().split(Pattern.quote(".")); // Split on period.
                 String type = tmp[2];
                 Log.info("(" + type + ")" + entry.getKey() + " = " + entry.getValue().toString());
             }
-            Log.info("--- end ---");
         }
     }
 
@@ -161,14 +158,14 @@ public class Storage {
             // if no dots in the path return just the storage ->
             // for example "TestData" was entered but not "TestData.key1"
             if ( ! path.contains(".") ) {
-                Object value = scenarioCtx.get(path, HashMap.class);
+                Object value = context.get(path, HashMap.class);
                 Log.debug("Value of " + path + " is " + value);
                 return (T) value;
             }
 
             //get hashmap with particular storage if it exists else return null
             String[] tmp = path.split("\\.");
-            Object value = scenarioCtx.get(tmp[0], HashMap.class);
+            Object value = context.get(tmp[0], HashMap.class);
 
             if ( value != null ) {
                 String sTmp = "";
@@ -223,7 +220,7 @@ public class Storage {
             Log.error("identifier null or empty!");
         }
 
-        HashMap<String, Object> dataMap = scenarioCtx.get(name,HashMap.class);
+        HashMap<String, Object> dataMap = context.get(name,HashMap.class);
         if ( dataMap != null ) {
 
             //Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -291,14 +288,13 @@ public class Storage {
             String sJson = name + " : " + content.substring(identifier.length()+1);
             File file = FileCore.createTempFile(name + "_" + identifier + "_","config");
             FileCore.appendToFile(file, sJson);
-            Config.create(file.getAbsolutePath());
+            ConfigReader.create(file.getAbsolutePath());
             //clean up
             if ( file.exists() ) {
                 FileCore.removeFile(file);
             }
         } else {
-            Log.error( "Storage file " + TMP_DIR_PATH + "//"
-                    + "SAF_Persistent_Storage_File.json"
+            Log.error( "Storage file " + STORAGE_FILE.getAbsolutePath()
                     + " does not exists!" + " Please make sure that step "
                     + " 'write storage (.+) with id (.+) to file'"
                     + " was executed" );

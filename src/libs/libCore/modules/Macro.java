@@ -15,7 +15,7 @@ public class Macro {
     private Context scenarioCtx;
 
     public Macro() {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
+        this.scenarioCtx = GlobalCtxSingleton.getInstance().get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
     }
 
 

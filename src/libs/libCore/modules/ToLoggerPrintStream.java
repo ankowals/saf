@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 /**
  * A wrapper class which takes a logger as constructor argument and offers a PrintStream whose flush
  * method writes the written content to the supplied logger (debug level).
@@ -27,10 +24,7 @@ import org.apache.logging.log4j.Logger;
  * @author  Heri Bender
  */
 public class ToLoggerPrintStream {
-    /**
-     * Logger for this class
-     */
-    private Logger myLog;
+
     private PrintStream myPrintStream;
 
     /**
@@ -51,7 +45,7 @@ public class ToLoggerPrintStream {
                  */
                 @Override
                 public void flush() {
-                    myLog.debug(this.myStringBuilder.toString());
+                    Log.debug(this.myStringBuilder.toString()); //customize to always use libs.libCore.modules logger
                     myStringBuilder = new StringBuilder();
                 }
             };
@@ -62,22 +56,4 @@ public class ToLoggerPrintStream {
         return myPrintStream;
     }
 
-
-    /**
-     * Constructor
-     */
-    public ToLoggerPrintStream() {
-        super();
-        myLog = LogManager.getLogger("libs.libCore.modules");
-    }
-
-    /**
-     * Constructor
-     *
-     * @param aLogger
-     */
-    public ToLoggerPrintStream(Logger aLogger) {
-        super();
-        myLog = aLogger;
-    }
 }

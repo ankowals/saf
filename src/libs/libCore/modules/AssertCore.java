@@ -13,7 +13,7 @@ public class AssertCore {
     private Storage Storage;
 
     public AssertCore() {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
+        this.scenarioCtx = GlobalCtxSingleton.getInstance().get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
         this.Storage = scenarioCtx.get("Storage", Storage.class);
     }
 

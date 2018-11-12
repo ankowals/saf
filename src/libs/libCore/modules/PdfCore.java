@@ -12,12 +12,6 @@ import java.util.List;
 @SuppressWarnings("unchecked")
 public class PdfCore {
 
-    private Context scenarioCtx;
-
-    public PdfCore() {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
-    }
-
 
     /**
      * read pdf file line by line and returns list of lines

@@ -1,14 +1,19 @@
 package libs.libCore.modules;
 
-import cucumber.api.junit.Cucumber;
-
-import org.junit.runner.RunWith;
 import cucumber.api.CucumberOptions;
+import cucumber.api.testng.AbstractTestNGCucumberTests;
+import org.testng.annotations.DataProvider;
 
-@RunWith(Cucumber.class)
-@CucumberOptions(
-        plugin = {"io.qameta.allure.cucumber3jvm.AllureCucumber3Jvm", "libs.libCore.modules.CustomFormatter"},
-        features = "src/features",
-        glue = "libs")
-
-public class TestRunner {}
+public class TestRunner extends AbstractTestNGCucumberTests {
+    @CucumberOptions(
+            plugin = {"io.qameta.allure.cucumber3jvm.AllureCucumber3Jvm", "libs.libCore.modules.CustomEventListener"},
+            features = "src/features",
+            glue = "libs")
+    public class RunCukesTest extends AbstractTestNGCucumberTests {
+        @Override
+        @DataProvider(parallel = true)
+        public Object[][] scenarios() {
+            return super.scenarios();
+        }
+    }
+}

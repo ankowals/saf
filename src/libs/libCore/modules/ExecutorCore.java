@@ -1,29 +1,17 @@
 package libs.libCore.modules;
 
 import org.apache.commons.exec.*;
-import org.apache.commons.lang.StringUtils;
-import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.winium.DesktopOptions;
-import org.openqa.selenium.winium.WiniumDriver;
-
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.charset.Charset;
 
 public class ExecutorCore {
 
-    private Context scenarioCtx;
-    private Context globalCtx;
-    private FileCore FileCore;
-    private Storage Storage;
+    private int exitValue;
 
-    public ExecutorCore() {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
-        this.globalCtx = ThreadContext.getContext("Global");
-        this.FileCore = scenarioCtx.get("FileCore",FileCore.class);
-        this.Storage = scenarioCtx.get("Storage",Storage.class);
+    public Integer getExitCode(){
+        return exitValue;
     }
+
     /**
      * Execute a Command as a background or blocking process.
      *
@@ -31,9 +19,9 @@ public class ExecutorCore {
      * @param workingDir  File, Working directory
      * @param timeout     Integer, Kill process after this time (in sec) (0: no timeout)
      * @param blocking    Boolean,  Synchronous/blocking (true) or asynchronous/background startup (false).
-     * @return  An outputstream that contains the output of the process written into stdout/stderr
+     * @return  String, contains content of StdOut/StdErr output
      */
-    public ByteArrayOutputStream execute(String cmd, File workingDir, int timeout, boolean blocking)
+    public String execute(String cmd, File workingDir, int timeout, boolean blocking)
     {
         Executor executor = new DefaultExecutor();
         DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
@@ -51,20 +39,20 @@ public class ExecutorCore {
             executor.setWatchdog(watchdog);
         }
 
-        ByteArrayOutputStream os1 = new ByteArrayOutputStream(1024);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream(1024);
 
         //live-streaming
-        InputStream is = null;
+        InputStream pis = null;
         if ( blocking ) {
-            PipedOutputStream os = new PipedOutputStream();
+            PipedOutputStream pos = new PipedOutputStream();
             try {
-                is = new PipedInputStream(os);
+                pis = new PipedInputStream(pos);
             } catch (IOException e) {
                 Log.error("", e);
             }
-            executor.setStreamHandler(new PumpStreamHandler(os));
+            executor.setStreamHandler(new PumpStreamHandler(pos));
         } else {
-            executor.setStreamHandler(new PumpStreamHandler(os1));
+            executor.setStreamHandler(new PumpStreamHandler(bos));
         }
 
         //This is used to end the process when the JVM exits
@@ -78,15 +66,13 @@ public class ExecutorCore {
 
         try {
             executor.execute(cmdLine, resultHandler);
-        } catch (ExecuteException e) {
-            Log.error("", e);
         } catch (IOException e) {
             Log.error("", e);
         }
 
         if ( blocking ) {
 
-            Reader reader = new InputStreamReader(is);
+            Reader reader = new InputStreamReader(pis);
             BufferedReader r = new BufferedReader(reader);
             String tmp;
 
@@ -98,15 +84,13 @@ public class ExecutorCore {
                         Log.debug(tmp);
                         String line = tmp + System.getProperty("line.separator");
                         byte[] bytes = line.getBytes();
-                        os1.write(bytes);
+                        bos.write(bytes);
                     }
 
                     resultHandler.waitFor();
 
-                } catch (InterruptedException e) {
+                } catch (InterruptedException | IOException e) {
                     //do nothing
-                } catch (IOException e) {
-                    Log.error("", e);
                 }
             }
 
@@ -121,7 +105,7 @@ public class ExecutorCore {
         }
 
         if ( blocking ) {
-            int exitValue = resultHandler.getExitValue();
+            exitValue = resultHandler.getExitValue();
             Log.debug("Command execution exitValue is " + exitValue);
             if (executor.isFailure(exitValue)) {
                 Log.debug("Command execution failed");
@@ -130,80 +114,7 @@ public class ExecutorCore {
             }
         }
 
-        return os1;
+        return new String(bos.toByteArray(), Charset.defaultCharset());
     }
-
-
-    public void startApp(String pathToApp, String args){
-        File workingDir = FileCore.getTempDir();
-        String port = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.port");
-        String url = "http://localhost:" + port;
-        Log.debug("Url is " + url);
-        URL uri = null;
-        try {
-            uri = new URL(url);
-        } catch (MalformedURLException e) {
-            Log.error("", e);
-        }
-
-        Log.debug("Trying to run an app from " + pathToApp);
-        DesktopOptions options = new DesktopOptions();
-        options.setApplicationPath(pathToApp);
-        if ( args != null && (! args.equals("")) ) {
-            Log.debug("Setting application arguments " + args);
-            options.setArguments(args);
-        } else {
-            Log.debug("No application arguments provided " + args);
-        }
-
-        String path = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.path");
-        //Set winium driver path
-        //System.setProperty("webdriver.winium.driver.desktop", FileCore.getProjectPath() + File.separator + path);
-        //WiniumDriverService service = new WiniumDriverService.Builder()
-        //        .usingPort(Integer.valueOf(port)).withVerbose(true).withSilent(false).build();
-        //service.start(); //Build and Start a Winium Driver service
-
-        execute(FileCore.getProjectPath() + File.separator + path + " --port " + port, workingDir, 60, false);
-
-        WiniumDriver App = new WiniumDriver(uri, options);
-        Boolean closeAppDriver = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.CloseAppAfterScenario");
-        if ( closeAppDriver ) {
-            scenarioCtx.put("App", WiniumDriver.class, App);
-            scenarioCtx.put("WiniumDriverStartedOnLocalHost", Boolean.class, true);
-        } else {
-            globalCtx.put("App", WiniumDriver.class, App);
-            globalCtx.put("WiniumDriverStartedOnLocalHost", Boolean.class, true);
-        }
-
-        //initialize winiumCore with driver
-        WiniumCore winiumCore = new WiniumCore();
-        scenarioCtx.put("WiniumCore", WiniumCore.class, winiumCore);
-
-        if ( args != null && (! args.equals("")) ){
-            Log.debug("Started an app from " + pathToApp + " " + args);
-        } else {
-            Log.debug("Started an app from " + pathToApp);
-        }
-
-
-    }
-
-
-    public void closeWiniumResources(){
-        File workingDir = FileCore.getTempDir();
-
-        String cmd = "Get-CimInstance Win32_Process | Where {$_.name -match '.*Winium.*'} | Select Caption, CommandLine, ProcessId | Format-list";
-        ByteArrayOutputStream out = execute("Powershell.exe \"" + cmd + "\"", workingDir, 60, true);
-        String result = new String(out.toByteArray(), Charset.defaultCharset());
-        if ( result.contains("Winium.Desktop.Driver.exe") ) {
-            Log.debug("Closing Winium.Desktop.Driver.exe");
-            String[] tmp = StringUtils.deleteWhitespace(result.trim()).split("ProcessId:");
-            String processId = tmp[tmp.length - 1].trim();
-            cmd = "Stop-Process -Id " + processId + " -Force -passThru";
-            execute("Powershell.exe \"" + cmd + "\"", workingDir, 60, true);
-        }
-
-    }
-
 
 }

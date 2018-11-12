@@ -3,5 +3,5 @@ Feature: ReadHugeFile
 
   Scenario: Execute simple command on local host
 
-    Given new text file is created
+    Given create text file
     When read the file

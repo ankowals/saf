@@ -22,100 +22,154 @@ public class CoreDbSteps extends BaseSteps {
      *
      * @param fileName, String, name of the input csv file that contains input data (without .csv extension)
      * @param tableName, String, name of the table to which data shall be loaded
+     * @param url String, connection string of the database that shall be used
      */
-    @Given("^data from (.*?) csv file is loaded to table (.*?)$")
-    public void data_from_csv_file_is_loaded_to_table(String fileName, String tableName) {
+    @Given("^load data from csv file (.*?) into a table (.*?) in (.+) database$")
+    public void load_data_from_csv_file_into_a_table(String fileName, String tableName, String url) {
+        String connectionString = StepCore.checkIfInputIsVariable(url);
         File input = new File(FileCore.getCurrentFeatureDirPath() + "/input/" + fileName + ".csv");
         StepCore.attachFileToReport(fileName+".csv", "text/csv", input.getAbsolutePath());
         Log.debug("Path to csv input file is " + input.getAbsolutePath());
-        SqlCore.insertFromFile(input,tableName,true, "TestData." + fileName + "TypeMapping");
+        SqlCore.insertFromFile(connectionString, input,tableName,true, "TestData." + fileName + "TypeMapping");
     }
 
-
     /**
-     * Executes sql select query<br>
-     * Results are printed to the log and attached as a file attachment to the report<br>
-     * They are available as a ctx.Object for further processing and validation<br><br>
+     * Executes sql query in desired database and compares results with a template.<br>
+     * Sql query and template name shall be passed to this step as a table.
      *
-     * Uses following objects:<br>
-     *  ctx.Object.queryResultName
-     *
-     * @param sQuery, String, query to be executed (can also be defined in test data config, in that case
-     *                this parameter act as query identifier)
-     * @param queryResultName, String, name of the context object that is
-     *                         going to be used to store path to the select query results
+     * @param url String, connection string of the database that shall be used
+     * @param params Map, table that contains sql query and template name
      */
-    @When("^select query (.*?) is executed and results stored as (.*?)$")
-    public void select_query_is_executed(String sQuery, String queryResultName) {
-        String query = StepCore.checkIfInputIsVariable(sQuery);
+    @Then("^verify in (.+) database$")
+    public void verify_in_database(String url, Map<String, String> params) {
+
+        String connectionString = StepCore.checkIfInputIsVariable(url);
+
+        String query = "";
+        String templateName = "";
+        Boolean templateComparison  = false;
+
+        //handle params
+        if ( ! params.isEmpty() ) {
+
+            for (Map.Entry<String, String> row : params.entrySet()) {
+                String param_name = row.getKey();
+                String param_value = StepCore.checkIfInputIsVariable(row.getValue());
+
+                if ( param_name.equals("query") ) {
+                    query = StepCore.checkIfInputIsVariable(param_value);
+                }
+                if ( param_name.equals("template") ) {
+                    templateName = param_value;
+                    if ( ! templateName.equals("") ){
+                        templateComparison = true;
+                    }
+                }
+            }
+        }
+
         String queryAfterReplacement = StepCore.replaceInString(query);
-        List<Map<String,Object>> list = SqlCore.selectList(queryAfterReplacement);
+        List<Map<String,Object>> list = SqlCore.selectList(connectionString, queryAfterReplacement);
 
         SqlCore.printList(list);
-        File results = SqlCore.writeListToFile(list,queryResultName,"txt");
+        String resName = "sqlSelectQueryResults";
+        File results = SqlCore.writeListToFile(list,resName,"txt");
 
-        StepCore.attachFileToReport(queryResultName + ".txt","text/plain", results.getAbsolutePath());
-        scenarioCtx.put(queryResultName, String.class, results.getAbsolutePath());
+        StepCore.attachFileToReport(resName + ".txt","text/plain", results.getAbsolutePath());
+        scenarioCtx.put(resName, String.class, results.getAbsolutePath());
+
+        if (templateComparison) {
+            StepCore.compareWithTemplate(templateName, results.getAbsolutePath());
+        }
+
     }
 
 
-    /**
-     * Verifies sql select query results by executing template comparison<br><br>
-     *
-     * Uses following objects:<br>
-     *  ctx.Object.queryResultName
-     *
-     * @param queryResultName, String, name of the context Object that stores the query results
-     * @param templateName, String, name of the template used for comparison
-     */
-    @Then("^validate that select query result (.*?) is like (.*) template$")
-    public void validate_that_select_query_result_is_like_template(String queryResultName, String templateName)  {
-        String path = scenarioCtx.get(queryResultName, String.class);
-        StepCore.compareWithTemplate(templateName, path);
-    }
 
     /**
-     * Creates table backup in the dB
+     * Executes update sql statement in desired database.<br>
+     * Multiple statements can be provided if more than one update shall be executed.
      *
-     * @param tableName, String, name of the table
-     * @param backupName, String, name of the backup table
+     * @param url String, connection string of the database that shall be used
+     * @param params Map, table that contains sql statement
      */
-    @When("^create table (.*?) backup with name (.*)$")
-    public void create_table_backup_with_name(String tableName, String backupName) {
-        String table = StepCore.checkIfInputIsVariable(tableName);
-        String backup = StepCore.checkIfInputIsVariable(backupName);
+    @When("^edit in (.+) database$")
+    public void edit_in_database(String url, List<String> params) {
 
-        Integer numOfRowsInTable = SqlCore.selectScalar("SELECT COUNT(*) FROM " + table);
+        String connectionString = StepCore.checkIfInputIsVariable(url);
 
-        String query = "SELECT INTO " + backup + " FROM " + table;
-        SqlCore.selectList(query);
+        //handle params
+        if ( ! params.isEmpty() ) {
+            for (String row : params) {
+                String statement = StepCore.checkIfInputIsVariable(row);
 
-        Integer numOfRowsInBackup = SqlCore.selectScalar("SELECT COUNT(*) FROM " + backup);
-
-        if ( ! numOfRowsInTable.equals(numOfRowsInBackup)){
-            Log.error("Table backup failed! Number of rows in " + table + " " + numOfRowsInTable +
-                " is not equal to number of rows in " + backup + " " + numOfRowsInBackup);
+                String statementAfterReplacement = StepCore.replaceInString(statement);
+                Integer result = SqlCore.update(connectionString, statementAfterReplacement);
+                if (result == 0){
+                    Log.warn("No rows were updated!");
+                } else {
+                    Log.debug(result + " rows were updated");
+                }
+            }
         }
     }
 
+
     /**
-     * Verifies that content of 2 tables A and B is the same
+     * Executes insert sql statement in desired database.<br>
+     * Multiple statements can be provided if more than one insert shall be executed.
      *
-     * @param tableAName, String, name of the table A
-     * @param tableBName, String, name of the table B
+     * @param url String, connection string of the database that shall be used
+     * @param params Map, table that contains sql statement
      */
-    @Then("^verify that content of table (.*?) equals content of table (.*)$")
-    public void verify_that_content_of_table_equals_content_of_table(String tableAName, String tableBName) {
-          String tableA = StepCore.checkIfInputIsVariable(tableAName);
-        String tableB = StepCore.checkIfInputIsVariable(tableBName);
+    @When("^insert into (.+) database$")
+    public void insert_into_database(String url, List<String> params) {
 
-        String query = "SELECT * FROM TABLE " + tableA + " EXCEPT SELECT * FROM TABLE " + tableB;
-        List<Map<String,Object>> list = SqlCore.selectList(query);
+        String connectionString = StepCore.checkIfInputIsVariable(url);
 
-        if ( list.size() > 0 ){
-            SqlCore.printList(list);
-            Log.error("Content of table " + tableA + " is different than content of table " + tableB);
+        //handle params
+        if ( ! params.isEmpty() ) {
+            for (String row : params) {
+                String statement = StepCore.checkIfInputIsVariable(row);
+                String statementAfterReplacement = StepCore.replaceInString(statement);
+                SqlCore.insert(connectionString, statementAfterReplacement);
+                Log.warn("Insert statement was executed but not feedback was provided how many rows were inserted!");
+            }
         }
+
     }
+
+
+    /**
+     * Executes delete sql statement in desired database.<br>
+     * Multiple statements can be provided if more than one delete shall be executed.
+     *
+     * @param url String, connection string of the database that shall be used
+     * @param params Map, table that contains sql statement
+     */
+    @When("^delete from (.+) database$")
+    public void delete_from_database(String url, List<String> params) {
+
+        String connectionString = StepCore.checkIfInputIsVariable(url);
+
+        //handle params
+        if ( ! params.isEmpty() ) {
+
+            for (String row : params) {
+                String statement = StepCore.checkIfInputIsVariable(row);
+                String statementAfterReplacement = StepCore.replaceInString(statement);
+                Integer result = SqlCore.delete(connectionString, statementAfterReplacement);
+                if ( result == 0 ){
+                    Log.warn("No rows were deleted!");
+                } else {
+                    Log.debug(result + " rows were deleted");
+                }
+            }
+        }
+
+    }
+
+
+
 
 }

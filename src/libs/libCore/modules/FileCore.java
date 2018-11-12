@@ -6,26 +6,14 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import cucumber.api.Scenario;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static org.apache.commons.io.FileUtils.readFileToString;
 
 @SuppressWarnings("unchecked")
 public class FileCore {
-
-    private Context scenarioCtx;
-
-    public FileCore () {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
-    }
 
     /**
      * Returns path to the project directory
@@ -46,26 +34,6 @@ public class FileCore {
 
         return path;
     }
-
-    /**
-     * Returns path the global configuration directory
-     *
-     * @return path String, path to global configuration directory
-     */
-    public String getGlobalConfigPath() {
-        return getProjectPath() + File.separator +"config";
-    }
-
-
-    /**
-     * Returns path the directory with feature files
-     *
-     * @return path String, path to features directory
-     */
-    public String getFeaturesPath() {
-        return getProjectPath() + File.separator + "features";
-    }
-
 
     /**
      * Returns paths to files that meets criteria like name or extension
@@ -101,6 +69,7 @@ public class FileCore {
     public String getCurrentFeatureDirPath(){
         Log.debug("Looking for a path to the current feature file");
 
+        Context scenarioCtx = GlobalCtxSingleton.getInstance().get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
         String scenario = scenarioCtx.get("FeatureUri", String.class);
         String path = new File(scenario).getParentFile().getAbsolutePath();
 
@@ -271,9 +240,7 @@ public class FileCore {
     public void removeFile(File file) {
         try {
             FileUtils.forceDelete(file);
-        } catch (IOException e) {
-            Log.error("", e);
-        } catch (NullPointerException e) {
+        } catch (IOException | NullPointerException e) {
             Log.error("", e);
         }
     }

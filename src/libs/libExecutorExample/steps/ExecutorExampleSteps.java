@@ -5,22 +5,17 @@ import cucumber.api.java.en.When;
 import libs.libCore.modules.BaseSteps;
 import libs.libCore.modules.Log;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.nio.charset.Charset;
 
 public class ExecutorExampleSteps extends BaseSteps {
 
     @Given("^execute sample command$")
     public void execute_sample_command() {
-        String cmd = "java -version";
-
         File workingDir = FileCore.getTempDir();
+        String out = ExecutorCore.execute("java -version", workingDir, 10, true);
 
-        ByteArrayOutputStream out = ExecutorCore.execute(cmd, workingDir, 10, true);
-
-        Log.debug("Output is ");
-        Log.debug(new String(out.toByteArray(), Charset.defaultCharset()));
+        Log.debug("Output is");
+        Log.debug(out);
     }
 
 
@@ -34,7 +29,7 @@ public class ExecutorExampleSteps extends BaseSteps {
 
 
 
-    @Given("^new text file is created$")
+    @Given("^create text file$")
     public void new_text_file_is_created() {
         String cmd = "powershell.exe " +
                 "\"$stream = [System.IO.StreamWriter] " +
@@ -47,10 +42,10 @@ public class ExecutorExampleSteps extends BaseSteps {
         String sWorkingDirPath = workingDir.getAbsolutePath();
         scenarioCtx.put("WorkingDir", String.class, sWorkingDirPath);
 
-        ByteArrayOutputStream out = ExecutorCore.execute(cmd, workingDir, 100, true);
+        String out = ExecutorCore.execute(cmd, workingDir, 100, true);
 
         Log.debug("Output is ");
-        Log.debug(new String(out.toByteArray(), Charset.defaultCharset()));
+        Log.debug(out);
     }
 
     @When("^read the file$")
@@ -59,11 +54,10 @@ public class ExecutorExampleSteps extends BaseSteps {
         String cmd = "powershell.exe 'Get-Content -Path " + path + "\\t2.txt'";
 
         File workingDir = FileCore.createTempDir();
-
-        ByteArrayOutputStream out = ExecutorCore.execute(cmd, workingDir, 100, true);
+        String out = ExecutorCore.execute(cmd, workingDir, 100, true);
 
         Log.debug("Output is ");
-        Log.debug(new String(out.toByteArray(), Charset.defaultCharset()));
+        Log.debug(out);
     }
 
 }

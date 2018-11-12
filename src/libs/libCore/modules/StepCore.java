@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.NumberFormat;
-import java.time.Instant;
 import java.util.*;
 
 import static java.lang.Math.toIntExact;
@@ -20,13 +19,11 @@ public class StepCore {
 
     private Context scenarioCtx;
     private FileCore FileCore;
-    private Storage Storage;
 
     // PicoContainer injects class SharedContext
     public StepCore() {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
+        this.scenarioCtx = GlobalCtxSingleton.getInstance().get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
         this.FileCore = scenarioCtx.get("FileCore",FileCore.class);
-        this.Storage = scenarioCtx.get("Storage", Storage.class);
     }
 
     /**
@@ -551,160 +548,6 @@ public class StepCore {
         }
 
         return input;
-    }
-
-
-    /**
-     * Creates a file in OS temporary directory which can be used to trigger browser lock<br>
-     * Please use this method together with lockBrowser()<br>
-     *
-     */
-    public void activateBrowserLock(){
-
-        File pathToTempDir = FileCore.getTempDir();
-        Log.debug("Path to temp directory is " + pathToTempDir);
-        File file = new File(pathToTempDir + "\\" + "activateBrowserLock.lck");
-
-        //get current timestamp
-        Instant instant = Instant.now();
-        Long now = instant.getEpochSecond();
-
-        //prepare line for file
-        String line = now.toString();
-
-        FileCore.writeToFile(file, line);
-
-    }
-
-    private Boolean checkIfBrowserLockIsActive(){
-        File pathToTempDir = FileCore.getTempDir();
-        Log.debug("Path to temp directory is " + pathToTempDir);
-        File file = new File(pathToTempDir + "\\" + "activateBrowserLock.lck");
-
-        if (file.exists() && !file.isDirectory()) {
-            String fileContent = FileCore.readToString(file);
-
-            //get current timestamp
-            Instant instant = Instant.now();
-            Long now = instant.getEpochSecond();
-
-            //check file content
-            Long result = 0L;
-            Long timestampFromFile = Long.valueOf(fileContent.trim());
-            result = now - timestampFromFile;
-
-            if ( result.intValue() <= 900 ){
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Can be used in case tests run in parallel on the same host.<br>
-     * Will pause test execution if other webUI test is in progress.<br>
-     * Use in case Sikuli is needed to handle flash based elements in the browser to avoid covering of browser window with other windows.
-     *
-     */
-    public void lockBrowser(){
-        /*
-
-        THIS IS JUST IN CASE WE WANT TO RUN BROWSER TESTS IN PARALLEL ON SAME HOST
-        AND USE SIKULI FOR FLASH BASED ELEMENTS for example via Jenkins
-        It shall not affect single tests runs
-
-         */
-
-        if ( checkIfBrowserLockIsActive() ) {
-            Log.warn("Browser lock activated! Going to check if new window can be open");
-        } else {
-            return;
-        }
-
-        //lock browser for 5 minutes
-        String url = Storage.get("Environment.Active.Web.url");
-        File pathToTempDir = FileCore.getTempDir();
-        Log.debug("Path to temp directory is " + pathToTempDir);
-        File file = new File(pathToTempDir + "\\" + "browserLock.lck");
-
-        Boolean isBusy = true;
-        Integer i = 0;
-
-        while (isBusy) {
-
-            //get current timestamp
-            Instant instant = Instant.now();
-            Long now = instant.getEpochSecond();
-
-            //prepare line for file
-            String line = url + "," + now.toString();
-            Long result = 0L;
-            String fileContent = "";
-
-            //overall timeout is set to 25 minutes
-            if(i==25){
-                Log.debug("Timeout!");
-                FileCore.writeToFile(file, line);
-                //timeout we need to close this loop
-                break;
-            }
-
-            if (file.exists() && !file.isDirectory()) {
-                Log.debug(pathToTempDir + "\\" + "browserLock.lck" + " file found");
-                fileContent = FileCore.readToString(file);
-                Log.debug("File content is " + fileContent);
-
-                if (fileContent.trim().equals("") || (! fileContent.contains(","))){
-                    Log.debug("lck file empty, writing new content");
-                    FileCore.writeToFile(file, line);
-                    //file is empty browser can be open
-                    break;
-                }
-
-                String[] tmp = fileContent.trim().split(",");
-                if (url.equals(tmp[0].trim())){
-                    //same job runs the browser, continue and do not wait
-                    Log.debug("same job runs the browser, no need to wait");
-                    FileCore.writeToFile(file, line);
-                    break;
-                }
-
-                Long timestampFromFile = Long.valueOf(tmp[1].trim());
-                result = now - timestampFromFile;
-
-            } else {
-                Log.warn(pathToTempDir + "\\" + "browserLock.lck" + " file not found! Going to create one");
-                //create file and open browser
-                FileCore.writeToFile(file, line);
-                break;
-            }
-
-            if ( result.intValue() > 300 ){
-                Log.debug("lck file found and 5 minutes since last usage has passed");
-                //5 minutes between previous test has passed we need to break this loop
-                //before we do that execute one last check to make sure that no other job is running
-                fileContent = FileCore.readToString(file);
-                Log.debug("File content is " + fileContent);
-
-                String[] tmp = fileContent.trim().split(",");
-                Long timestampFromFile = Long.valueOf(tmp[1].trim());
-                result = now - timestampFromFile;
-
-                if ( url.equals(tmp[0].trim()) || result.intValue() > 300 ){
-                    //same job runs the browser, continue and do not wait
-                    Log.debug("same job runs the browser or 5 minutes has passed, no need to wait");
-                    FileCore.writeToFile(file, line);
-                    break;
-                } else{
-                    lockBrowser();
-                }
-            }
-
-            Log.debug("lck file found and in use. Going to wait");
-            sleep(60);
-            i++;
-        }
     }
 
 }

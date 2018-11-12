@@ -34,8 +34,8 @@ public class ReqResInSteps extends BaseSteps {
      * Triggers http get request with variable path
      * ValidatableResponse is available as a context Object with name response.
      */
-    @When("^json get request single user with id (.+) is sent$")
-    public void json_get_request_is_sent(String id){
+    @When("^send json get request single user with id (.+)$")
+    public void send_json_get_request_single_user_with_id(String id){
         String url = Storage.get("Environment.Active.Rest.url");
         String path = Storage.get("Environment.Active.Rest.url_get_suffix");
         String userId = globalCtx.get(id,String.class);
@@ -68,8 +68,8 @@ public class ReqResInSteps extends BaseSteps {
      *
      * @param name, String, name of the template that contains http body of the request
      */
-    @When("^json put request (.*?) to modify single user with id (.*?) is sent$")
-    public void json_put_request_is_sent(String name, String id) {
+    @When("^send json put request (.*?) to modify single user with id (.*?)$")
+    public void send_json_put_request_to_modify_single_user_with_id(String name, String id) {
         String url = Storage.get("Environment.Active.Rest.url");
         String path = Storage.get("Environment.Active.Rest.url_put_suffix");
 
@@ -102,8 +102,8 @@ public class ReqResInSteps extends BaseSteps {
      * Triggers http delete request with variable path
      * ValidatableResponse is available as a context Object with name response.
      */
-    @When("^json delete single user request with id (.+) is sent$")
-    public void json_delete_request_is_sent(String userId){
+    @When("^send json delete request single user request with id (.+)$")
+    public void send_json_delete_request_single_user_with_id(String userId){
         String url = Storage.get("Environment.Active.Rest.url");
         String path = Storage.get("Environment.Active.Rest.url_get_suffix");
 

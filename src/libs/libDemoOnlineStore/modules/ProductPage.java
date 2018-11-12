@@ -5,7 +5,6 @@ import libs.libCore.modules.Log;
 import org.apache.commons.lang.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
-
 import java.util.List;
 
 public class ProductPage extends BasePage {
@@ -30,7 +29,6 @@ public class ProductPage extends BasePage {
      * Adds product to the cart
      *
      * @param       name name of the product that shall be added to the cart
-     *
      */
     public void addToCart(String name){
 
@@ -71,12 +69,9 @@ public class ProductPage extends BasePage {
     /**
      * Clicks on Checkout button and goes to check out page
      *
-     *
      * @return      CheckoutPage
      */
     public CheckoutPage goToCheckout(){
-
-
         //click checkout
         WebElement CheckoutButton = PageCore.findElement(CheckoutButtonSelector);
         CheckoutButton.click();
