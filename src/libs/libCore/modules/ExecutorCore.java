@@ -30,7 +30,7 @@ public class ExecutorCore {
         try {
             cmdLine = CommandLine.parse(cmd);
         } catch (IllegalArgumentException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
 
         if (timeout > 0)
@@ -48,7 +48,7 @@ public class ExecutorCore {
             try {
                 pis = new PipedInputStream(pos);
             } catch (IOException e) {
-                Log.error("", e);
+                Log.error(e.getMessage());
             }
             executor.setStreamHandler(new PumpStreamHandler(pos));
         } else {
@@ -67,7 +67,7 @@ public class ExecutorCore {
         try {
             executor.execute(cmdLine, resultHandler);
         } catch (IOException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
 
         if ( blocking ) {
@@ -98,7 +98,7 @@ public class ExecutorCore {
                 r.close();
                 reader.close();
             } catch (IOException e) {
-                Log.error("", e);
+                Log.error(e.getMessage());
             }
 
 

@@ -69,7 +69,7 @@ public class ConfigReader {
         try {
             root = new JsonParser().parse(confFileContent);
         } catch (JsonSyntaxException e) {
-                Log.error("Typo in file " + file.getAbsolutePath(), e);
+                Log.error("Typo in file " + file.getAbsolutePath() + "! " + e.getMessage());
         }
 
         //read each entry and create new shared object for it
@@ -80,7 +80,7 @@ public class ConfigReader {
                     try {
                         object = root.getAsJsonObject().get(entry.getKey()).getAsJsonObject();
                     } catch (NullPointerException e) {
-                        Log.error("No objects defined in configuration file!", e);
+                        Log.error("No objects defined in configuration file! " + e.getMessage());
                     }
 
                     result = parseObject(object);
@@ -134,7 +134,7 @@ public class ConfigReader {
                         }
                     } catch (Exception e) {
                         Log.error("Not able to parse String to Number for " + key + " : " +
-                                entry.getValue().getAsString(), e);
+                                entry.getValue().getAsString() + "! " + e.getMessage());
                     }
                     if (num != null){
                         map.put(key, num);
@@ -170,7 +170,8 @@ public class ConfigReader {
                             } catch (Exception e) {
                                 Log.error("Not able to parse String to Number for " +
                                         key + " : " +
-                                        entry.getValue().getAsJsonArray().get(i).getAsString(), e);
+                                        entry.getValue().getAsJsonArray().get(i).getAsString()
+                                        + "! " + e.getMessage() );
                             }
                             if (num != null){
                                 tmpArray.add(num);
@@ -201,7 +202,7 @@ public class ConfigReader {
         try {
             return FileUtils.readFileToString(file, "UTF-8");
         } catch (IOException e) {
-            Log.error( "", e );
+            Log.error(e.getMessage());
         }
 
         return null;

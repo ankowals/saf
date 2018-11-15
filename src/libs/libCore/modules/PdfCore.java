@@ -39,7 +39,7 @@ public class PdfCore {
                 Log.error("Pdf file " + file + " is encrypted. Can't read it!");
             }
         } catch (IOException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
 
         List<String> result = Arrays.asList(lines);

@@ -213,7 +213,6 @@ public class Macro {
         HashMap<String, Object> mapToEval = scenarioCtx.get(input,HashMap.class);
         if ( mapToEval != null ) {
             HashMap<String, Object> macros = scenarioCtx.get("Macro", HashMap.class);
-
             HashMap<String, String> macrosAfterEvaluation = mcr(macros);
 
             //evaluate macros

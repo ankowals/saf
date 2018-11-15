@@ -113,7 +113,7 @@ public class StepCore {
                 }
             } catch (Exception e) {
                 Log.debug("Checking if String contains a numeric value " + input);
-                Log.error("Not able to parse String to Number for " + input, e);
+                Log.error("Not able to parse String to Number for " + input + "! " + e.getMessage());
             }
             Class<T> typeKey = (Class<T>) getType(num);
             result = typeKey.cast(num);
@@ -486,7 +486,7 @@ public class StepCore {
         try {
             bytes = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
         } catch (IOException e) {
-            Log.error( "File " + file.getAbsolutePath() + " not found!", e );
+            Log.error( "File " + file.getAbsolutePath() + " not found! " + e.getMessage());
         }
 
         Log.debug("File " + path + " with name " + name + " attached to report");

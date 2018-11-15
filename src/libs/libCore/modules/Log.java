@@ -72,25 +72,8 @@ public class Log {
     public static void error(String message) {
 		String threadId = String.valueOf(Thread.currentThread().getId());
 		ThreadContext.put("TId", threadId);
-		Log.error(message);
+		//Log.error(message);
 		fail(message);
-	}
-
-
-    /**
-     * logs message with ERROR severity. Marks current step and Scenario as failed.
-     *
-     * Shall be used every time execution of a step shall be interrupted and error
-     * re-thrown in the log file
-     *
-     * @param message String, text to be written to the log file
-     * @param e Throwable, error received
-     */
-	public static void error(String message, Throwable e) {
-		String threadId = String.valueOf(Thread.currentThread().getId());
-		ThreadContext.put("TId", threadId);
-		Log.error(message, e);
-		fail(e.getMessage());
 	}
 
 

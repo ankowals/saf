@@ -72,7 +72,7 @@ public class SqlCore {
             list = runner.query(connection, SqlQuery, new MapListHandler());
             Log.debug("Sql query executed");
         } catch (SQLException e) {
-            Log.error( "", e );
+            Log.error(e.getMessage());
         } finally {
             close(connectionString, connection);
         }
@@ -206,7 +206,7 @@ public class SqlCore {
             scalar = runner.query(connection, SqlQuery, scalarHandler);
             Log.debug("Sql query executed");
         } catch (SQLException e) {
-            Log.error("", e );
+            Log.error(e.getMessage());
         } finally {
             close(connectionString, connection);
         }
@@ -230,7 +230,7 @@ public class SqlCore {
             runner.insert(connection, SqlQuery, new ScalarHandler<>());
             Log.debug("Sql query executed");
         } catch (SQLException e) {
-            Log.error( "", e );
+            Log.error(e.getMessage());
         } finally {
             close(connectionString, connection);
         }
@@ -255,7 +255,7 @@ public class SqlCore {
             scalar = runner.update(connection, SqlQuery);
             Log.debug("Sql query executed");
         } catch (SQLException e) {
-            Log.error( "", e );
+            Log.error(e.getMessage());
         } finally {
             close(connectionString, connection);
         }
@@ -280,7 +280,7 @@ public class SqlCore {
             scalar = runner.update(connection, SqlQuery);
             Log.debug("Sql query executed");
         } catch (SQLException e) {
-            Log.error( "", e );
+            Log.error(e.getMessage());
         } finally {
             close(connectionString, connection);
         }
@@ -311,13 +311,13 @@ public class SqlCore {
         try {
             csvReader = new CSVReader(new FileReader(file));
         } catch (FileNotFoundException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
 
         try {
             headerRow = csvReader.readNext();
         } catch (IOException e) {
-            Log.error( "", e );
+            Log.error(e.getMessage());
         }
 
         if ( null == headerRow ) {
@@ -421,7 +421,7 @@ public class SqlCore {
                                     Timestamp timestamp = Timestamp.valueOf(string);
                                     ps.setTimestamp(index++, timestamp);
                                 } catch ( IllegalArgumentException e) {
-                                    Log.error("Wrong timestamp format provided", e);
+                                    Log.error("Wrong timestamp format provided! " + e.getMessage());
                                 }
                             } else {
                                 Log.error("Wrong type provided. Type in typeMapping[" + idx + "] not known");
@@ -434,7 +434,7 @@ public class SqlCore {
                     }
                 }
             } catch (IOException e) {
-                Log.error( "", e );
+                Log.error(e.getMessage());
             }
             ps.executeBatch(); // insert remaining records
             connection.commit();
@@ -443,20 +443,20 @@ public class SqlCore {
             try {
                 connection.rollback();
             } catch (SQLException e1) {
-                Log.error( "SQL batch query rollback execution failed", e1 );
+                Log.error("SQL batch query rollback execution failed! " + e1.getMessage() );
             }
-            Log.error( "", e );
+            Log.error(e.getMessage());
         } finally {
             if (null != ps)
                 try {
                     ps.close();
                 } catch (SQLException e) {
-                    Log.error( "", e );
+                    Log.error(e.getMessage());
                 }
             try {
                 csvReader.close();
             } catch (IOException e) {
-                Log.error( "", e );
+                Log.error(e.getMessage());
             }
             close(connectionString, connection);
         }

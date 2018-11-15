@@ -12,10 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.support.events.EventFiringWebDriver;
+import org.testng.Assert;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -35,9 +32,6 @@ public class CustomEventListener implements ConcurrentEventListener {
     private EventHandler<TestStepFinished> stepFinishedHandler = new EventHandler<TestStepFinished>() {
         @Override
         public void receive(TestStepFinished event) {
-            if ( event.result.getErrorMessage() != null ){
-                Log.error(event.result.getErrorMessage());
-            }
             handleTestStepFinished(event);
         }
     };
@@ -155,18 +149,25 @@ public class CustomEventListener implements ConcurrentEventListener {
     }
 
     private void handleTestRunFinished(TestRunFinished event){
+        Log.info("+------------------------------+");
+        Log.info("+--- All scenarios executed ---+");
+        Log.info("+------------------------------+");
+
         Log.info("Cleaning up global resources");
         Context globalCtx = GlobalCtxSingleton.getInstance();
 
         //closing all web drivers in the wed driver pool
+        Log.debug("Closing web drivers");
         WebDriverObjectPool webDriverPool = globalCtx.get("WebDriverObjectPool", WebDriverObjectPool.class);
         webDriverPool.closeAll();
 
         //closing all ssh clients in the ssh client pool
+        Log.debug("Closing ssh clients");
         SshClientObjectPool sshClientObjectPool = globalCtx.get("SshClientObjectPool", SshClientObjectPool.class);
         sshClientObjectPool.closeAll();
 
         //closing all jdbc drivers in the jdbc drivers pool
+        Log.debug("Closing jdbc connections");
         JdbcDriverObjectPool jdbcDriverObjectPool = globalCtx.get("JdbcDriverObjectPool", JdbcDriverObjectPool.class);
         jdbcDriverObjectPool.closeAll();
 
@@ -198,6 +199,18 @@ public class CustomEventListener implements ConcurrentEventListener {
     }
 
     private void handleTestStepFinished(TestStepFinished event){
+        //nasty workaround to attach log file to allure report and print an error message with a stack trace into it
+        if ( event.result.getErrorMessage() != null ){
+            //we do not want to fail a test case yet, it shall be done after attaching scenario report
+            Logger logger = LogManager.getLogger("libs.libCore.modules");
+            logger.error(event.result.getErrorMessage());
+        }
+
+        String stepFiller = StringUtils.repeat("-", event.result.getStatus().toString().length());
+        Log.info("+---------------------------" + stepFiller + " ---+");
+        Log.info("+--- Step ended with status " + event.result.getStatus() + " ---+");
+        Log.info("+---------------------------" + stepFiller + " ---+");
+
         Context globalCtx = GlobalCtxSingleton.getInstance();
         ScenarioCtxObjectPool scenarioCtxPool = globalCtx.get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class);
         Context scenarioCtx = scenarioCtxPool.checkOut();
@@ -205,29 +218,39 @@ public class CustomEventListener implements ConcurrentEventListener {
         String testCaseName = scenarioCtx.get("ScenarioName", String.class);
         Integer scenarioStepsListSize = scenarioCtx.get("scenarioStepsListSize", Integer.class);
         Integer scenarioStepsCounter = scenarioCtx.get("ScenarioStepsCounter", Integer.class);
+        String scenarioFiller = StringUtils.repeat("-", testCaseName.length());
+
+        //detect if scenario has failed
+        if ( event.result.is(Result.Type.FAILED) || event.result.getErrorMessage() != null ){
+            Log.info("+-----------------------" + scenarioFiller + "---------------------------+");
+            Log.info("+--- Scenario with name " + testCaseName + " ended due to an error! ---+");
+            Log.info("+-----------------------" + scenarioFiller + "---------------------------+");
+        }
 
         //detect last step of a scenario
-        //it has to be used instead of TestCaseFinished event because otherwise scenario log
-        //will not be attached to the report
         if ( scenarioStepsCounter.equals(scenarioStepsListSize) ) {
-            String scenarioFiller = StringUtils.repeat("-", testCaseName.length());
-            Log.info("+-----------------------" + scenarioFiller + "-----------+");
-            Log.info("+--- Scenario with name " + testCaseName + " ended! ---+");
-            Log.info("+-----------------------" + scenarioFiller + "-----------+");
+            Log.info("+-----------------------" + scenarioFiller + "----------+");
+            Log.info("+--- Scenario with name " + testCaseName + " ended ---+");
+            Log.info("+-----------------------" + scenarioFiller + "----------+");
+        }
+
+        //in case scenario has failed or was successfully executed clean up scenario resources and attach log to the report
+        if ( scenarioStepsCounter.equals(scenarioStepsListSize) ||
+                event.result.is(Result.Type.FAILED ) ||
+                event.result.getErrorMessage() != null) {
 
             //close web driver and take screenshot in case scenario has failed
             //has to be done here otherwise screenshot will not be attached to allure report
             WebDriverObjectPool webDriverPool = globalCtx.get("WebDriverObjectPool", WebDriverObjectPool.class);
             Storage storage = scenarioCtx.get("Storage", Storage.class);
-            EventFiringWebDriver instance = scenarioCtx.get("SeleniumWebDriver", EventFiringWebDriver.class);
+            StepCore stepCore = scenarioCtx.get("StepCore", StepCore.class);
+
             Boolean closeAfterScenario = storage.get("Environment.Active.WebDrivers.CloseBrowserAfterScenario");
             if ( ! closeAfterScenario ){
-                takeScreenshotOnFailure(instance, event, scenarioCtx);
-                webDriverPool.checkInAllPerThread();
+                webDriverPool.checkInAllPerThread(event, testCaseName, stepCore);
             } else{
                 Log.debug("Closing web browser");
-                takeScreenshotOnFailure(instance, event, scenarioCtx);
-                webDriverPool.closeAllPerThread();
+                webDriverPool.closeAllPerThread(event, testCaseName, stepCore);
             }
 
             //return all ssh client used by particular thread to the pool
@@ -239,8 +262,17 @@ public class CustomEventListener implements ConcurrentEventListener {
             jdbcDriverObjectPool.checkInAllPerThread();
 
             //attach log file to allure report
-            StepCore stepCore = scenarioCtx.get("StepCore", StepCore.class);
             stepCore.attachFileToReport("Log", "text/plain", scenarioCtx.get("ScenarioLogFileName", String.class));
+
+            //everything below will not be attached to allure report scenario log
+            Log.info("Cleaning up scenario resources");
+            scenarioCtxPool.checkIn();
+
+            //stop execution of other steps in the scenario
+            if ( event.result.getErrorMessage() != null ){
+                Log.error("Scenario ended due to an error " + event.result.getErrorMessage());
+            }
+
         }
 
     }
@@ -260,7 +292,7 @@ public class CustomEventListener implements ConcurrentEventListener {
 
         Long threadId = Thread.currentThread().getId();
 
-        //this is used to create log dire per feature and log file per scenario in a feature
+        //this is used to create log dir per feature and log file per scenario in a feature
         //file name can't be longer than 256 characters
         String logFileName =  createLogFileName(threadId, event);
 
@@ -306,7 +338,7 @@ public class CustomEventListener implements ConcurrentEventListener {
         //get project global configuration
         HashMap<String, Object> tMap = globalCtx.get("ProjectDefaultConfiguration", HashMap.class);
 
-        //make a deep copy and put each key and value paris into scenario context
+        //make a deep copy of global config and put each key and value paris into scenario context
         Cloner cloner = new Cloner();
         HashMap<String, Object> globalConfig = cloner.deepClone(tMap);
 
@@ -394,8 +426,6 @@ public class CustomEventListener implements ConcurrentEventListener {
             macro.eval("TestData");
             Log.info("Evaluating macros in Expected object");
             macro.eval("Expected");
-            Log.info("Evaluating macros in Environment.Active object");
-            macro.eval("Environment.Active");
         }
 
         //allow to use values from one entity in other entities of Storage
@@ -424,10 +454,7 @@ public class CustomEventListener implements ConcurrentEventListener {
     }
 
     private void handleTestCaseFinished(TestCaseFinished event){
-        Log.info("Cleaning up scenario resources");
-        Context globalCtx = GlobalCtxSingleton.getInstance();
-        ScenarioCtxObjectPool scenarioCtxPool = globalCtx.get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class);
-        scenarioCtxPool.checkIn();
+
     }
 
 
@@ -562,7 +589,7 @@ public class CustomEventListener implements ConcurrentEventListener {
                 try {
                     Files.createDirectory(allureResultsDir.toPath());
                 } catch (IOException e) {
-                    Log.error("", e);
+                    Log.error(e.getMessage());
                 }
             }
 
@@ -570,7 +597,7 @@ public class CustomEventListener implements ConcurrentEventListener {
             try {
                 Files.write(targetFile.toPath(), lines);
             } catch (IOException e) {
-                Log.error("", e);
+                Log.error(e.getMessage());
             }
         }
 
@@ -718,7 +745,7 @@ public class CustomEventListener implements ConcurrentEventListener {
                     .trim()
                     .replaceAll("(?m)^#.*$", "");
         } catch (IOException e){
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
 
         Pattern pattern = Pattern.compile("(?im)^Feature:(.*?)$");
@@ -731,27 +758,6 @@ public class CustomEventListener implements ConcurrentEventListener {
 
         if ( count > 1){
             Log.error("More than 1 feature defined in a feature file " + featurePath + "!");
-        }
-    }
-
-    private void takeScreenshotOnFailure(EventFiringWebDriver instance, TestStepFinished event, Context scenarioCtx){
-        if ( event.result.is(Result.Type.FAILED) ) {
-            Log.debug("Try to take a screenshot");
-            try {
-                byte[] screenshot = ((TakesScreenshot) instance).getScreenshotAs(OutputType.BYTES);
-                String testCaseName = scenarioCtx.get("ScenarioName", String.class);
-                String name = StringUtils.remove(testCaseName, "-");
-                if (name.length() > 256) {
-                    name = name.substring(0, 255);
-                }
-                StepCore stepCore = scenarioCtx.get("StepCore", StepCore.class);
-                stepCore.attachScreenshotToReport(name, screenshot);
-            } catch ( NullPointerException | WebDriverException e ){
-                Log.warn("Driver not usable. Can't take screenshot");
-                StringWriter sw = new StringWriter();
-                e.printStackTrace(new PrintWriter(sw));
-                Log.warn(sw.toString());
-            }
         }
     }
 

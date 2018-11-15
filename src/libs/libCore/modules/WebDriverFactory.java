@@ -132,7 +132,7 @@ public class WebDriverFactory {
                 width = Integer.parseInt(dimensions[0]);
                 height = Integer.parseInt(dimensions[1]);
             } catch (NumberFormatException e) {
-                Log.error("", e);
+                Log.error(e.getMessage());
             }
             Log.debug("Going to set browser window width " + width + " and height " + height);
             driver.manage().window().setSize(new Dimension(width, height));

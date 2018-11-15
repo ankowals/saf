@@ -57,7 +57,7 @@ public class PageCore {
         try {
             wait.until(ExpectedConditions.titleContains(pageTitle));
         } catch (TimeoutException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
     }
 
@@ -102,7 +102,7 @@ public class PageCore {
         try {
             wait.until(ExpectedConditions.presenceOfElementLocated(locator));
         } catch (TimeoutException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
     }
 
@@ -120,7 +120,7 @@ public class PageCore {
         try {
             wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
         } catch (TimeoutException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
     }
 
@@ -139,7 +139,7 @@ public class PageCore {
         try {
             wait.until(ExpectedConditions.invisibilityOfElementLocated(locator));
         } catch (TimeoutException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
         turnOnImplicitWaits();
     }
@@ -229,14 +229,8 @@ public class PageCore {
      * @return WebElement
      */
     public WebElement findElement(By locator) {
-
-        ExecutionTimer t_FindBy = new ExecutionTimer();
         Log.debug("Looking for an element identified " + locator);
-        WebElement element = driver.findElement(locator);
-        t_FindBy.end();
-        Log.debug("Element found after " + t_FindBy.duration()  + " ms");
-
-        return element;
+        return driver.findElement(locator);
     }
 
 
@@ -282,7 +276,7 @@ public class PageCore {
         try {
             driver.get(url);
         } catch (Exception e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
     }
 
@@ -295,7 +289,7 @@ public class PageCore {
         try {
             driver.close();
         } catch (Exception e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
     }
 
@@ -327,7 +321,6 @@ public class PageCore {
      * @return Object
      */
     public Object executeJs (String script) {
-
         Log.debug("Going to execute js");
         ExecutionTimer t_FindBy = new ExecutionTimer();
         Object result = driver.executeScript(script);
@@ -345,13 +338,15 @@ public class PageCore {
      * @param to WebElement, web element where to drop the previous one
      */
     public void dragAndDrop (WebElement from, WebElement to) {
-
+        ExecutionTimer t_FindBy = new ExecutionTimer();
         Actions builder = new Actions(driver);
         Action dragAndDrop = builder.clickAndHold(from)
                                     .moveToElement(to)
                                     .release(to)
                                     .build();
         dragAndDrop.perform();
+        t_FindBy.end();
+        Log.debug("Drag and drop action performed within " + t_FindBy.duration()  + " ms");
     }
 
 
@@ -361,13 +356,13 @@ public class PageCore {
      * @param element WebElement, web element on which double click shall be performed
      */
     public void doubleClick (WebElement element) {
-
         Actions builder = new Actions(driver);
         Action doubleClick = builder.moveToElement(element)
                                     .doubleClick()
                                     .build();
 
         doubleClick.perform();
+        Log.debug("Double click performed");
     }
 
 
@@ -377,11 +372,13 @@ public class PageCore {
      * @param element WebElement, web element on which mouse hover shall be done
      */
     public void hoverOver (WebElement element) {
-
+        ExecutionTimer t_FindBy = new ExecutionTimer();
         Actions builder = new Actions(driver);
         Action hoverOver = builder.moveToElement(element).build();
 
         hoverOver.perform();
+        t_FindBy.end();
+        Log.debug("Mouse hover over " + element.toString() + " executed within " + t_FindBy.duration()  + " ms");
     }
 
 
@@ -391,11 +388,13 @@ public class PageCore {
      * @param element WebElement, web element on which mouse hover shall be done and click performed
      */
     public void hoverOverAndClick (WebElement element) {
-
+        ExecutionTimer t_FindBy = new ExecutionTimer();
         Actions builder = new Actions(driver);
         Action hoverOver = builder.moveToElement(element).click().build();
 
         hoverOver.perform();
+        t_FindBy.end();
+        Log.debug("Mouse hover over " + element.toString() + " and click executed within " + t_FindBy.duration()  + " ms");
     }
 
 
@@ -416,6 +415,7 @@ public class PageCore {
      * @param locator By, locator of web element like xpath or css selector
      */
     public void scrollTo (By locator) {
+        ExecutionTimer t_FindBy = new ExecutionTimer();
         WebElement element = driver.findElement(locator);
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
         try {
@@ -423,6 +423,8 @@ public class PageCore {
         } catch (InterruptedException e) {
             //don't do anything
         }
+        t_FindBy.end();
+        Log.debug("Scroll to element identified " + locator.toString() + " executed within " + t_FindBy.duration()  + " ms");
     }
 
 
@@ -433,11 +435,10 @@ public class PageCore {
      */
     public void switchToIFrame (By locator) {
         WebElement iFrame = driver.findElement(locator);
-        //driver.switchTo().defaultContent(); // you are now outside any frame
         try {
             driver.switchTo().frame(iFrame);
         } catch (NoSuchFrameException e){
-            Log.error( "", e );
+            Log.error(e.getMessage());
         }
 
         Log.debug("Switched to iFrame located by " + locator);
@@ -471,7 +472,7 @@ public class PageCore {
         try {
             driver.switchTo().window(individualHandle[id]);
         } catch (NoSuchWindowException e){
-            Log.error( "", e );
+            Log.error(e.getMessage());
         }
 
         driver.switchTo().defaultContent();
@@ -491,7 +492,7 @@ public class PageCore {
 
 
     /**
-     * opens new tab open in the browser
+     * opens new tab in the browser
      * Simulates pressing of CTRL+t keys combination
      */
     public void openNewTab() {
@@ -523,7 +524,7 @@ public class PageCore {
         try {
             wait.until(ExpectedConditions.alertIsPresent());
         } catch (TimeoutException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
 
         return driver.switchTo().alert();
@@ -538,7 +539,7 @@ public class PageCore {
         try {
             screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
         } catch (WebDriverException e) {
-            Log.error( "Screenshot can't be taken. Make sure that driver was started!", e );
+            Log.error("Screenshot can't be taken. Make sure that driver was started! " + e.getMessage());
         }
 
         return screenshot;

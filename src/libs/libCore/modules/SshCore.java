@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import static net.sf.expectit.filter.Filters.removeColors;
 import static net.sf.expectit.filter.Filters.removeNonPrintable;
-import static net.sf.expectit.matcher.Matchers.contains;
+import static net.sf.expectit.matcher.Matchers.regexp;
 
 @SuppressWarnings("unchecked")
 public class SshCore {
@@ -56,7 +56,7 @@ public class SshCore {
 
             return session;
         } catch (ConnectionException | TransportException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
 
         return null;
@@ -66,7 +66,7 @@ public class SshCore {
         try {
             session.close();
         } catch (ConnectionException | TransportException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
     }
 
@@ -92,7 +92,7 @@ public class SshCore {
             stdErr = IOUtils.readFully(command.getErrorStream()).toString();
 
         } catch (IOException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         } finally {
             stopSession(session);
             sshClientObjectPool.checkIn(node, client);
@@ -180,7 +180,7 @@ public class SshCore {
             Log.debug("Downloading file " + pathToFileOnRemote + " to " + pathToLocalDir + " via scp");
             client.newSCPFileTransfer().download(pathToFileOnRemote, new FileSystemFile(pathToLocalDir));
         } catch (IOException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         } finally {
             sshClientObjectPool.checkIn(node, client);
         }
@@ -208,7 +208,7 @@ public class SshCore {
             return true;
 
         } catch (IOException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         } finally {
             sshClientObjectPool.checkIn(node, client);
         }
@@ -236,7 +236,7 @@ public class SshCore {
             sftp.get(pathToFileOnRemote, new FileSystemFile(pathToLocalDir));
             sftp.close();
         } catch (IOException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         } finally {
             sshClientObjectPool.checkIn(node, client);
         }
@@ -266,7 +266,7 @@ public class SshCore {
             return true;
 
         } catch (IOException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         } finally {
             sshClientObjectPool.checkIn(node, client);
         }
@@ -297,7 +297,7 @@ public class SshCore {
             scenarioCtx.put("SshShellClient_" + node, SSHClient.class, client);
 
         } catch (IOException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
     }
 
@@ -318,13 +318,13 @@ public class SshCore {
         try {
             Log.debug("Command to execute via interactive ssh shell is " + cmd);
             expect.sendLine(cmd);
-            stdOut  = expect.expect(contains(expectedOutput)).getInput();
+            stdOut  = expect.expect(regexp(expectedOutput)).getInput();
             stdErr = "";
             exitCode = 0;
             Log.debug(stdOut);
         } catch (Exception e) {
             stopShell(node);
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
     }
 
@@ -341,7 +341,7 @@ public class SshCore {
         try {
             expect.close();
         } catch (IOException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         } finally {
             sshClientObjectPool.checkIn(node, client);
         }

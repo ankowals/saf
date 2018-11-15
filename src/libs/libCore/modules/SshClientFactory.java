@@ -46,7 +46,7 @@ public class SshClientFactory {
         } catch (
                 IOException e) {
             Log.error("Unable to connect via ssh to " + node + " as " + user
-                    + " on " + address + " and port " + port, e);
+                    + " on " + address + " and port " + port + "! " + e.getMessage());
         }
 
         return null;

@@ -39,7 +39,7 @@ public class RemoteExecutionSteps extends BaseSteps {
 
         String node = "node1";
         SshCore.startShell(node, 40);
-        SshCore.executeInShell(node, "", "$");
+        SshCore.executeInShell(node, "", "\\$");
         SshCore.executeInShell(node, userChangeCmd, "Password");
         SshCore.executeInShell(node, passOfUserCmd, "root@");
         SshCore.executeInShell(node, validateCmd, "root");
@@ -50,7 +50,7 @@ public class RemoteExecutionSteps extends BaseSteps {
     public void check_command_exit_status_code_when_in_shell(){
         String node = "node1";
         SshCore.startShell(node, 10);
-        SshCore.executeInShell(node,"", "$");
+        SshCore.executeInShell(node,"", "\\$");
         SshCore.executeInShell(node, "test -e postinstall.sh;echo $?", "0");
         Log.debug(SshCore.getStdOut().replaceAll("(\\r|\\n)", "").trim());
         SshCore.stopShell(node);

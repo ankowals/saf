@@ -70,7 +70,7 @@ public class DateParser {
                     return date;
                 }
             } catch (ParseException e) {
-                Log.error("", e);
+                Log.error(e.getMessage());
             }
         }
 

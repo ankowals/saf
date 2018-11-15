@@ -29,7 +29,7 @@ public class FileCore {
             path = path + File.separator +"src";
             Log.debug("Project path is " + path);
         } catch (URISyntaxException e) {
-            Log.error( "Project path not found!", e );
+            Log.error( "Project path not found! " + e.getMessage() );
         }
 
         return path;
@@ -95,7 +95,7 @@ public class FileCore {
         try {
             result = readFileToString(file, encoding);
         } catch (IOException e) {
-            Log.error( "", e );
+            Log.error(e.getMessage());
         }
 
         return result;
@@ -113,7 +113,7 @@ public class FileCore {
         try {
             FileUtils.writeStringToFile(file, content, encoding, false);
         } catch (IOException e) {
-            Log.error( "", e );
+            Log.error(e.getMessage());
         }
     }
 
@@ -129,7 +129,7 @@ public class FileCore {
         try {
             FileUtils.writeStringToFile(file, content, encoding, true);
         } catch (IOException e) {
-            Log.error( "", e );
+            Log.error(e.getMessage());
         }
     }
 
@@ -148,7 +148,7 @@ public class FileCore {
         try {
             result = File.createTempFile(name, "." + extension);
         } catch (IOException e) {
-            Log.error( "", e );
+            Log.error(e.getMessage());
         }
 
         return result;
@@ -169,7 +169,7 @@ public class FileCore {
         try {
             pathToTempDir = Files.createTempDirectory(path, "SAF_dir_");
         } catch (IOException | UnsupportedOperationException | IllegalArgumentException | SecurityException e ) {
-            Log.error( "", e );
+            Log.error(e.getMessage());
         }
 
         String sPathToTempDir = pathToTempDir.toAbsolutePath().toString();
@@ -205,7 +205,7 @@ public class FileCore {
         try {
             result = FileUtils.readLines(file, "UTF-8");
         } catch (IOException e) {
-            Log.error( "", e );
+            Log.error(e.getMessage());
         }
 
         return result;
@@ -225,7 +225,7 @@ public class FileCore {
         try {
             result = FileUtils.waitFor(file, timeout);
         } catch (NullPointerException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
 
         return result;
@@ -241,7 +241,7 @@ public class FileCore {
         try {
             FileUtils.forceDelete(file);
         } catch (IOException | NullPointerException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
     }
 

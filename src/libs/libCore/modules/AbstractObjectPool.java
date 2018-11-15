@@ -1,14 +1,13 @@
 package libs.libCore.modules;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 public abstract class AbstractObjectPool<T> {
 
-    private Map<String, Set<T>> available = new HashMap<>();
-    private Map<String, Set<T>> inUse = new HashMap<>();
+    protected Map<String, Set<T>> available;
+    protected Map<String, Set<T>> inUse;
 
     protected abstract T create(String identifier);
 
@@ -100,7 +99,6 @@ public abstract class AbstractObjectPool<T> {
                 available.remove(key);
             }
         }
-
     }
 
 }

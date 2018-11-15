@@ -12,6 +12,8 @@ import org.openqa.selenium.support.events.WebDriverEventListener;
  */
 public class WebDriverCustomEventListener implements WebDriverEventListener{
 
+    private ExecutionTimer t_FindBy;
+
     @Override
     public void beforeAlertAccept(WebDriver webDriver) {
 
@@ -74,10 +76,14 @@ public class WebDriverCustomEventListener implements WebDriverEventListener{
 
     @Override
     public void beforeFindBy(By by, WebElement webElement, WebDriver webDriver) {
+        Log.debug("Looking for an element identified " + by);
+        t_FindBy = new ExecutionTimer();
     }
 
     @Override
     public void afterFindBy(By by, WebElement webElement, WebDriver webDriver) {
+        t_FindBy.end();
+        Log.debug("Element found after " + t_FindBy.duration()  + " ms");
     }
 
     @Override
@@ -87,6 +93,7 @@ public class WebDriverCustomEventListener implements WebDriverEventListener{
 
     @Override
     public void afterClickOn(WebElement webElement, WebDriver webDriver) {
+        Log.debug("Element " + webElement.toString() + " clicked");
     }
 
     @Override
@@ -117,7 +124,7 @@ public class WebDriverCustomEventListener implements WebDriverEventListener{
 
     @Override
     public void onException(Throwable throwable, WebDriver webDriver) {
-        Log.error("Exception occurred at " + throwable.getMessage());
+        //Log.error(throwable.getMessage());
     }
 
     @Override

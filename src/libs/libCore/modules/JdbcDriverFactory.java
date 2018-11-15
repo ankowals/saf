@@ -59,7 +59,7 @@ public class JdbcDriverFactory {
             return DriverManager.getConnection(connectionString);
 
         } catch (ClassNotFoundException | SQLException | IllegalAccessException | InstantiationException e){
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
 
         return null;
@@ -75,7 +75,7 @@ public class JdbcDriverFactory {
             return getConnection(classname, url, connectionString);
 
         } catch (MalformedURLException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
 
         return null;
@@ -91,7 +91,7 @@ public class JdbcDriverFactory {
             return getConnection(classname, url, connectionString);
 
         } catch (MalformedURLException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
 
         return null;
@@ -107,7 +107,7 @@ public class JdbcDriverFactory {
             return getConnection(classname, url, connectionString);
 
         } catch (MalformedURLException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
 
         return null;

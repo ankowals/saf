@@ -36,7 +36,7 @@ public class AssertCore {
         try {
             cType = vResp.extract().path(key).getClass().getName();
         } catch (NullPointerException e) {
-            Log.error("Key " + key + " not found in the message body", e );
+            Log.error("Key " + key + " not found in the message body" + e.getMessage() );
         }
 
         Log.debug("Current is " + vResp.extract().path(key));
@@ -93,7 +93,7 @@ public class AssertCore {
         try {
             cType = vResp.extract().path(key).getClass().getName();
         } catch (NullPointerException e) {
-            Log.error("Key " + key + " not found in the message body", e );
+            Log.error("Key " + key + " not found in the message body" + e.getMessage() );
         }
 
         Log.debug("Key " + key + " value is");
