@@ -6,7 +6,7 @@
         </Console>
         <RollingFile name="RollingFileAppender" fileName="target/logs/all.log"
                      filePattern="target/logs/all_%d{yyyy-MM-dd-hh-mm}.log.zip">
-            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [thread-%T] [%-5level] %msg%n"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [thread-%2T] [%-5level] %msg%n"/>
             <Policies>
                 <SizeBasedTriggeringPolicy size="10 MB"/>
             </Policies>

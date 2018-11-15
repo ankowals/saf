@@ -12,7 +12,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
-import org.testng.Assert;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -88,7 +87,7 @@ public class CustomEventListener implements ConcurrentEventListener {
 
         readSystemProperties();
 
-        Log.info("*** Creating global cache");
+        Log.debug("Creating global context");
         Context globalCtx = GlobalCtxSingleton.getInstance();
 
         //creating scenario context pool
@@ -115,12 +114,12 @@ public class CustomEventListener implements ConcurrentEventListener {
 
         Storage storage = new Storage(globalCtx, fileCore, configReader);
 
-        Log.info("*** reading libCore default configuration ***");
+        Log.debug("Reading libCore default configuration");
         String defaultConfigDir = projPath + File.separator + "libs" + File.separator + "libCore" + File.separator + "config";
         Log.debug("Default configuration directory is " + defaultConfigDir);
         readConfigFiles(fileCore, defaultConfigDir, configReader);
 
-        Log.info("*** reading global project configuration ***");
+        Log.debug("Reading global project configuration");
         String globalConfigDir = projPath + File.separator + "config";
         String projFilePath = globalConfigDir + File.separator + "project.config";
         File projFile = new File(projFilePath);
@@ -153,7 +152,7 @@ public class CustomEventListener implements ConcurrentEventListener {
         Log.info("+--- All scenarios executed ---+");
         Log.info("+------------------------------+");
 
-        Log.info("Cleaning up global resources");
+        Log.debug("Cleaning up global resources");
         Context globalCtx = GlobalCtxSingleton.getInstance();
 
         //closing all web drivers in the wed driver pool
@@ -203,6 +202,7 @@ public class CustomEventListener implements ConcurrentEventListener {
         if ( event.result.getErrorMessage() != null ){
             //we do not want to fail a test case yet, it shall be done after attaching scenario report
             Logger logger = LogManager.getLogger("libs.libCore.modules");
+            ThreadContext.put("TId", String.valueOf(Thread.currentThread().getId()));
             logger.error(event.result.getErrorMessage());
         }
 
@@ -218,46 +218,41 @@ public class CustomEventListener implements ConcurrentEventListener {
         String testCaseName = scenarioCtx.get("ScenarioName", String.class);
         Integer scenarioStepsListSize = scenarioCtx.get("scenarioStepsListSize", Integer.class);
         Integer scenarioStepsCounter = scenarioCtx.get("ScenarioStepsCounter", Integer.class);
-        String scenarioFiller = StringUtils.repeat("-", testCaseName.length());
 
-        //detect if scenario has failed
-        if ( event.result.is(Result.Type.FAILED) || event.result.getErrorMessage() != null ){
-            Log.info("+-----------------------" + scenarioFiller + "---------------------------+");
-            Log.info("+--- Scenario with name " + testCaseName + " ended due to an error! ---+");
-            Log.info("+-----------------------" + scenarioFiller + "---------------------------+");
-        }
-
-        //detect last step of a scenario
-        if ( scenarioStepsCounter.equals(scenarioStepsListSize) ) {
-            Log.info("+-----------------------" + scenarioFiller + "----------+");
-            Log.info("+--- Scenario with name " + testCaseName + " ended ---+");
-            Log.info("+-----------------------" + scenarioFiller + "----------+");
-        }
-
-        //in case scenario has failed or was successfully executed clean up scenario resources and attach log to the report
+        //in case scenario has failed or was successfully executed clean up scenario resources
+        //and attach log to the report
         if ( scenarioStepsCounter.equals(scenarioStepsListSize) ||
                 event.result.is(Result.Type.FAILED ) ||
                 event.result.getErrorMessage() != null) {
+
+            String scenarioFiller = StringUtils.repeat("-", testCaseName.length());
+            Log.info("+-----------------------" + scenarioFiller + "----------+");
+            Log.info("+--- Scenario with name " + testCaseName + " ended ---+");
+            Log.info("+-----------------------" + scenarioFiller + "----------+");
+
+            Log.debug("Cleaning up scenario resources");
 
             //close web driver and take screenshot in case scenario has failed
             //has to be done here otherwise screenshot will not be attached to allure report
             WebDriverObjectPool webDriverPool = globalCtx.get("WebDriverObjectPool", WebDriverObjectPool.class);
             Storage storage = scenarioCtx.get("Storage", Storage.class);
             StepCore stepCore = scenarioCtx.get("StepCore", StepCore.class);
-
             Boolean closeAfterScenario = storage.get("Environment.Active.WebDrivers.CloseBrowserAfterScenario");
             if ( ! closeAfterScenario ){
+                Log.debug("Returning web driver to the pool");
                 webDriverPool.checkInAllPerThread(event, testCaseName, stepCore);
             } else{
-                Log.debug("Closing web browser");
+                Log.debug("Closing web driver");
                 webDriverPool.closeAllPerThread(event, testCaseName, stepCore);
             }
 
             //return all ssh client used by particular thread to the pool
+            Log.debug("Returning ssh clients to the pool");
             SshClientObjectPool sshClientObjectPool = globalCtx.get("SshClientObjectPool", SshClientObjectPool.class);
             sshClientObjectPool.checkInAllPerThread();
 
             //return all jdbc drivers used by particular thread to the pool
+            Log.debug("Returning jdbc connections to the pool");
             JdbcDriverObjectPool jdbcDriverObjectPool = globalCtx.get("JdbcDriverObjectPool", JdbcDriverObjectPool.class);
             jdbcDriverObjectPool.checkInAllPerThread();
 
@@ -265,7 +260,7 @@ public class CustomEventListener implements ConcurrentEventListener {
             stepCore.attachFileToReport("Log", "text/plain", scenarioCtx.get("ScenarioLogFileName", String.class));
 
             //everything below will not be attached to allure report scenario log
-            Log.info("Cleaning up scenario resources");
+            Log.debug("Removing scenario context");
             scenarioCtxPool.checkIn();
 
             //stop execution of other steps in the scenario
@@ -286,6 +281,7 @@ public class CustomEventListener implements ConcurrentEventListener {
                 String stacktrace = sw.toString();
                 //WA to not use Log.error and do not throw fail in addition
                 Logger logger = LogManager.getLogger("libs.libCore.modules");
+                ThreadContext.put("TId", String.valueOf(Thread.currentThread().getId()));
                 logger.error(stacktrace);
             }
         });
@@ -330,7 +326,7 @@ public class CustomEventListener implements ConcurrentEventListener {
         Log.info("+--- Scenario with name " + event.testCase.getName() + " started in thread with id " + threadId + " ---+");
         Log.info("+----------------------" + scenarioFiller + "----------------------------" + threadFiller + "----+");
 
-        Log.info("Started scenario resources initialisation");
+        Log.debug("Started scenario resources initialisation");
         Context globalCtx = GlobalCtxSingleton.getInstance();
         ScenarioCtxObjectPool scenarioCtxPool = globalCtx.get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class);
         Context scenarioCtx = scenarioCtxPool.checkOut();
@@ -391,9 +387,9 @@ public class CustomEventListener implements ConcurrentEventListener {
         CloudDirectorCore cloudDirectorCore = new CloudDirectorCore();
         scenarioCtx.put("CloudDirectorCore", CloudDirectorCore.class, cloudDirectorCore);
 
-        Log.info("Finished scenario resources initialisation");
+        Log.debug("Finished scenario resources initialisation");
 
-        Log.info("*** reading local config ***");
+        Log.debug("Reading local configuration");
         String featureDir = fileCore.getCurrentFeatureDirPath();
         Log.debug("Feature dir is " + featureDir);
         if( featureDir != null ){
@@ -401,7 +397,7 @@ public class CustomEventListener implements ConcurrentEventListener {
             readConfigFiles(fileCore, featureDir, configReader);
         }
 
-        Log.debug("*** creating active environment config ***");
+        Log.debug("Creating active environment configuration");
         Map<String, Object> finalEnvConfig = storage.get("Environment.Active");
         createActiveEnvironmentConfig(finalEnvConfig, storage, configReader);
 
@@ -422,9 +418,9 @@ public class CustomEventListener implements ConcurrentEventListener {
         //check if macro evaluation shall be done in hooks
         Boolean doMacroEval = storage.get("Environment.Active.MacroEval");
         if( doMacroEval ) {
-            Log.info("Evaluating macros in TestData object");
+            Log.debug("Evaluating macros in TestData object");
             macro.eval("TestData");
-            Log.info("Evaluating macros in Expected object");
+            Log.debug("Evaluating macros in Expected object");
             macro.eval("Expected");
         }
 
@@ -434,10 +430,12 @@ public class CustomEventListener implements ConcurrentEventListener {
         evaluateConfigEntities(storage.get("Expected"), stepCore);
 
         //print storage
-        Log.info("*** Following configuration Environment.Active is going to be used ***");
+        Log.debug("*** Following configuration Environment.Active is going to be used ***");
         storage.print("Environment.Active");
         Log.debug("*** Following TestData configuration is going to be used");
         storage.print("TestData");
+        Log.debug("*** Following Expected configuration is going to be used");
+        storage.print("Expected");
         Log.debug("***");
 
         //update allure properties
@@ -482,18 +480,18 @@ public class CustomEventListener implements ConcurrentEventListener {
 
     private void readSystemProperties(){
         Properties p = System.getProperties();
-        Log.info("System properties");
-        Log.info("os.arch=" + p.get("os.arch"));
-        Log.info("os.name=" + p.get("os.name"));
-        Log.info("user.name=" + p.get("user.name"));
-        Log.info("user.home=" + p.get("user.home"));
-        Log.info("user.dir=" + p.get("user.dir"));
-        Log.info("user.timezone=" + p.get("user.timezone"));
-        Log.info("java.runtime.name=" + p.get("java.runtime.name"));
-        Log.info("java.version=" + p.get("java.version"));
-        Log.info("java.vm.version=" + p.get("java.vm.version"));
-        Log.info("java.io.tmpdir=" + p.get("java.io.tmpdir"));
-        Log.info("java.home=" + p.get("java.home"));
+        Log.debug("System properties");
+        Log.debug("os.arch=" + p.get("os.arch"));
+        Log.debug("os.name=" + p.get("os.name"));
+        Log.debug("user.name=" + p.get("user.name"));
+        Log.debug("user.home=" + p.get("user.home"));
+        Log.debug("user.dir=" + p.get("user.dir"));
+        Log.debug("user.timezone=" + p.get("user.timezone"));
+        Log.debug("java.runtime.name=" + p.get("java.runtime.name"));
+        Log.debug("java.version=" + p.get("java.version"));
+        Log.debug("java.vm.version=" + p.get("java.vm.version"));
+        Log.debug("java.io.tmpdir=" + p.get("java.io.tmpdir"));
+        Log.debug("java.home=" + p.get("java.home"));
     }
 
     private void readConfigFiles(FileCore fileCore, String dir, ConfigReader configReader){
@@ -551,14 +549,14 @@ public class CustomEventListener implements ConcurrentEventListener {
 
         //add information about used test environment to the report
         if ( ! Files.exists(allureEnvironment.toPath()) ) {
-            Log.info("Adding environment information to the report");
+            Log.debug("Adding environment information to the report");
             Map<String, String> environmentProperties = storage.get("Environment.Active.WriteToReport");
             writeAllurePropertiesToFile(allureEnvironment, allureResultsDir, environmentProperties);
         }
 
         //add links to issues and tests into to the report
         if ( ! Files.exists(allureProperties.toPath()) ) {
-            Log.info("Adding issue tracker and test tracker information to the report");
+            Log.debug("Adding issue tracker and test tracker information to the report");
             String issueTrackerUrlPattern = storage.get("Environment.Active.IssueTrackerUrlPattern");
             String testTrackerUrlPattern = storage.get("Environment.Active.TestTrackerUrlPattern");
             Map<String, String> trackerProperties = new HashMap<>();
@@ -588,6 +586,7 @@ public class CustomEventListener implements ConcurrentEventListener {
             if ( ! Files.exists(allureResultsDir.toPath()) ) {
                 try {
                     Files.createDirectory(allureResultsDir.toPath());
+                    Log.debug("Allure results directory " + allureResultsDir.getAbsolutePath() + " created");
                 } catch (IOException e) {
                     Log.error(e.getMessage());
                 }
@@ -596,6 +595,7 @@ public class CustomEventListener implements ConcurrentEventListener {
             //write lines into environment.properties or allure properties file
             try {
                 Files.write(targetFile.toPath(), lines);
+                Log.debug("Allure properties file " + targetFile.getAbsolutePath() + " modified");
             } catch (IOException e) {
                 Log.error(e.getMessage());
             }
@@ -628,7 +628,6 @@ public class CustomEventListener implements ConcurrentEventListener {
 
 
     private void adjustRestAssuredConfig(Storage storage, String configType){
-
         RestAssured.reset();
 
         int maxConnections = storage.get("Environment." + configType + ".Rest.http_maxConnections");
@@ -716,11 +715,11 @@ public class CustomEventListener implements ConcurrentEventListener {
         //check if cmd argument ctx.Environment.Active.name was provided and Environment.Active.name property shall be overwritten
         String cmd_arg  = System.getProperty("ctx.Environment.Active.name");
         if ( cmd_arg != null ) {
-            Log.info("Property Environment.Active.name overwritten by CMD arg -Dctx.Environment.Active.name=" + cmd_arg);
+            Log.debug("Property Environment.Active.name overwritten by CMD arg -Dctx.Environment.Active.name=" + cmd_arg);
             storage.set("Environment.Active.name", cmd_arg);
         }
         //read name of the environment that shall be activated
-        Log.debug("*** reading active environment config ***");
+        Log.debug("Reading active environment configuration");
         String actEnvName = storage.get("Environment.Active.name");
         if ( actEnvName == null || actEnvName.equals("") || actEnvName.equalsIgnoreCase("default") ) {
             Log.debug("Environment.Active.name not set! Fallback to Environment.Default");
@@ -728,7 +727,7 @@ public class CustomEventListener implements ConcurrentEventListener {
             //check if config with such name exists else fallback to default
             Map<String, Object> activeEnvConfig = storage.get("Environment." + actEnvName);
             if ( activeEnvConfig == null || activeEnvConfig.size() == 0 ){
-                Log.error("Environment config with name " + actEnvName + " not found or empty");
+                Log.error("Environment config with name " + actEnvName + " not found or empty!");
             }
             //merge default and active
             configReader.deepMerge(defaultEnvConfig, activeEnvConfig);

@@ -72,7 +72,6 @@ public class Log {
     public static void error(String message) {
 		String threadId = String.valueOf(Thread.currentThread().getId());
 		ThreadContext.put("TId", threadId);
-		//Log.error(message);
 		fail(message);
 	}
 
