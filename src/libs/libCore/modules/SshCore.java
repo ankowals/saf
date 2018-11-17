@@ -288,6 +288,8 @@ public class SshCore {
             Expect expect = new ExpectBuilder()
                     .withOutput(shell.getOutputStream())
                     .withInputs(shell.getInputStream(), shell.getErrorStream())
+                    .withEchoInput(System.err)
+                    .withEchoOutput(System.out)
                     .withTimeout(timeout, TimeUnit.SECONDS)
                     .withInputFilters(removeColors(), removeNonPrintable())
                     .withExceptionOnFailure()

@@ -1,6 +1,7 @@
 @parallelWebTest
 Feature: ParallelWebTest
 
+  @testFailingScenario
   Scenario: First thread scenario
 
     Given open browser

@@ -1,5 +1,6 @@
 package libs.libCore.modules;
 
+import io.restassured.filter.log.LogDetail;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
@@ -548,6 +549,18 @@ public class StepCore {
         }
 
         return input;
+    }
+
+
+    public String encodeString(String input) {
+        Log.debug("Encoding input is " + input);
+        return StringEncoder.encrypt(input, "thisisa128bitkey");
+    }
+
+
+    public String decodeString(String input) {
+        Log.debug("Decoding input string " + input);
+        return StringEncoder.decrypt(input, "thisisa128bitkey");
     }
 
 }

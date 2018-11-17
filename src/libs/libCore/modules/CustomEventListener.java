@@ -198,32 +198,29 @@ public class CustomEventListener implements ConcurrentEventListener {
     }
 
     private void handleTestStepFinished(TestStepFinished event){
-        //nasty workaround to attach log file to allure report and print an error message with a stack trace into it
         if ( event.result.getErrorMessage() != null ){
-            //we do not want to fail a test case yet, it shall be done after attaching scenario report
             Logger logger = LogManager.getLogger("libs.libCore.modules");
             ThreadContext.put("TId", String.valueOf(Thread.currentThread().getId()));
             logger.error(event.result.getErrorMessage());
         }
 
         String stepFiller = StringUtils.repeat("-", event.result.getStatus().toString().length());
-        Log.info("+---------------------------" + stepFiller + " ---+");
+        Log.info("+---------------------------" + stepFiller + "----+");
         Log.info("+--- Step ended with status " + event.result.getStatus() + " ---+");
-        Log.info("+---------------------------" + stepFiller + " ---+");
+        Log.info("+---------------------------" + stepFiller + "----+");
 
         Context globalCtx = GlobalCtxSingleton.getInstance();
         ScenarioCtxObjectPool scenarioCtxPool = globalCtx.get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class);
         Context scenarioCtx = scenarioCtxPool.checkOut();
 
-        String testCaseName = scenarioCtx.get("ScenarioName", String.class);
         Integer scenarioStepsListSize = scenarioCtx.get("scenarioStepsListSize", Integer.class);
         Integer scenarioStepsCounter = scenarioCtx.get("ScenarioStepsCounter", Integer.class);
 
-        //in case scenario has failed or was successfully executed clean up scenario resources
-        //and attach log to the report
-        if ( scenarioStepsCounter.equals(scenarioStepsListSize) ||
-                event.result.is(Result.Type.FAILED ) ||
-                event.result.getErrorMessage() != null) {
+        if ( scenarioStepsCounter.equals(scenarioStepsListSize) ){
+            String testCaseName = scenarioCtx.get("ScenarioName", String.class);
+
+            //in case scenario has failed or was successfully executed clean up scenario resources
+            //and attach log to the report
 
             String scenarioFiller = StringUtils.repeat("-", testCaseName.length());
             Log.info("+-----------------------" + scenarioFiller + "----------+");
@@ -238,10 +235,10 @@ public class CustomEventListener implements ConcurrentEventListener {
             Storage storage = scenarioCtx.get("Storage", Storage.class);
             StepCore stepCore = scenarioCtx.get("StepCore", StepCore.class);
             Boolean closeAfterScenario = storage.get("Environment.Active.WebDrivers.CloseBrowserAfterScenario");
-            if ( ! closeAfterScenario ){
+            if (!closeAfterScenario) {
                 Log.debug("Returning web driver to the pool");
                 webDriverPool.checkInAllPerThread(event, testCaseName, stepCore);
-            } else{
+            } else {
                 Log.debug("Closing web driver");
                 webDriverPool.closeAllPerThread(event, testCaseName, stepCore);
             }
@@ -257,17 +254,9 @@ public class CustomEventListener implements ConcurrentEventListener {
             jdbcDriverObjectPool.checkInAllPerThread();
 
             //attach log file to allure report
-            stepCore.attachFileToReport("Log", "text/plain", scenarioCtx.get("ScenarioLogFileName", String.class));
-
-            //everything below will not be attached to allure report scenario log
             Log.debug("Removing scenario context");
-            scenarioCtxPool.checkIn();
-
-            //stop execution of other steps in the scenario
-            if ( event.result.getErrorMessage() != null ){
-                Log.error("Scenario ended due to an error " + event.result.getErrorMessage());
-            }
-
+            Log.debug("Attaching scenario log to the report");
+            stepCore.attachFileToReport("Log", "text/plain", scenarioCtx.get("ScenarioLogFileName", String.class));
         }
 
     }
@@ -346,7 +335,7 @@ public class CustomEventListener implements ConcurrentEventListener {
 
         //pass path to the feature file to fileCore
         scenarioCtx.put("FeatureUri", String.class, featurePath);
-        //intialize step counter
+        //initialize step counter
         scenarioCtx.put("ScenarioStepsCounter", Integer.class, 0);
         //put scenario name into context so it can be used in test step finished event
         scenarioCtx.put("ScenarioName", String.class, event.testCase.getName());
@@ -452,7 +441,9 @@ public class CustomEventListener implements ConcurrentEventListener {
     }
 
     private void handleTestCaseFinished(TestCaseFinished event){
-
+        Context globalCtx = GlobalCtxSingleton.getInstance();
+        ScenarioCtxObjectPool scenarioCtxPool = globalCtx.get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class);
+        scenarioCtxPool.checkIn();
     }
 
 

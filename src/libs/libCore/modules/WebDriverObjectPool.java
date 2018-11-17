@@ -87,9 +87,10 @@ public class WebDriverObjectPool extends AbstractObjectPool<EventFiringWebDriver
     }
 
     private void takeScreenshotOnFailure(EventFiringWebDriver instance, TestStepFinished event, String testCaseName, StepCore stepCore){
-        if ( (event.result.is(Result.Type.FAILED) || event.result.getErrorMessage() != null)
+        if ( (event.result.is(Result.Type.FAILED) || (event.result.is(Result.Type.SKIPPED)
+                || event.result.getErrorMessage() != null))
                 && validate(instance) ) {
-            Log.debug("Try to take a screenshot");
+            Log.debug("Taking screenshot on scenario failure");
             try {
                 byte[] screenshot = ((TakesScreenshot) instance).getScreenshotAs(OutputType.BYTES);
                 String name = StringUtils.remove(testCaseName, "-");

@@ -96,4 +96,18 @@ public class CoreSteps extends BaseSteps{
         StepCore.sleep(sec);
     }
 
+
+    @And("^encode string (.+)$")
+    public void encode_string(String input) {
+       String output = StepCore.encodeString(input);
+        Log.debug("Encoded input is " + output);
+    }
+
+
+    @And("^decode string (.+)$")
+    public void decode_string(String input) {
+        String output = StepCore.decodeString(input);
+        Log.debug("Decoded input is " + output);
+    }
+
 }
