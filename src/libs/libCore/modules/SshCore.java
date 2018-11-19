@@ -288,8 +288,8 @@ public class SshCore {
             Expect expect = new ExpectBuilder()
                     .withOutput(shell.getOutputStream())
                     .withInputs(shell.getInputStream(), shell.getErrorStream())
-                    .withEchoInput(System.err)
-                    .withEchoOutput(System.out)
+                    .withEchoInput(System.out)
+                    //.withEchoOutput(System.out)
                     .withTimeout(timeout, TimeUnit.SECONDS)
                     .withInputFilters(removeColors(), removeNonPrintable())
                     .withExceptionOnFailure()
@@ -320,10 +320,9 @@ public class SshCore {
         try {
             Log.debug("Command to execute via interactive ssh shell is " + cmd);
             expect.sendLine(cmd);
-            stdOut  = expect.expect(regexp(expectedOutput)).getInput();
+            stdOut  = expect.expect(regexp(expectedOutput)).getBefore();
             stdErr = "";
             exitCode = 0;
-            Log.debug(stdOut);
         } catch (Exception e) {
             stopShell(node);
             Log.error(e.getMessage());

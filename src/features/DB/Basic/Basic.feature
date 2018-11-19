@@ -5,7 +5,7 @@ Feature: Basic
 
     Given load data from csv file input into a table Dept in Environment.Active.Jdbc.url database
     When edit in Environment.Active.Jdbc.url database
-      |UPDATE Customers SET ContactName = 'Alfred Schmidt', City = 'Frankfurt' WHERE CustomerID = 1|
+      |UPDATE Dept SET DNAME = 'New RESEARCH', LOC = 'Barcelona' WHERE DEPTNO = 20|
 
     Then verify in Environment.Active.Jdbc.url database
       |query        |TestData.simpleQuery |

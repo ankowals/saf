@@ -14,6 +14,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
 
 import java.io.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.*;
@@ -234,6 +237,34 @@ public class CustomEventListener implements ConcurrentEventListener {
             WebDriverObjectPool webDriverPool = globalCtx.get("WebDriverObjectPool", WebDriverObjectPool.class);
             Storage storage = scenarioCtx.get("Storage", Storage.class);
             StepCore stepCore = scenarioCtx.get("StepCore", StepCore.class);
+
+            //USE WITH CAUTION!!!
+            //execute custom logic at the end of the scenario
+            //can be used to for example to attach some logs to a report etc. even if scenario was unsuccessful
+            String className = storage.get("Environment.Default.Plugins.handleTestStepFinished");
+            if ( className != null && !className.equals("") ){
+
+                // Create a new ClassLoader
+                ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+
+                try {
+                    // Load the target class using its name
+                    Class aClass = classLoader.loadClass(className);
+                    Log.info("Plugin detected! Loading " + aClass.getName() + " class!");
+
+                    // Create a new instance from the loaded class
+                    Constructor constructor = aClass.getConstructor();
+                    Object aClassObject = constructor.newInstance();
+
+                    // Getting the target method from the loaded class and invoke it using its name
+                    Method method = aClass.getMethod("load");
+                    Log.debug("Invoking method with name " + method.getName());
+                    method.invoke(aClassObject);
+                } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                    Log.error(e.getMessage());
+                }
+            }
+
             Boolean closeAfterScenario = storage.get("Environment.Active.WebDrivers.CloseBrowserAfterScenario");
             if (!closeAfterScenario) {
                 Log.debug("Returning web driver to the pool");

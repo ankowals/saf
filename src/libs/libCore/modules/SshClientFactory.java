@@ -9,10 +9,12 @@ public class SshClientFactory {
 
     private Context scenarioCtx;
     private Storage Storage;
+    private StepCore StepCore;
 
     public SshClientFactory() {
         this.scenarioCtx = GlobalCtxSingleton.getInstance().get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
         this.Storage = scenarioCtx.get("Storage",Storage.class);
+        this.StepCore = scenarioCtx.get("StepCore",StepCore.class);
     }
 
     public SSHClient create(String node) {
@@ -32,6 +34,11 @@ public class SshClientFactory {
         }
         if (passwd == null) {
             Log.error("Environment.Active.Ssh. " + node + ".password " + " is null or empty!");
+        }
+
+        boolean useEncoding = Storage.get("Environment.Active.useEncoding");
+        if ( useEncoding ){
+            passwd = StepCore.decodeString(passwd);
         }
 
         try {
