@@ -21,18 +21,19 @@ public class FileCore {
      * @return path String, path to project directory
      */
     public String getProjectPath() {
-        String path = null;
         try {
             String tmp = Paths.get(ClassLoader.getSystemResource("").toURI()).getParent().toString();
             int idx = tmp.lastIndexOf(File.separator);
-            path = tmp.substring(0,idx);
+            String path = tmp.substring(0,idx);
             path = path + File.separator +"src";
             Log.debug("Project path is " + path);
+
+            return path;
         } catch (URISyntaxException e) {
             Log.error( "Project path not found! " + e.getMessage() );
         }
 
-        return path;
+        return "";
     }
 
     /**
@@ -88,17 +89,13 @@ public class FileCore {
      * @return String sFile, content of the file as string
      */
     public String readToString (File file) {
-
-        String result = null;
-        String encoding = "UTF-8";
-
         try {
-            result = readFileToString(file, encoding);
+            return readFileToString(file, "UTF-8");
         } catch (IOException e) {
             Log.error(e.getMessage());
         }
 
-        return result;
+        return null;
     }
 
 
@@ -109,9 +106,8 @@ public class FileCore {
      * @param content String, string that shall be written
      */
     public void writeToFile(File file, String content) {
-        String encoding = "UTF-8";
         try {
-            FileUtils.writeStringToFile(file, content, encoding, false);
+            FileUtils.writeStringToFile(file, content, "UTF-8", false);
         } catch (IOException e) {
             Log.error(e.getMessage());
         }
@@ -125,9 +121,8 @@ public class FileCore {
      * @param content String, string that shall be added to the file
      */
     public void appendToFile(File file, String content) {
-        String encoding = "UTF-8";
         try {
-            FileUtils.writeStringToFile(file, content, encoding, true);
+            FileUtils.writeStringToFile(file, content, "UTF-8", true);
         } catch (IOException e) {
             Log.error(e.getMessage());
         }
@@ -143,15 +138,14 @@ public class FileCore {
      * @return File
      */
     public File createTempFile (String name, String extension) {
-        File result = null;
-
         try {
-            result = File.createTempFile(name, "." + extension);
+            getTempDir();
+            return File.createTempFile(name, "." + extension);
         } catch (IOException e) {
             Log.error(e.getMessage());
         }
 
-        return result;
+        return null;
     }
 
 
@@ -162,20 +156,15 @@ public class FileCore {
      * @return File
      */
     public File createTempDir () {
-        Path pathToTempDir = null;
-        String systemTmpDirPath = FileUtils.getTempDirectoryPath();
-        Path path = Paths.get(systemTmpDirPath);
+         Path path = Paths.get(getTempDir().getAbsolutePath());
 
         try {
-            pathToTempDir = Files.createTempDirectory(path, "SAF_dir_");
+            return new File(Files.createTempDirectory(path, "SAF_dir_").toAbsolutePath().toString());
         } catch (IOException | UnsupportedOperationException | IllegalArgumentException | SecurityException e ) {
             Log.error(e.getMessage());
         }
 
-        String sPathToTempDir = pathToTempDir.toAbsolutePath().toString();
-        File result = new File(sPathToTempDir);
-
-        return result;
+        return null;
     }
 
 
@@ -185,10 +174,17 @@ public class FileCore {
      * @return File
      */
     public File getTempDir () {
-        String systemTmpDirPath = FileUtils.getTempDirectoryPath();
-        File result = new File(systemTmpDirPath);
+        Context scenarioCtx = GlobalCtxSingleton.getInstance().get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
+        Storage storage = scenarioCtx.get("Storage", Storage.class);
+        boolean isSysTemp = storage.get("Environment.Active.UseSystemTempDir");
+        if ( !isSysTemp ){
+            System.setProperty("java.io.tmpdir", getProjectPath().replaceAll("src$", "target"));
+        }
 
-        return result;
+        Properties p = System.getProperties();
+        Log.debug("java.io.tmpdir = " + p.get("java.io.tmpdir"));
+
+        return new File(FileUtils.getTempDirectoryPath());
     }
 
 
@@ -199,16 +195,13 @@ public class FileCore {
      * @return List<String>
      */
     public List<String> readLines (File file) {
-
-        List<String> result = null;
-
         try {
-            result = FileUtils.readLines(file, "UTF-8");
+            return FileUtils.readLines(file, "UTF-8");
         } catch (IOException e) {
             Log.error(e.getMessage());
         }
 
-        return result;
+        return new ArrayList<>();
     }
 
 
@@ -220,15 +213,13 @@ public class FileCore {
      * @return Boolean
      */
     public Boolean waitForFile(File file, int timeout) {
-        Boolean result = false;
-
         try {
-            result = FileUtils.waitFor(file, timeout);
+            return FileUtils.waitFor(file, timeout);
         } catch (NullPointerException e) {
             Log.error(e.getMessage());
         }
 
-        return result;
+        return false;
     }
 
 

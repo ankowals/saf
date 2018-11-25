@@ -15,6 +15,7 @@ public class BaseSteps {
     protected CloudDirectorCore CloudDirectorCore;
     protected AssertCore AssertCore;
     protected PdfCore PdfCore;
+    protected CsvCore CsvCore;
 
     public BaseSteps() {
         this.globalCtx = GlobalCtxSingleton.getInstance();
@@ -30,6 +31,7 @@ public class BaseSteps {
         this.CloudDirectorCore = scenarioCtx.get("CloudDirectorCore", CloudDirectorCore.class);
         this.AssertCore = scenarioCtx.get("AssertCore", AssertCore.class);
         this.PdfCore = scenarioCtx.get("PdfCore", PdfCore.class);
+        this.CsvCore = scenarioCtx.get("CsvCore", CsvCore.class);
     }
 
 }

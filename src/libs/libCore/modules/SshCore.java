@@ -23,25 +23,9 @@ public class SshCore {
     private Context scenarioCtx;
     private SshClientObjectPool sshClientObjectPool;
 
-    private String stdOut;
-    private String stdErr;
-    private Integer exitCode;
-
     public SshCore() {
         this.scenarioCtx = GlobalCtxSingleton.getInstance().get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
         this.sshClientObjectPool = GlobalCtxSingleton.getInstance().get("SshClientObjectPool", SshClientObjectPool.class);
-    }
-
-    public String getStdOut(){
-        return stdOut;
-    }
-
-    public String getStdErr(){
-        return stdErr;
-    }
-
-    public Integer getExitCode(){
-        return exitCode;
     }
 
     /**
@@ -80,23 +64,26 @@ public class SshCore {
      *
      * @return SshResult, result set that contains stdout, stderr and exit status code
      */
-    public void execute(String node, String cmd, Integer timeout) {
+    public ExecResult execute(String node, String cmd, Integer timeout) {
         SSHClient client = sshClientObjectPool.checkOut(node);
         Session session = startSession(client);
         try {
             Log.debug("Going to execute following command via ssh " + cmd);
             Session.Command command = session.exec(cmd);
             command.join(timeout, TimeUnit.SECONDS);
-            exitCode = command.getExitStatus();
-            stdOut = IOUtils.readFully(command.getInputStream()).toString();
-            stdErr = IOUtils.readFully(command.getErrorStream()).toString();
-
+            int exitStatus = command.getExitStatus();
+            String stdout = IOUtils.readFully(command.getInputStream()).toString();
+            String stderr = IOUtils.readFully(command.getErrorStream()).toString();
+            return new ExecResult(stdout, stderr, exitStatus);
         } catch (IOException e) {
             Log.error(e.getMessage());
         } finally {
             stopSession(session);
             sshClientObjectPool.checkIn(node, client);
         }
+
+        return new ExecResult("", "", Integer.MIN_VALUE);
+
 
     }
 
@@ -110,8 +97,8 @@ public class SshCore {
      * @return Boolean, true if file exits, false otherwise
      */
     public Boolean checkThatFileExists(String node, String pathToFile) {
-        execute(node, "test -e " + pathToFile,60);
-        if ( getExitCode() == 0 ) {
+        int exitCode = execute(node, "test -e " + pathToFile,60).getExitCode();
+        if ( exitCode == 0 ) {
             return true;
         }
 
@@ -154,8 +141,8 @@ public class SshCore {
      * @return Boolean, true if alive, false otherwise
      */
     public Boolean checkThatNodeIsAlive(String node){
-        execute(node, "echo alive", 60);
-        if ( getExitCode() == 0 ) {
+        int exitCode = execute(node, "echo alive", 60).getExitCode();
+        if ( exitCode == 0 ) {
             return true;
         }
 
@@ -312,7 +299,7 @@ public class SshCore {
      * @param cmd, String, command to execute
      * @param expectedOutput, String, expected output in stdout, it can be prompt or string
      */
-    public void executeInShell(String node, String cmd, String expectedOutput) {
+    public ExecResult executeInShell(String node, String cmd, String expectedOutput) {
         Expect expect = scenarioCtx.get("SshExpect_" + node, Expect.class);
         if ( expect == null ){
             Log.error("Expect object null or empty! Please make sure that interactive shall was started!");
@@ -320,13 +307,14 @@ public class SshCore {
         try {
             Log.debug("Command to execute via interactive ssh shell is " + cmd);
             expect.sendLine(cmd);
-            stdOut  = expect.expect(regexp(expectedOutput)).getBefore();
-            stdErr = "";
-            exitCode = 0;
+            String stdOut  = expect.expect(regexp(expectedOutput)).getBefore();
+            return new ExecResult(stdOut, "", 0);
         } catch (Exception e) {
             stopShell(node);
             Log.error(e.getMessage());
         }
+
+        return new ExecResult("","", Integer.MIN_VALUE);
     }
 
 

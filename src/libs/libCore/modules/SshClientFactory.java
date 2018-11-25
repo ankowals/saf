@@ -36,7 +36,7 @@ public class SshClientFactory {
             Log.error("Environment.Active.Ssh. " + node + ".password " + " is null or empty!");
         }
 
-        boolean useEncoding = Storage.get("Environment.Active.useEncoding");
+        boolean useEncoding = Storage.get("Environment.Active.UseEncoding");
         if ( useEncoding ){
             passwd = StepCore.decodeString(passwd);
         }

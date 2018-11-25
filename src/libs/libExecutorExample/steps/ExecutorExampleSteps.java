@@ -3,6 +3,7 @@ package libs.libExecutorExample.steps;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.When;
 import libs.libCore.modules.BaseSteps;
+import libs.libCore.modules.ExecResult;
 import libs.libCore.modules.Log;
 
 import java.io.File;
@@ -12,10 +13,33 @@ public class ExecutorExampleSteps extends BaseSteps {
     @Given("^execute sample command$")
     public void execute_sample_command() {
         File workingDir = FileCore.getTempDir();
-        String out = ExecutorCore.execute("java -version", workingDir, 10, true);
+        ExecResult out = ExecutorCore.execute("cmd.exe /c java -version", workingDir, 10);
 
-        Log.debug("Output is");
-        Log.debug(out);
+        Log.warn("Error is " + out.getStdErr());
+        Log.debug("Output is " + out.getStdOut());
+        Log.debug("ExitValue is " + out.getExitCode());
+    }
+
+    @Given("^execute sample command in background$")
+    public void execute_sample_command_in_background() {
+        File workingDir = FileCore.getTempDir();
+        //ExecResult out = ExecutorCore.execute("cmd.exe start /b java -version", workingDir, 10);
+
+        ExecResult out = ExecutorCore.execute("Powershell.exe Start-Job {start-sleep 20};Write-Host 'Let us check if job was started';Get-job", workingDir, 10);
+
+        Log.warn("Error is " + out.getStdErr());
+        Log.debug("Output is " + out.getStdOut());
+        Log.debug("ExitValue is " + out.getExitCode());
+    }
+
+    @Given("^execute error command$")
+    public void execute_error_command() {
+        File workingDir = FileCore.getTempDir();
+        ExecResult out = ExecutorCore.execute("cmd.exe /c del I_do_NOT_EXIST", workingDir, 10);
+
+        Log.warn("Error is " + out.getStdErr());
+        Log.debug("Output is " + out.getStdOut());
+        Log.debug("ExitValue is " + out.getExitCode());
     }
 
 
@@ -23,8 +47,12 @@ public class ExecutorExampleSteps extends BaseSteps {
     public void execute_loop_command(){
         File workingDir = FileCore.getTempDir();
 
-        String cmd = "1..1000 | % {Write-Host $(get-date) '$_ testaaaaaaaaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaa $_';Start-Sleep -m 20}";
-        ExecutorCore.execute("Powershell.exe " + cmd, workingDir, 301, true);
+        String cmd = "1..100 | % {Write-Host $(get-date) '$_ testaaaaaaaaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaa aaaaaaaaaaaaaaaaaa $_';Start-Sleep -m 20}";
+        ExecResult out =  ExecutorCore.execute("Powershell.exe " + cmd, workingDir, 301);
+
+        Log.warn("Error is " + out.getStdErr());
+        Log.debug("Output is " + out.getStdOut());
+        Log.debug("ExitValue is " + out.getExitCode());
     }
 
 
@@ -42,10 +70,11 @@ public class ExecutorExampleSteps extends BaseSteps {
         String sWorkingDirPath = workingDir.getAbsolutePath();
         scenarioCtx.put("WorkingDir", String.class, sWorkingDirPath);
 
-        String out = ExecutorCore.execute(cmd, workingDir, 100, true);
+        ExecResult out = ExecutorCore.execute(cmd, workingDir, 100);
 
-        Log.debug("Output is ");
-        Log.debug(out);
+        Log.warn("Error is " + out.getStdErr());
+        Log.debug("Output is " + out.getStdOut());
+        Log.debug("ExitValue is " + out.getExitCode());
     }
 
     @When("^read the file$")
@@ -54,10 +83,11 @@ public class ExecutorExampleSteps extends BaseSteps {
         String cmd = "powershell.exe 'Get-Content -Path " + path + "\\t2.txt'";
 
         File workingDir = FileCore.createTempDir();
-        String out = ExecutorCore.execute(cmd, workingDir, 100, true);
+        ExecResult out = ExecutorCore.execute(cmd, workingDir, 100);
 
-        Log.debug("Output is ");
-        Log.debug(out);
+        Log.warn("Error is " + out.getStdErr());
+        Log.debug("Output is " + out.getStdOut());
+        Log.debug("ExitValue is " + out.getExitCode());
     }
 
 }

@@ -38,9 +38,6 @@ public class Macro {
 
         result = new HashMap<>();
 
-        // Get the current date and time
-        LocalDateTime currentTime = LocalDateTime.now();
-
         //for each macro calculate new value and store it in a result map as string
         for (HashMap.Entry<String, Object> entry : macro.entrySet())
         {
@@ -150,10 +147,14 @@ public class Macro {
                 Log.error("Wrong zoneId defined for macro " + entry.getKey());
             }
 
-            //calculate new macro value
+            // Get the current date and time
+
             ZoneId zoneId = ZoneId.of(sZoneId);
+            ZonedDateTime currentTimeAtZone = ZonedDateTime.now(zoneId);
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
-            ZonedDateTime macroTime = currentTime.atZone(zoneId).plusYears(addYears)
+
+            //calculate new macro value
+            currentTimeAtZone = currentTimeAtZone.plusYears(addYears)
                     .plusMonths(addMonths)
                     .plusWeeks(addWeeks)
                     .plusDays(addDays)
@@ -162,23 +163,25 @@ public class Macro {
                     .plusSeconds(addSeconds)
                     .plusNanos(addNanos);
 
-            long epoch = macroTime.toEpochSecond();
+            long epoch = currentTimeAtZone.toEpochSecond();
+
+            LocalDateTime macroTime = LocalDateTime.ofInstant(currentTimeAtZone.toInstant(), zoneId);
 
             if(type.equals("startOfWeek")){
-                ZonedDateTime firstOfWeek = macroTime.with(ChronoField.DAY_OF_WEEK, 1); //ISO8601, Monday is first day of week
+                LocalDateTime firstOfWeek = macroTime.with(ChronoField.DAY_OF_WEEK, 1); //ISO8601, Monday is first day of week
                 calculatedValue = prefix + firstOfWeek.format(formatter) + suffix;
             }
             if(type.equals("endOfWeek")){
-                ZonedDateTime endOfWeek = macroTime.with(ChronoField.DAY_OF_WEEK, 7); //ISO8601, Sunday is last day of week
+                LocalDateTime endOfWeek = macroTime.with(ChronoField.DAY_OF_WEEK, 7); //ISO8601, Sunday is last day of week
                 calculatedValue = prefix + endOfWeek.format(formatter) + suffix;
             }
             if(type.equals("startOfMonth")){
-                ZonedDateTime firstOfMonth = macroTime.with(ChronoField.DAY_OF_MONTH, 1);
+                LocalDateTime firstOfMonth = macroTime.with(ChronoField.DAY_OF_MONTH, 1);
                 calculatedValue = prefix + firstOfMonth.format(formatter) + suffix;
             }
             if(type.equals("endOfMonth")){
                 Integer lengthOfMonth = macroTime.toLocalDate().lengthOfMonth();
-                ZonedDateTime endOfMonth = macroTime.with(ChronoField.DAY_OF_MONTH, lengthOfMonth);
+                LocalDateTime endOfMonth = macroTime.with(ChronoField.DAY_OF_MONTH, lengthOfMonth);
                 calculatedValue = prefix + endOfMonth.format(formatter) + suffix;
             }
             if(type.equals("date")) {

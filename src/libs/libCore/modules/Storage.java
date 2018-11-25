@@ -14,8 +14,7 @@ public class Storage {
     private Context context;
     private FileCore FileCore;
     private ConfigReader ConfigReader;
-    private static final String TMP_DIR_PATH = System.getProperty("java.io.tmpdir");
-    private static final File STORAGE_FILE = new File(TMP_DIR_PATH + "//" + "SAF_Persistent_Storage_File.json");
+    private final String STORAGE_FILE_NAME = "SAF_Persistent_Storage_File.json";
 
     public Storage(Context context, FileCore fileCore, ConfigReader configReader) {
         this.context = context;
@@ -75,8 +74,7 @@ public class Storage {
                             Log.error("Can't set " + textKey + " to " + value + ". Key does not exists or null!");
                         }
                     } else {
-                        Object tValue = null;
-                        Storage.put(key, tValue);
+                        Storage.put(key, null);
                     }
                 }
                 //Log.error("Can't set " + textKey + " to " + value + ". Key does not exists or null!");
@@ -227,18 +225,21 @@ public class Storage {
             Gson gson = new GsonBuilder().create();
             String content = gson.toJson(dataMap);
 
-            if ( ! STORAGE_FILE.exists() ) {
-                FileCore.writeToFile(STORAGE_FILE, identifier + "=" + content + System.getProperty("line.separator"));
-                Log.debug("Storage file " + STORAGE_FILE.getAbsolutePath() + " created");
+            String tmpDirPath = FileCore.getTempDir().getAbsolutePath();
+            File storageFile = new File(tmpDirPath + File.separator + STORAGE_FILE_NAME);
+
+            if ( ! storageFile.exists() ) {
+                FileCore.writeToFile(storageFile, identifier + "=" + content + System.getProperty("line.separator"));
+                Log.debug("Storage file " + storageFile.getAbsolutePath() + " created");
             } else {
                 //overwrite line with identifier if exist else add new line
                 Boolean overwriteWasDone = false;
-                List<String> lines = FileCore.readLines(STORAGE_FILE);
+                List<String> lines = FileCore.readLines(storageFile);
 
                 //just in case file exists but is empty
                 if ( lines.size() == 0 ) {
-                    FileCore.writeToFile(STORAGE_FILE, identifier + "=" + content + System.getProperty("line.separator"));
-                    Log.debug("Storage file " + STORAGE_FILE.getAbsolutePath() + " updated");
+                    FileCore.writeToFile(storageFile, identifier + "=" + content + System.getProperty("line.separator"));
+                    Log.debug("Storage file " + storageFile.getAbsolutePath() + " updated");
                 }
 
                 for (int i = 0; i < lines.size(); i++) {
@@ -249,14 +250,14 @@ public class Storage {
                 }
 
                 if ( overwriteWasDone.equals(true) ) {
-                    FileCore.removeFile(STORAGE_FILE);
+                    FileCore.removeFile(storageFile);
                     for (int i = 0; i < lines.size(); i++) {
-                        FileCore.appendToFile(STORAGE_FILE, lines.get(i) + System.getProperty("line.separator"));
+                        FileCore.appendToFile(storageFile, lines.get(i) + System.getProperty("line.separator"));
                     }
                 } else {
-                    FileCore.appendToFile(STORAGE_FILE, identifier + "=" + content + System.getProperty("line.separator"));
+                    FileCore.appendToFile(storageFile, identifier + "=" + content + System.getProperty("line.separator"));
                 }
-                Log.debug("Storage file " + STORAGE_FILE.getAbsolutePath() + " updated");
+                Log.debug("Storage file " + storageFile.getAbsolutePath() + " updated");
             }
         }
     }
@@ -270,9 +271,12 @@ public class Storage {
             Log.error("identifier null or empty!");
         }
 
-        if ( STORAGE_FILE.exists() ) {
+        String tmpDirPath = FileCore.getTempDir().getAbsolutePath();
+        File storageFile = new File(tmpDirPath + File.separator + STORAGE_FILE_NAME);
+
+        if ( storageFile.exists() ) {
             String content = null;
-            List<String> lines = FileCore.readLines(STORAGE_FILE);
+            List<String> lines = FileCore.readLines(storageFile);
             for (int i = 0; i < lines.size(); i++) {
                 if ( lines.get(i).startsWith(identifier+"={") ) {
                     content = lines.get(i);
@@ -294,7 +298,7 @@ public class Storage {
                 FileCore.removeFile(file);
             }
         } else {
-            Log.error( "Storage file " + STORAGE_FILE.getAbsolutePath()
+            Log.error( "Storage file " + storageFile.getAbsolutePath()
                     + " does not exists!" + " Please make sure that step "
                     + " 'write storage (.+) with id (.+) to file'"
                     + " was executed" );

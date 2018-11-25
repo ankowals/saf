@@ -79,7 +79,7 @@ public class CoreSteps extends BaseSteps{
                 Integer.toString(timeout);
 
         Log.debug("Calling autoIt pause script with timeout " + timeout + " seconds");
-        ExecutorCore.execute(cmd, workingDir, timeout + 1, true);
+        ExecutorCore.execute(cmd, workingDir, timeout + 1);
         Log.debug("Pause canceled or timeout. Resuming execution");
     }
 

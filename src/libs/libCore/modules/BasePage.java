@@ -11,6 +11,7 @@ public class BasePage {
     protected Storage Storage;
     protected FileCore FileCore;
     protected AssertCore AssertCore;
+    protected CsvCore CsvCore;
 
     public BasePage () {
         this.globalCtx = GlobalCtxSingleton.getInstance();
@@ -21,6 +22,7 @@ public class BasePage {
         this.Storage = scenarioCtx.get("Storage", Storage.class);
         this.FileCore = scenarioCtx.get("FileCore",FileCore.class);
         this.AssertCore = scenarioCtx.get("AssertCore", AssertCore.class);
+        this.CsvCore = scenarioCtx.get("CsvCore", CsvCore.class);
 
         PageCore.waitForPageToLoad();
     }

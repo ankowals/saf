@@ -4,6 +4,8 @@ import cucumber.api.java.en.Given;
 import cucumber.api.java.en.When;
 import libs.libCore.modules.BaseSteps;
 import libs.libCore.modules.Log;
+import libs.libCore.modules.ExecResult;
+
 import java.io.File;
 
 public class RemoteExecutionSteps extends BaseSteps {
@@ -12,11 +14,11 @@ public class RemoteExecutionSteps extends BaseSteps {
     @Given("^host (.+) is alive$")
     public void host_is_alive(String host) {
         String cmd = "echo " + host + " is alive";
-        SshCore.execute(host, cmd, 10);
-        Log.debug("Result is " + SshCore.getStdOut());
-        Log.debug("Exit code is " + SshCore.getExitCode());
+        ExecResult result = SshCore.execute(host, cmd, 10);
+        Log.debug("Result is " + result.getStdOut());
+        Log.debug("Exit code is " + result.getExitCode());
 
-        String output = SshCore.getStdOut().replaceAll("(\\r|\\n)", "").trim();
+        String output = result.getStdOut().replaceAll("(\\r|\\n)", "").trim();
         if ( ! output.equalsIgnoreCase(cmd.substring(5)) ) {
             Log.error("host " + host + " is not accessible");
         }
@@ -25,9 +27,9 @@ public class RemoteExecutionSteps extends BaseSteps {
     @When("^list files in users home directory$")
     public void list_files_in_users_home_directory(){
         String singleCmd = "ls";
-        SshCore.execute("node1", singleCmd, 10);
-        Log.debug("Result is " + SshCore.getStdOut());
-        Log.debug("Exit code is " + SshCore.getExitCode());
+        ExecResult result = SshCore.execute("node1", singleCmd, 10);
+        Log.debug("Result is " + result.getStdOut());
+        Log.debug("Exit code is " + result.getExitCode());
     }
 
 
@@ -51,8 +53,8 @@ public class RemoteExecutionSteps extends BaseSteps {
         String node = "node1";
         SshCore.startShell(node, 10);
         SshCore.executeInShell(node,"", "\\$");
-        SshCore.executeInShell(node, "test -e postinstall.sh;echo $?", "0");
-        Log.debug(SshCore.getStdOut().replaceAll("(\\r|\\n)", "").trim());
+        ExecResult result = SshCore.executeInShell(node, "test -e postinstall.sh;echo $?", "0");
+        Log.debug(result.getStdOut().replaceAll("(\\r|\\n)", "").trim());
         SshCore.stopShell(node);
     }
 

@@ -230,11 +230,6 @@ public class CustomEventListener implements ConcurrentEventListener {
             Log.info("+--- Scenario with name " + testCaseName + " ended ---+");
             Log.info("+-----------------------" + scenarioFiller + "----------+");
 
-            Log.debug("Cleaning up scenario resources");
-
-            //close web driver and take screenshot in case scenario has failed
-            //has to be done here otherwise screenshot will not be attached to allure report
-            WebDriverObjectPool webDriverPool = globalCtx.get("WebDriverObjectPool", WebDriverObjectPool.class);
             Storage storage = scenarioCtx.get("Storage", Storage.class);
             StepCore stepCore = scenarioCtx.get("StepCore", StepCore.class);
 
@@ -258,13 +253,22 @@ public class CustomEventListener implements ConcurrentEventListener {
 
                     // Getting the target method from the loaded class and invoke it using its name
                     Method method = aClass.getMethod("load");
-                    Log.debug("Invoking method with name " + method.getName());
+                    Log.info("Invoking method with name " + method.getName());
                     method.invoke(aClassObject);
                 } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
                     Log.error(e.getMessage());
+                } catch (Exception e){
+                    Logger logger = LogManager.getLogger("libs.libCore.modules");
+                    ThreadContext.put("TId", String.valueOf(Thread.currentThread().getId()));
+                    logger.error(e.getMessage());
                 }
             }
 
+            Log.debug("Cleaning up scenario resources");
+
+            //close web driver and take screenshot in case scenario has failed
+            //has to be done here otherwise screenshot will not be attached to allure report
+            WebDriverObjectPool webDriverPool = globalCtx.get("WebDriverObjectPool", WebDriverObjectPool.class);
             Boolean closeAfterScenario = storage.get("Environment.Active.WebDrivers.CloseBrowserAfterScenario");
             if (!closeAfterScenario) {
                 Log.debug("Returning web driver to the pool");
@@ -388,6 +392,9 @@ public class CustomEventListener implements ConcurrentEventListener {
 
         ExecutorCore executorCore = new ExecutorCore();
         scenarioCtx.put("ExecutorCore", ExecutorCore.class, executorCore);
+
+        CsvCore csvCore = new CsvCore();
+        scenarioCtx.put("CsvCore", CsvCore.class, csvCore);
 
         AssertCore assertCore = new AssertCore();
         scenarioCtx.put("AssertCore", AssertCore.class, assertCore);
