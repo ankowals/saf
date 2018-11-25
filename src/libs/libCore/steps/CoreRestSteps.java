@@ -204,7 +204,7 @@ public class CoreRestSteps extends BaseSteps {
                 }
 
                 //execute comparison
-                AssertCore.validatableResponseBodyTableAssertion(response, key, action, expectedValue);
+                RestCore.validatableResponseBodyTableAssertion(response, key, action, expectedValue);
             }
         }
     }

@@ -1,11 +1,14 @@
 package libs.libCore.modules;
 
 import com.opencsv.CSVReader;
+import org.apache.commons.lang.StringUtils;
+import org.testng.Assert;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
 
+@SuppressWarnings("unchecked")
 public class CsvCore {
 
     private int getHeaderLocation(String[] header, String columnName){
@@ -40,6 +43,35 @@ public class CsvCore {
         }
 
         return line[getHeaderLocation(header, columnName)];
+    }
+
+    public void verifyValueInParticularRowAndColumn(String columnName, String action, String expectedValue, String input){
+        //extract desired line number
+        if ( !columnName.contains("[") || !columnName.contains("]") ){
+            Log.error("Specified column name in the key field shall contain row number! " +
+                    "Please specify one by appending [row number] to column name!");
+        }
+        String sRowNum = columnName.substring(columnName.indexOf("[") + 1);
+        columnName = columnName.substring(0, columnName.indexOf("["));
+        sRowNum = sRowNum.substring(0, sRowNum.indexOf("]"));
+
+        if ( !StringUtils.isNumeric(sRowNum) ){
+            Log.error("Provided column id is not a number!");
+        }
+
+        int rowNum = Integer.parseInt(sRowNum);
+
+        //extract header
+        String[] header = extractLine(input, 0);
+        //extract line from csv
+        String[] line = extractLine(input, rowNum);
+        //extract value from particular column of particular line
+        String extractedValue = extractValueFromColumnAtLine(header, line, columnName);
+
+
+        if ( action.equals("equals") ){
+            Assert.assertEquals(extractedValue, expectedValue);
+        }
     }
 
 }

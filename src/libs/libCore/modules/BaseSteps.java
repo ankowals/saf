@@ -13,7 +13,7 @@ public class BaseSteps {
     protected ExecutorCore ExecutorCore;
     protected SqlCore SqlCore;
     protected CloudDirectorCore CloudDirectorCore;
-    protected AssertCore AssertCore;
+    protected RestCore RestCore;
     protected PdfCore PdfCore;
     protected CsvCore CsvCore;
 
@@ -29,7 +29,7 @@ public class BaseSteps {
         this.ExecutorCore = scenarioCtx.get("ExecutorCore", ExecutorCore.class);
         this.SqlCore = scenarioCtx.get("SqlCore",SqlCore.class);
         this.CloudDirectorCore = scenarioCtx.get("CloudDirectorCore", CloudDirectorCore.class);
-        this.AssertCore = scenarioCtx.get("AssertCore", AssertCore.class);
+        this.RestCore = scenarioCtx.get("RestCore", RestCore.class);
         this.PdfCore = scenarioCtx.get("PdfCore", PdfCore.class);
         this.CsvCore = scenarioCtx.get("CsvCore", CsvCore.class);
     }

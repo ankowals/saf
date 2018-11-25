@@ -2,7 +2,6 @@ package libs.libCore.modules;
 
 import com.rits.cloning.Cloner;
 import cucumber.api.PickleStepTestStep;
-import cucumber.api.Result;
 import cucumber.api.event.*;
 import cucumber.api.event.EventHandler;
 import io.restassured.RestAssured;
@@ -396,8 +395,8 @@ public class CustomEventListener implements ConcurrentEventListener {
         CsvCore csvCore = new CsvCore();
         scenarioCtx.put("CsvCore", CsvCore.class, csvCore);
 
-        AssertCore assertCore = new AssertCore();
-        scenarioCtx.put("AssertCore", AssertCore.class, assertCore);
+        RestCore restCore = new RestCore();
+        scenarioCtx.put("RestCore", RestCore.class, restCore);
 
         PdfCore pdfCore = new PdfCore();
         scenarioCtx.put("PdfCore", PdfCore.class, pdfCore);

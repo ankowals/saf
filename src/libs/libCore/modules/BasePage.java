@@ -10,7 +10,7 @@ public class BasePage {
     protected SqlCore SqlCore;
     protected Storage Storage;
     protected FileCore FileCore;
-    protected AssertCore AssertCore;
+    protected RestCore RestCore;
     protected CsvCore CsvCore;
 
     public BasePage () {
@@ -21,7 +21,7 @@ public class BasePage {
         this.SqlCore = scenarioCtx.get("SqlCore",SqlCore.class);
         this.Storage = scenarioCtx.get("Storage", Storage.class);
         this.FileCore = scenarioCtx.get("FileCore",FileCore.class);
-        this.AssertCore = scenarioCtx.get("AssertCore", AssertCore.class);
+        this.RestCore = scenarioCtx.get("RestCore", RestCore.class);
         this.CsvCore = scenarioCtx.get("CsvCore", CsvCore.class);
 
         PageCore.waitForPageToLoad();
