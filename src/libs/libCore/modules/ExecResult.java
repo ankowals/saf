@@ -9,7 +9,7 @@ public class ExecResult {
     /**
      * Constructor
      *
-     * Creates new set of SshResults
+     * Creates new set of ExecResult
      *
      */
     public ExecResult(String stdout, String stderr, Integer exitCode) {

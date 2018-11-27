@@ -1,7 +1,10 @@
 package libs.libCore.modules;
 
 import org.apache.commons.exec.*;
+import org.apache.commons.lang3.reflect.FieldUtils;
+
 import java.io.*;
+import java.util.Vector;
 
 public class ExecutorCore {
 
@@ -38,13 +41,34 @@ public class ExecutorCore {
         try {
             Log.debug("Command to execute is " + cmd);
             Log.debug("Working dir is " + workingDir.getAbsolutePath());
-            executor.execute(CommandLine.parse(cmd), resultHandler);
+            executor.execute(fixCommandLine(CommandLine.parse(cmd)), resultHandler);
             resultHandler.waitFor();
         } catch (IllegalArgumentException | IOException | InterruptedException e) {
             Log.error(e.getMessage());
         }
 
         return new ExecResult(os.getOutput(), es.getOutput(), resultHandler.getExitValue());
+    }
+
+    private CommandLine fixCommandLine(CommandLine badCommandLine) {
+        try {
+            CommandLine fixedCommandLine = new CommandLine(badCommandLine.getExecutable());
+            fixedCommandLine.setSubstitutionMap(badCommandLine.getSubstitutionMap());
+            Vector<?> arguments = (Vector<?>) FieldUtils.readField(badCommandLine, "arguments", true);
+            arguments.stream()
+                    .map(badArgument -> {
+                        try {
+                            return (String) FieldUtils.readField(badArgument, "value", true);
+                        } catch (IllegalAccessException e) {
+                            throw new RuntimeException(e);
+                        }
+                    })
+                    .forEach(goodArgument -> fixedCommandLine.addArgument(goodArgument, false));
+            return fixedCommandLine;
+        } catch (Exception e) {
+            Log.warn("Cannot fix command line " + e.getMessage());
+            return badCommandLine;
+        }
     }
 
 }
