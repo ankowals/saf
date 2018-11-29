@@ -496,14 +496,14 @@ public class CustomEventListener implements ConcurrentEventListener {
                     + "_" + System.nanoTime() + "_" + threadId;
         }
 
-        return logFileName;
+        return logFileName.replaceAll("[^A-Za-z0-9_]","");
     }
 
     private String createLogDirName(String featurePath){
         String featureFileName = new File(featurePath).getName().replaceAll("\\s+", "_")
                 .replaceAll("[^\\w\\s]","").replace("feature","");
         int maxLength = (featureFileName.length() < 256)?featureFileName.length():256;
-        return featureFileName.substring(0, maxLength);
+        return featureFileName.substring(0, maxLength).replaceAll("[^A-Za-z0-9_]","");
     }
 
     private void readSystemProperties(){
