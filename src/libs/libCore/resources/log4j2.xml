@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="OFF">
     <Appenders>
+        <CountingNoOp name="DEV_NULL"/>
         <Console name="ConsoleAppender" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [thread-%-2T] [%-5level] %msg%n"/>
         </Console>
@@ -12,13 +13,14 @@
             </Policies>
         </RollingFile>
         <Routing name="RoutingAppender">
-            <Routes pattern="$${ctx:logFileName}">
+            <Routes pattern="${ctx:logFileName}">
                 <Route>
                     <File name="File-${ctx:logFileName}" fileName="target/logs/${ctx:logDirName}/${ctx:logFileName}.log">
                         <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [thread-%-2T] [%-5level] %msg%n"/>
                     </File>
                 </Route>
             </Routes>
+            <Route ref="DEV_NULL" key="${ctx:logFileName}"/>
         </Routing>
     </Appenders>
     <Loggers>
@@ -26,6 +28,7 @@
             <!--<AppenderRef ref="RoutingAppender"/>-->
         </Root>
         <Logger name="libs.libCore.modules" level="ALL">
+            <AppenderRef ref="DEV_NULL"/>
             <AppenderRef ref="RoutingAppender"/>
             <AppenderRef ref="ConsoleAppender"/>
             <AppenderRef ref="RollingFileAppender"/>

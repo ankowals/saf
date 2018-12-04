@@ -34,20 +34,6 @@ public class Log {
 
 
     /**
-     * logs message with INFO severity
-     *
-     * Shall be used to indicate when new step def is started or other important action is happening
-     *
-     * @param message String, text to be written to the log file
-     */
-	public static void info(String message) {
-		String threadId = String.valueOf(Thread.currentThread().getId());
-		ThreadContext.put("TId", threadId);
-		Log.info(message);
-	}
-
-
-    /**
      * logs message with WARN severity
      *
      * Shall be used to inform the user that result of some action is acceptable

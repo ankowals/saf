@@ -8,8 +8,16 @@ public class ExecutorLogOutputStream extends LogOutputStream {
 
     private List<String> lines = new ArrayList<>();
 
+    public ExecutorLogOutputStream(int logLevel) {
+        super(logLevel);
+    }
+
     @Override protected void processLine(String line, int level) {
-        Log.debug(line);
+        if ( level == 0 ) {
+            Log.debug(line);
+        } else {
+            Log.warn(line);
+        }
         lines.add(line);
     }
 

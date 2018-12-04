@@ -28,8 +28,8 @@ public class ExecutorCore {
         ExecuteWatchdog watchdog = new ExecuteWatchdog(1000 * timeout);
         ShutdownHookProcessDestroyer processDestroyer = new ShutdownHookProcessDestroyer(); //This is used to end the process when the JVM exits
 
-        ExecutorLogOutputStream os = new ExecutorLogOutputStream();
-        ExecutorLogOutputStream es = new ExecutorLogOutputStream();
+        ExecutorLogOutputStream os = new ExecutorLogOutputStream(0);
+        ExecutorLogOutputStream es = new ExecutorLogOutputStream(1);
 
         PumpStreamHandler psh = new PumpStreamHandler(os, es);
 

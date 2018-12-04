@@ -83,9 +83,10 @@ public class CustomEventListener implements ConcurrentEventListener {
     }
 
     private void handleTestRunStarted(TestRunStarted event){
-        Log.info("+----------------------------+");
-        Log.info("+--- Features run started ---+");
-        Log.info("+----------------------------+");
+        Logger logger = LogManager.getLogger("libs.libCore.modules");
+        logger.info("+----------------------------+");
+        logger.info("+--- Features run started ---+");
+        logger.info("+----------------------------+");
 
         readSystemProperties();
 
@@ -150,9 +151,10 @@ public class CustomEventListener implements ConcurrentEventListener {
     }
 
     private void handleTestRunFinished(TestRunFinished event){
-        Log.info("+------------------------------+");
-        Log.info("+--- All scenarios executed ---+");
-        Log.info("+------------------------------+");
+        Logger logger = LogManager.getLogger("libs.libCore.modules");
+        logger.info("+------------------------------+");
+        logger.info("+--- All scenarios executed ---+");
+        logger.info("+------------------------------+");
 
         Log.debug("Cleaning up global resources");
         Context globalCtx = GlobalCtxSingleton.getInstance();
@@ -172,22 +174,23 @@ public class CustomEventListener implements ConcurrentEventListener {
         JdbcDriverObjectPool jdbcDriverObjectPool = globalCtx.get("JdbcDriverObjectPool", JdbcDriverObjectPool.class);
         jdbcDriverObjectPool.closeAll();
 
-        Log.info("+-----------------------------+");
-        Log.info("+--- Features run finished ---+");
-        Log.info("+-----------------------------+");
-        Log.info("");
-        Log.info("");
-        Log.info("");
+        logger.info("+-----------------------------+");
+        logger.info("+--- Features run finished ---+");
+        logger.info("+-----------------------------+");
+        Log.debug("");
+        Log.debug("");
+        Log.debug("");
     }
 
     private void handleTestStepStarted(TestStepStarted event){
+        Logger logger = LogManager.getLogger("libs.libCore.modules");
         if(event.testStep instanceof PickleStepTestStep) {
             PickleStepTestStep ev = (PickleStepTestStep) event.testStep;
             String stepFiller = StringUtils.repeat("-", ev.getStepText().length());
             String threadFiller = StringUtils.repeat("-", Long.toString(Thread.currentThread().getId()).length());
-            Log.info("+-----------------" + stepFiller + "------------------" + threadFiller + "-----+");
-            Log.info("+--- Step started " + ev.getStepText() + " in thread with id " + Thread.currentThread().getId() +  " ---+");
-            Log.info("+-----------------" + stepFiller + "------------------" + threadFiller + "-----+");
+            logger.info("+-----------------" + stepFiller + "------------------" + threadFiller + "-----+");
+            logger.info("+--- Step started " + ev.getStepText() + " in thread with id " + Thread.currentThread().getId() +  " ---+");
+            logger.info("+-----------------" + stepFiller + "------------------" + threadFiller + "-----+");
         }
 
         Context globalCtx = GlobalCtxSingleton.getInstance();
@@ -200,16 +203,15 @@ public class CustomEventListener implements ConcurrentEventListener {
     }
 
     private void handleTestStepFinished(TestStepFinished event){
+        Logger logger = LogManager.getLogger("libs.libCore.modules");
         if ( event.result.getErrorMessage() != null ){
-            Logger logger = LogManager.getLogger("libs.libCore.modules");
-            ThreadContext.put("TId", String.valueOf(Thread.currentThread().getId()));
             logger.error(event.result.getErrorMessage());
         }
 
         String stepFiller = StringUtils.repeat("-", event.result.getStatus().toString().length());
-        Log.info("+---------------------------" + stepFiller + "----+");
-        Log.info("+--- Step ended with status " + event.result.getStatus() + " ---+");
-        Log.info("+---------------------------" + stepFiller + "----+");
+        logger.info("+---------------------------" + stepFiller + "----+");
+        logger.info("+--- Step ended with status " + event.result.getStatus() + " ---+");
+        logger.info("+---------------------------" + stepFiller + "----+");
 
         Context globalCtx = GlobalCtxSingleton.getInstance();
         ScenarioCtxObjectPool scenarioCtxPool = globalCtx.get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class);
@@ -225,9 +227,9 @@ public class CustomEventListener implements ConcurrentEventListener {
             //and attach log to the report
 
             String scenarioFiller = StringUtils.repeat("-", testCaseName.length());
-            Log.info("+-----------------------" + scenarioFiller + "----------+");
-            Log.info("+--- Scenario with name " + testCaseName + " ended ---+");
-            Log.info("+-----------------------" + scenarioFiller + "----------+");
+            logger.info("+-----------------------" + scenarioFiller + "----------+");
+            logger.info("+--- Scenario with name " + testCaseName + " ended ---+");
+            logger.info("+-----------------------" + scenarioFiller + "----------+");
 
             Storage storage = scenarioCtx.get("Storage", Storage.class);
             StepCore stepCore = scenarioCtx.get("StepCore", StepCore.class);
@@ -244,7 +246,7 @@ public class CustomEventListener implements ConcurrentEventListener {
                 try {
                     // Load the target class using its name
                     Class aClass = classLoader.loadClass(className);
-                    Log.info("Plugin detected! Loading " + aClass.getName() + " class!");
+                    logger.info("Plugin detected! Loading " + aClass.getName() + " class!");
 
                     // Create a new instance from the loaded class
                     Constructor constructor = aClass.getConstructor();
@@ -252,13 +254,11 @@ public class CustomEventListener implements ConcurrentEventListener {
 
                     // Getting the target method from the loaded class and invoke it using its name
                     Method method = aClass.getMethod("load");
-                    Log.info("Invoking method with name " + method.getName());
+                    logger.info("Invoking method with name " + method.getName());
                     method.invoke(aClassObject);
                 } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
                     Log.error(e.getMessage());
                 } catch (Exception e){
-                    Logger logger = LogManager.getLogger("libs.libCore.modules");
-                    ThreadContext.put("TId", String.valueOf(Thread.currentThread().getId()));
                     logger.error(e.getMessage());
                 }
             }
@@ -296,28 +296,26 @@ public class CustomEventListener implements ConcurrentEventListener {
     }
 
     private void handleTestCaseStarted(TestCaseStarted event) {
-
+        Logger logger = LogManager.getLogger("libs.libCore.modules");
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             public void uncaughtException(Thread t, Throwable e) {
                 StringWriter sw = new StringWriter();
                 e.printStackTrace(new PrintWriter(sw));
                 String stacktrace = sw.toString();
                 //WA to not use Log.error and do not throw fail in addition
-                Logger logger = LogManager.getLogger("libs.libCore.modules");
-                ThreadContext.put("TId", String.valueOf(Thread.currentThread().getId()));
                 logger.error(stacktrace);
             }
         });
 
-        Long threadId = Thread.currentThread().getId();
-
-        //this is used to create log dir per feature and log file per scenario in a feature
-        //file name can't be longer than 256 characters
-        String logFileName =  createLogFileName(threadId, event);
+        long threadId = Thread.currentThread().getId();
 
         //prepare log dir file name
         String featurePath = event.testCase.getUri();
         String featureFileName = createLogDirName(featurePath);
+
+        //this is used to create log dir per feature and log file per scenario in a feature
+        //file name + its path can't be longer than 257 characters (MAX_PATH under win 260 but 3 chars are gone for drive letter)
+        String logFileName =  createLogFileName(threadId, event);
 
         //pass log dir name and log file name to the Log4j2 context
         ThreadContext.put("logFileName", logFileName);
@@ -340,14 +338,14 @@ public class CustomEventListener implements ConcurrentEventListener {
         String featureFiller = StringUtils.repeat("-", (relativeFeaturePath).length());
 
         //start scenario
-        Log.info("+---------------" + featureFiller + "----+");
-        Log.info("+--- Feature id " + relativeFeaturePath + " ---+");
-        Log.info("+---------------" + featureFiller + "----+");
-        Log.info("***");
+        logger.info("+---------------" + featureFiller + "----+");
+        logger.info("+--- Feature id " + relativeFeaturePath + " ---+");
+        logger.info("+---------------" + featureFiller + "----+");
+        Log.debug("***");
         String threadFiller = StringUtils.repeat("-", Long.toString(threadId).length());
-        Log.info("+----------------------" + scenarioFiller + "----------------------------" + threadFiller + "----+");
-        Log.info("+--- Scenario with name " + event.testCase.getName() + " started in thread with id " + threadId + " ---+");
-        Log.info("+----------------------" + scenarioFiller + "----------------------------" + threadFiller + "----+");
+        logger.info("+----------------------" + scenarioFiller + "----------------------------" + threadFiller + "----+");
+        logger.info("+--- Scenario with name " + event.testCase.getName() + " started in thread with id " + threadId + " ---+");
+        logger.info("+----------------------" + scenarioFiller + "----------------------------" + threadFiller + "----+");
 
         Log.debug("Started scenario resources initialisation");
         Context globalCtx = GlobalCtxSingleton.getInstance();
@@ -468,9 +466,9 @@ public class CustomEventListener implements ConcurrentEventListener {
         String targetDirPath = fileCore.getProjectPath().replaceAll("src$", "target");
         updateAllureProperties(storage, targetDirPath);
 
-        Log.info("+-------------------------------" + scenarioFiller + "-------------------" + threadFiller + "----+");
-        Log.info("+--- Running steps for scenario " + event.testCase.getName() + " in thread with id " + threadId + " ---+");
-        Log.info("+-------------------------------" + scenarioFiller + "-------------------" + threadFiller + "----+");
+        logger.info("+-------------------------------" + scenarioFiller + "-------------------" + threadFiller + "----+");
+        logger.info("+--- Running steps for scenario " + event.testCase.getName() + " in thread with id " + threadId + " ---+");
+        logger.info("+-------------------------------" + scenarioFiller + "-------------------" + threadFiller + "----+");
         scenarioCtx.put("ScenarioLogFileName", String.class, fileCore.getProjectPath().replaceAll("src$","target")
                 + File.separator + "logs"
                 + File.separator + featureFileName
@@ -478,6 +476,8 @@ public class CustomEventListener implements ConcurrentEventListener {
     }
 
     private void handleTestCaseFinished(TestCaseFinished event){
+        ThreadContext.remove("logFileName");
+        ThreadContext.remove("logDirName");
         Context globalCtx = GlobalCtxSingleton.getInstance();
         ScenarioCtxObjectPool scenarioCtxPool = globalCtx.get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class);
         scenarioCtxPool.checkIn();
@@ -485,14 +485,14 @@ public class CustomEventListener implements ConcurrentEventListener {
 
 
     private String createLogFileName(Long threadId, TestCaseStarted event){
-        int availableLength = 256 - Long.toString(System.nanoTime()).length() - Long.toString(threadId).length() - 2;
+        int availableLength = 69 - Long.toString(System.nanoTime()).length() - Long.toString(threadId).length() - 3;
         int scenarioNameLength = event.testCase.getName().replaceAll("\\s+", "_").length();
 
         //create log file name
         String logFileName = event.testCase.getName().replaceAll("\\s+", "_") + "_" + System.nanoTime() +
                 "_" + threadId;
         if ( availableLength < scenarioNameLength  ){
-            logFileName = event.testCase.getName().replaceAll("\\s+", "_").substring(0, scenarioNameLength - availableLength)
+            logFileName = event.testCase.getName().replaceAll("\\s+", "_").substring(0, availableLength)
                     + "_" + System.nanoTime() + "_" + threadId;
         }
 
@@ -502,7 +502,7 @@ public class CustomEventListener implements ConcurrentEventListener {
     private String createLogDirName(String featurePath){
         String featureFileName = new File(featurePath).getName().replaceAll("\\s+", "_")
                 .replaceAll("[^\\w\\s]","").replace("feature","");
-        int maxLength = (featureFileName.length() < 256)?featureFileName.length():256;
+        int maxLength = (featureFileName.length() < 50)?featureFileName.length():50;
         return featureFileName.substring(0, maxLength).replaceAll("[^A-Za-z0-9_]","");
     }
 
@@ -634,7 +634,7 @@ public class CustomEventListener implements ConcurrentEventListener {
     private void overwriteStorageDataUsingCmdSwitch(StepCore stepCore, Storage storage){
         Properties props = System.getProperties();
         Set<Object> propsSet = props.keySet();
-        Integer nrOfSwitches = 0;
+        int nrOfSwitches = 0;
         for(Object key : propsSet ){
             if ( key.toString().contains("ctx.TestData.") ||
                     key.toString().contains("ctx.Environment.") ||

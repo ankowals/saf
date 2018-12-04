@@ -105,8 +105,7 @@ public class StepCore {
                 if ( num instanceof Long ) {
                     Long tVal = (Long) num;
                     try {
-                        int iVal = toIntExact(tVal);
-                        num = iVal;
+                        num = toIntExact(tVal);
                     } catch (ArithmeticException e) {
                         //do nothing just return Long
                     }
@@ -198,34 +197,6 @@ public class StepCore {
 
 
     /**
-     * Checks if ${ctx.storageName.storageKey} kind of variables exist in the template
-     * If so executes variables substitution
-     * Template file after evaluation is attached to the report
-     *
-     * @param templateName String, name of the template without .template extension
-     * @param templateDirPath String, path to the directory where template is present
-     *
-     * @return File
-     */
-    public File evaluateTemplate(String templateName, String templateDirPath){
-        File template = new File(templateDirPath + File.separator + templateName + ".template");
-        String sFile = FileCore.readToString(template);
-
-        //evaluate the template
-        String templateAfterEval = replaceInTemplate(sFile);
-
-        //attach template after evaluation to the report
-        File temp = FileCore.createTempFile(templateName,"template");
-        FileCore.appendToFile(temp, templateAfterEval);
-        String tempPath = temp.getAbsolutePath();
-        attachFileToReport(templateName + ".template","text/plain",tempPath);
-
-        return temp;
-    }
-
-
-
-    /**
      * helper function used in evaluateTemplate method
      * replaces variables with values from storage
      *
@@ -234,8 +205,8 @@ public class StepCore {
      * @return String
      */
     private String replaceInTemplate (String input) {
-        Integer beignIdx = input.indexOf("${");
-        Integer endIdx = input.indexOf("}", beignIdx);
+        int beignIdx = input.indexOf("${");
+        int endIdx = input.indexOf("}", beignIdx);
 
         if (beignIdx != -1) {
             if ( endIdx == -1 ){
@@ -324,28 +295,29 @@ public class StepCore {
             Log.error("List of positive filters is empty!");
         }
 
-        String output = "";
         List<String> lines = FileCore.readLines(input);
 
-        String sFilter = "";
+        StringBuilder sb = new StringBuilder();
         for (String filter : filters) {
-            sFilter = sFilter + ", " + filter;
+            //sFilter = sFilter + ", " + filter;
+            sb.append(filter);
+            sb.append(", ");
         }
+        String sFilter = sb.toString();
 
-        String n = System.lineSeparator();
-
-        Log.debug("Going to apply positive filter [" + sFilter.substring(1) + "]");
+        Log.debug("Going to apply positive filter [" + sFilter.substring(0,sFilter.length()-1) + "]");
+        sb = new StringBuilder();
         for ( String line : lines ) {
             for ( String filter : filters) {
                 if ( line.contains(filter) ) {
-                    output = output + line + n;
+                    //output = output + line + n;
+                    sb.append(line);
+                    sb.append(System.lineSeparator());
                 }
             }
         }
+        return sb.toString().trim();
 
-        output = output.trim();
-
-        return output;
     }
 
 
@@ -368,32 +340,33 @@ public class StepCore {
             Log.error("List of negative filters is empty!");
         }
 
-        String output = "";
         List<String> lines = FileCore.readLines(input);
 
-        String sFilter = "";
+        StringBuilder sb = new StringBuilder();
         for (String filter : filters) {
-            sFilter = sFilter + ", " + filter;
+            //sFilter = sFilter + ", " + filter;
+            sb.append(filter);
+            sb.append(", ");
         }
+        String sFilter = sb.toString();
 
-        String n = System.lineSeparator();
-
-        Log.debug("Going to apply negative filter [" + sFilter.substring(1) + "]");
+        Log.debug("Going to apply negative filter [" + sFilter.substring(0,sFilter.length()-1) + "]");
+        sb = new StringBuilder();
         for ( String line : lines ) {
-            Boolean isMatch = false;
+            boolean isMatch = false;
             for ( String filter : filters) {
                 if ( line.contains(filter) ) {
                     isMatch = true;
                 }
             }
             if ( ! isMatch ) {
-                output = output + line + n;
+                //output = output + line + n;
+                sb.append(line);
+                sb.append(System.lineSeparator());
             }
         }
 
-        output = output.trim();
-
-        return output;
+        return sb.toString().trim();
     }
 
 
@@ -417,57 +390,42 @@ public class StepCore {
             Log.error("List of block filters is empty!");
         }
 
-        String output = "";
-        String n = System.lineSeparator();
         List<String> lines = FileCore.readLines(input);
+        StringBuilder sb = new StringBuilder();
 
         for ( Map<String, String> filter : filters) {
-            Boolean isMatch = false;
+            boolean isMatch = false;
             String begin = filter.get("begin");
             String end = filter.get("end");
 
-            if (begin == null || begin == "") {
+            if (begin == null || begin.equals("")) {
                 Log.error("begin keyword of block filter " + filter + " null or empty!");
             }
 
-            if (end == null || end == "") {
+            if (end == null || end.equals("")) {
                 Log.error("end keyword of block filter " + filter + " null or empty!");
             }
 
             for ( String line : lines ) {
                 if ( line.contains( end ) ) {
-                    output = output + line + n;
+                    //output = output + line + n;
+                    sb.append(line);
+                    sb.append(System.lineSeparator());
                     isMatch = false;
                 }
                 if ( line.contains( begin ) ) {
                     isMatch = true;
                     }
                 if ( isMatch ) {
-                    output = output + line + n;
+                    //output = output + line + n;
+                    sb.append(line);
+                    sb.append(System.lineSeparator());
                 }
             }
 
         }
 
-        output = output.trim();
-
-        return output;
-    }
-
-
-    /**
-     * Creates random string of desired length
-     *
-     * @param length
-     * @return String
-     */
-    public String makeRandomString(int length) {
-        Random rand = new Random();
-        StringBuilder result = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            result.append( (char) ('a' + rand.nextInt(26)));
-        }
-        return result.toString();
+        return sb.toString().trim();
     }
 
 
@@ -527,8 +485,8 @@ public class StepCore {
      */
     public String replaceInString(String input) {
         Log.debug("Input is " + input);
-        Integer beignIdx = input.indexOf("${");
-        Integer endIdx = input.indexOf("}", beignIdx);
+        int beignIdx = input.indexOf("${");
+        int endIdx = input.indexOf("}", beignIdx);
 
         if (beignIdx != -1) {
             if ( endIdx == -1 ){

@@ -1,6 +1,6 @@
-@demoOnline
 Feature: DemoOnlineShop
 
+  @demoOnline
   Scenario: Verify sum of 2 items equals total price Thread 1
 
     Given open browser

@@ -33,7 +33,7 @@ public class Storage {
     public <T> void set (String textKey, T value) {
         Log.debug("Try to set " + textKey + " to " + value);
 
-        Integer idx = 0;
+        int idx = 0;
         String[] t_textKey = textKey.split("[.]");
         String StorageName = t_textKey[idx];
 
@@ -65,7 +65,7 @@ public class Storage {
                 } else {
                     if ( t_textKey[idx].contains("[") ) {
                         String sIndex = t_textKey[idx].split("\\[")[1].replace("]", "");
-                        Integer iIndex = Integer.valueOf(sIndex);
+                        int iIndex = Integer.valueOf(sIndex);
                         if (iIndex == 0) {
                             ArrayList<Object> tValue = new ArrayList<>();
                             tValue.add(null);
@@ -101,7 +101,7 @@ public class Storage {
         if ( Storage.get(tKey) instanceof Map ) {
             Storage = (HashMap<String, Object>) Storage.get(key);
         } else if (Storage.get(tKey) instanceof List ) {
-            Integer index = Integer.valueOf(key.substring(key.indexOf("[") + 1, key.indexOf("]")));
+            int index = Integer.valueOf(key.substring(key.indexOf("[") + 1, key.indexOf("]")));
             ArrayList<Object> t_Array = (ArrayList<Object>) Storage.get(tKey);
             if (t_Array.size() - index == 0) {
                 HashMap<String, Object> tMap = new HashMap<>();
@@ -133,7 +133,7 @@ public class Storage {
             for (Map.Entry<String, Object> entry : dataMap.entrySet()) {
                 String[] tmp = entry.getValue().getClass().getName().split(Pattern.quote(".")); // Split on period.
                 String type = tmp[2];
-                Log.info("(" + type + ")" + entry.getKey() + " = " + entry.getValue().toString());
+                Log.debug("(" + type + ")" + entry.getKey() + " = " + entry.getValue().toString());
             }
         }
     }
@@ -181,7 +181,7 @@ public class Storage {
                         if ( value != null ) {
                             if (element.contains("[")) {
                                 if (List.class.isAssignableFrom(value.getClass())) {
-                                    Integer index = Integer.valueOf(element.substring(element.indexOf("[") + 1, element.indexOf("]")));
+                                    int index = Integer.valueOf(element.substring(element.indexOf("[") + 1, element.indexOf("]")));
                                     value = ((List<Object>) value).get(index);
                                     if ( value == null ){
                                         Log.warn("Value of " + path + " is null");

@@ -62,6 +62,7 @@ public class WebDriverFactory {
             prefs.put("credentials_enable_service", false);
             prefs.put("profile.password_manager_enabled", false);
             options.setExperimentalOption("prefs", prefs);
+            options.setExperimentalOption("useAutomationExtension", false);
 
             return createEventFieringWebDriver(new ChromeDriver(options));
         } else if (browser.equalsIgnoreCase("firefox")) {
@@ -96,12 +97,12 @@ public class WebDriverFactory {
      *  @retrun EventFiringWebDriver
      */
     private EventFiringWebDriver createEventFieringWebDriver(WebDriver driver) {
-        Log.info("Driver name used is " + driver.getClass().getName());
+        Log.debug("Driver name used is " + driver.getClass().getName());
 
         BuildInfo bd = new BuildInfo();
-        Log.info("Driver build revision " + bd.getBuildRevision());
-        Log.info("Driver build time " + bd.getBuildTime());
-        Log.info("Driver build release label " + bd.getReleaseLabel());
+        Log.debug("Driver build revision " + bd.getBuildRevision());
+        Log.debug("Driver build time " + bd.getBuildTime());
+        Log.debug("Driver build release label " + bd.getReleaseLabel());
 
         EventFiringWebDriver eventFiringWebDriver = new EventFiringWebDriver(driver);
         WebDriverEventListener handler = new WebDriverCustomEventListener();
@@ -126,8 +127,8 @@ public class WebDriverFactory {
             //expected format is width x height
             String tmp = StringUtils.deleteWhitespace(WidthXHeight).trim();
             String[] dimensions = tmp.split("[xX]");
-            Integer width = null;
-            Integer height = null;
+            int width = 480;
+            int height = 640;
             try {
                 width = Integer.parseInt(dimensions[0]);
                 height = Integer.parseInt(dimensions[1]);
@@ -141,7 +142,7 @@ public class WebDriverFactory {
         Integer timeout = Storage.get("Environment.Active.Web.timeout");
         driver.manage().timeouts().implicitlyWait(timeout, TimeUnit.SECONDS);
         Dimension brDim = driver.manage().window().getSize();
-        Log.info("Browser width x height is " + brDim.getWidth() + " x " + brDim.getHeight());
+        Log.debug("Browser width x height is " + brDim.getWidth() + " x " + brDim.getHeight());
 
         return eventFiringWebDriver;
     }

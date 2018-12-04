@@ -25,6 +25,11 @@ public class PageCore {
         this.scenarioCtx = GlobalCtxSingleton.getInstance().get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
         this.Storage = scenarioCtx.get("Storage", Storage.class);
         this.driver = scenarioCtx.get("SeleniumWebDriver", EventFiringWebDriver.class);
+
+        if (driver == null) {
+            Log.error("Selenium Web Driver not started or null! Please make sure that step 'open browser' was executed!");
+        }
+
     }
 
 
@@ -35,11 +40,7 @@ public class PageCore {
      * @return boolean
      */
     public Boolean titleContains(String pageTitle){
-        if(StringUtils.containsIgnoreCase(driver.getTitle(),pageTitle)){
-            return true;
-        }else{
-            return false;
-        }
+        return StringUtils.containsIgnoreCase(driver.getTitle(),pageTitle);
     }
 
 
@@ -155,7 +156,7 @@ public class PageCore {
      */
     protected boolean checkIfElemnetIsRemoved(By locator) {
         turnOffImplicitWaits();
-        boolean result = false;
+        boolean result;
         try {
             result = ExpectedConditions.invisibilityOfElementLocated(locator).apply(driver);
         }
@@ -196,10 +197,6 @@ public class PageCore {
      */
     public WebElement findElementWithFluentTimeout(final By byLocator, int maxWaitTime) {
         Log.debug("Going to wait for an element identified " + byLocator.toString() + " to be present with timeout " + maxWaitTime);
-        if (driver == null) {
-            Log.error("Selenium Web Driver not started or null!");
-        }
-
 
         FluentWait<EventFiringWebDriver> wait = new FluentWait<>(driver).withTimeout(Duration.ofSeconds(maxWaitTime))
                 .pollingEvery(Duration.ofMillis(200));
@@ -229,7 +226,6 @@ public class PageCore {
      * @return WebElement
      */
     public WebElement findElement(By locator) {
-        Log.debug("Looking for an element identified " + locator);
         return driver.findElement(locator);
     }
 
@@ -242,7 +238,7 @@ public class PageCore {
      */
     public List<WebElement> findElements(By locator) {
 
-        Integer count = 0;
+        int count = 0;
 
         ExecutionTimer t_FindBy = new ExecutionTimer();
         Log.debug("Looking for elements identified " + locator);

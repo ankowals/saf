@@ -124,7 +124,7 @@ public class WebDriverCustomEventListener implements WebDriverEventListener{
 
     @Override
     public void onException(Throwable throwable, WebDriver webDriver) {
-        //Log.error(throwable.getMessage());
+
     }
 
     @Override

@@ -142,7 +142,7 @@ public class Macro {
             if(!availableZones.contains(sZoneId)) {
                 Log.warn("Available macro zoneIds are as follows:");
                 for (String s : availableZones) {
-                    Log.info(s);
+                    Log.debug(s);
                 }
                 Log.error("Wrong zoneId defined for macro " + entry.getKey());
             }
