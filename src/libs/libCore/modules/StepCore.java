@@ -7,6 +7,7 @@ import io.qameta.allure.Attachment;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.NumberFormat;
@@ -19,11 +20,13 @@ public class StepCore {
 
     private Context scenarioCtx;
     private FileCore FileCore;
+    private Storage Storage;
 
     // PicoContainer injects class SharedContext
     public StepCore() {
         this.scenarioCtx = GlobalCtxSingleton.getInstance().get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
         this.FileCore = scenarioCtx.get("FileCore",FileCore.class);
+        this.Storage = scenarioCtx.get("Storage", Storage.class);
     }
 
     /**
@@ -87,7 +90,7 @@ public class StepCore {
      */
     public <T> T checkIfInputIsVariable(String input) {
         T result = (T) input;
-        Storage Storage = scenarioCtx.get("Storage", Storage.class);
+        //Storage Storage = scenarioCtx.get("Storage", Storage.class);
         T tmp = Storage.get(input);
 
         //check if String contains boolean
@@ -511,13 +514,28 @@ public class StepCore {
 
     public String encodeString(String input) {
         Log.debug("Encoding input is " + input);
-        return StringEncoder.encrypt(input, "thisisa128bitkey");
+        String secretKey = Storage.get("Environment.Active.EncoderKey");
+        String decryptedKey = "";
+        try {
+            decryptedKey = new String(Base64.getDecoder().decode(secretKey), "UTF-8");
+        } catch (UnsupportedEncodingException e){
+            Log.error(e.getMessage());
+        }
+
+        return StringEncoder.encrypt(input, decryptedKey);
     }
 
 
     public String decodeString(String input) {
         Log.debug("Decoding input string " + input);
-        return StringEncoder.decrypt(input, "thisisa128bitkey");
+        String secretKey = Storage.get("Environment.Active.EncoderKey");
+        String decryptedKey = "";
+        try {
+            decryptedKey = new String(Base64.getDecoder().decode(secretKey), "UTF-8");
+        } catch (UnsupportedEncodingException e){
+            Log.error(e.getMessage());
+        }
+        return StringEncoder.decrypt(input, decryptedKey);
     }
 
 }

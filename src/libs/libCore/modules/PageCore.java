@@ -186,15 +186,16 @@ public class PageCore {
     }
 
 
-    /**
-     * Looks for a visible OR invisible element via the provided locator for up
-     * to maxWaitTime. Returns as soon as the element is found.
-     *
-     * @param byLocator
-     * @param maxWaitTime - In seconds
-     * @return
-     *
-     */
+//    /**
+//     * Looks for a visible OR invisible element via the provided locator for up
+//     * to maxWaitTime. Returns as soon as the element is found.
+//     *
+//     * @param byLocator
+//     * @param maxWaitTime - In seconds
+//     * @return
+//     *
+//     */
+    /*
     public WebElement findElementWithFluentTimeout(final By byLocator, int maxWaitTime) {
         Log.debug("Going to wait for an element identified " + byLocator.toString() + " to be present with timeout " + maxWaitTime);
 
@@ -217,7 +218,7 @@ public class PageCore {
             return null;
         }
     }
-
+    */
 
     /**
      * Tries to find an element on the web page identified by locator like xpath, css or others
@@ -237,19 +238,7 @@ public class PageCore {
      * @return List<WebElement>
      */
     public List<WebElement> findElements(By locator) {
-
-        int count = 0;
-
-        ExecutionTimer t_FindBy = new ExecutionTimer();
-        Log.debug("Looking for elements identified " + locator);
-        List<WebElement> elements = driver.findElements(locator);
-        t_FindBy.end();
-        if (elements != null ) {
-            count = elements.size();
-        }
-        Log.debug(count + " elements found after " + t_FindBy.duration()  + " ms");
-
-        return elements;
+        return driver.findElements(locator);
     }
 
 

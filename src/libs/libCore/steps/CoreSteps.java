@@ -3,7 +3,6 @@ package libs.libCore.steps;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
 import libs.libCore.modules.*;
-import org.openqa.selenium.support.events.EventFiringWebDriver;
 
 import java.io.File;
 
@@ -16,9 +15,10 @@ public class CoreSteps extends BaseSteps{
     public void open_browser(){
         WebDriverObjectPool webDriverPool = globalCtx.get("WebDriverObjectPool", WebDriverObjectPool.class);
         String browser = Storage.get("Environment.Active.Web.browser");
-        EventFiringWebDriver driver = webDriverPool.checkOut(browser);
+        webDriverPool.checkOut(browser);
+        //EventFiringWebDriver driver = webDriverPool.checkOut(browser);
 
-        scenarioCtx.put("SeleniumWebDriver", EventFiringWebDriver.class, driver);
+        //scenarioCtx.put("SeleniumWebDriver", EventFiringWebDriver.class, driver);
         PageCore pageCore = new PageCore();
         scenarioCtx.put("PageCore", PageCore.class, pageCore);
     }

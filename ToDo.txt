@@ -1,4 +1,4 @@
-Refactor of Strage and ConfigReader to get rid of hadouken coding
+Refactor of Storage and ConfigReader to get rid of hadouken coding
 Test cloudDirector api after refactoring
 Add support for Winium -> implement new desktop driver pool
 Add support for winRM -> implement new winRM4j client pool
@@ -6,6 +6,7 @@ Add support for winRS and add steps removed from CloudDirectorCoreSteps
 Create StringCore and expose basic String manipulation methods
 Integrate Sikuli -> create SikuliCore
 Integrate Appium -> create AppiumCore
+Integrate PowerShellForJ to have interactive powershell session support?
 Update documentation in ReadMe.md, create wiki and add screeshots
 
 Update InteliiJ Cucumber for Java plugin and Allure adaptor to support cucumber 4

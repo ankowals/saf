@@ -2,7 +2,6 @@ package libs.libCore.modules;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.commons.lang.math.NumberUtils;
 
 import java.io.*;
 import java.util.*;
@@ -148,65 +147,64 @@ public class Storage {
      * @return value from storage
      */
     public <T> T get(String path) {
-        //do not check if storage exists if we are dealing with a number
-        if ( NumberUtils.isNumber(path) ) {
-            Log.warn("Value of " + path + " is null");
-            return null;
-        } else {
-            // if no dots in the path return just the storage ->
-            // for example "TestData" was entered but not "TestData.key1"
-            if ( ! path.contains(".") ) {
-                Object value = context.get(path, HashMap.class);
+        // if no dots in the path return just the storage ->
+        // for example "TestData" was entered but not "TestData.key1"
+        if ( ! path.contains(".") ) {
+            Object value = context.get(path, HashMap.class);
+            if ( value != null) {
                 Log.debug("Value of " + path + " is " + value);
-                return (T) value;
+            }
+            return (T) value;
+        }
+
+        //get hashmap with particular storage if it exists else return null
+        String[] tmp = path.split("\\.");
+        Object value = context.get(tmp[0], HashMap.class);
+
+        if ( value != null ) {
+            //String sTmp = "";
+            StringBuilder sb = new StringBuilder();
+            for (int i = 1; i < tmp.length; i++) {
+                //sTmp = sTmp + "." + tmp[i];
+                sb.append(".");
+                sb.append(tmp[i]);
             }
 
-            //get hashmap with particular storage if it exists else return null
-            String[] tmp = path.split("\\.");
-            Object value = context.get(tmp[0], HashMap.class);
+            //iterate over elements
+            String[] elements = sb.toString().substring(1).split("\\.");
+            for (String element : elements) {
+                String ename = element.split("\\[")[0];
 
-            if ( value != null ) {
-                String sTmp = "";
-                for (int i = 1; i < tmp.length; i++) {
-                    sTmp = sTmp + "." + tmp[i];
-                }
-
-                //iterate over elements
-                String[] elements = sTmp.substring(1).split("\\.");
-                for (String element : elements) {
-                    String ename = element.split("\\[")[0];
-
-                    if (AbstractMap.class.isAssignableFrom(value.getClass())) {
-                        value = ((AbstractMap<String, Object>) value).get(ename);
-                        if ( value != null ) {
-                            if (element.contains("[")) {
-                                if (List.class.isAssignableFrom(value.getClass())) {
-                                    int index = Integer.valueOf(element.substring(element.indexOf("[") + 1, element.indexOf("]")));
-                                    value = ((List<Object>) value).get(index);
-                                    if ( value == null ){
-                                        Log.warn("Value of " + path + " is null");
-                                        return null;
-                                    }
-                                } else {
-                                    Log.warn("Value of " + path + " is null");
+                if (AbstractMap.class.isAssignableFrom(value.getClass())) {
+                    value = ((AbstractMap<String, Object>) value).get(ename);
+                    if ( value != null ) {
+                        if (element.contains("[")) {
+                            if (List.class.isAssignableFrom(value.getClass())) {
+                                int index = Integer.valueOf(element.substring(element.indexOf("[") + 1, element.indexOf("]")));
+                                value = ((List<Object>) value).get(index);
+                                if ( value == null ){
+                                    Log.warn("Key " + path + " not found!");
                                     return null;
                                 }
+                            } else {
+                                Log.warn("Key " + path + " not found!");
+                                return null;
                             }
-                        } else {
-                            Log.warn("Value of " + path + " is null");
-                            return null;
                         }
                     } else {
-                        Log.warn("Value of " + path + " is null");
+                        Log.warn("Key " + path + " not found!");
                         return null;
                     }
+                } else {
+                    Log.warn("Key " + path + " not found!");
+                    return null;
                 }
             }
-
-            Log.debug("Value of " + path + " is " + value);
-            return (T) value;
-
         }
+
+        Log.debug("Value of " + path + " is " + value);
+        return (T) value;
+
     }
 
     public synchronized void writeToFile(String name, String identifier) {
