@@ -149,10 +149,16 @@ public class Storage {
     public <T> T get(String path) {
         // if no dots in the path return just the storage ->
         // for example "TestData" was entered but not "TestData.key1"
+        if ( path == null ){
+            Log.warn("Key null not found!");
+            return null;
+        }
         if ( ! path.contains(".") ) {
             Object value = context.get(path, HashMap.class);
             if ( value != null) {
                 Log.debug("Value of " + path + " is " + value);
+            } else {
+                Log.warn("Key " + path + " not found!");
             }
             return (T) value;
         }
@@ -165,7 +171,6 @@ public class Storage {
             //String sTmp = "";
             StringBuilder sb = new StringBuilder();
             for (int i = 1; i < tmp.length; i++) {
-                //sTmp = sTmp + "." + tmp[i];
                 sb.append(".");
                 sb.append(tmp[i]);
             }

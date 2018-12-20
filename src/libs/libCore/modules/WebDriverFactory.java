@@ -64,17 +64,17 @@ public class WebDriverFactory {
             options.setExperimentalOption("prefs", prefs);
             options.setExperimentalOption("useAutomationExtension", false);
 
-            return createEventFieringWebDriver(new ChromeDriver(options));
+            return createEventFiringWebDriver(new ChromeDriver(options));
         } else if (browser.equalsIgnoreCase("firefox")) {
             String path = Storage.get("Environment.Active.WebDrivers.FireFox.path");
             System.setProperty("webdriver.firefox.marionette", FileCore.getProjectPath() + File.separator + path);
 
-            return createEventFieringWebDriver(new FirefoxDriver());
+            return createEventFiringWebDriver(new FirefoxDriver());
         } else if (browser.equalsIgnoreCase("ie")) {
             String path = Storage.get("Environment.Active.WebDrivers.InternetExplorer.path");
             System.setProperty("webdriver.ie.driver", FileCore.getProjectPath() + File.separator + path);
 
-            return createEventFieringWebDriver(new InternetExplorerDriver());
+            return createEventFiringWebDriver(new InternetExplorerDriver());
         } else {
             Log.error( "Can't read browser type or wrong name provided." +
                     "Supported browser types are: chrome, firefox, ie" );
@@ -96,7 +96,7 @@ public class WebDriverFactory {
      *
      *  @retrun EventFiringWebDriver
      */
-    private EventFiringWebDriver createEventFieringWebDriver(WebDriver driver) {
+    private EventFiringWebDriver createEventFiringWebDriver(WebDriver driver) {
         Log.debug("Driver name used is " + driver.getClass().getName());
 
         BuildInfo bd = new BuildInfo();
@@ -110,7 +110,7 @@ public class WebDriverFactory {
 
         //we have to put it here because if something goes not ok
         //during browser manipulation driver won't be closed
-        scenarioCtx.put("Page", EventFiringWebDriver.class, eventFiringWebDriver);
+        scenarioCtx.put("SeleniumWebDriver", EventFiringWebDriver.class, eventFiringWebDriver);
 
         Log.debug("Removing all cookies");
         eventFiringWebDriver.manage().deleteAllCookies();

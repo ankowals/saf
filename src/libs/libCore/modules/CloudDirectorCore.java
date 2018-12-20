@@ -75,12 +75,12 @@ public class CloudDirectorCore {
                 .post();
 
         //print status code
-        Integer statusCode = response.getStatusCode();
+        int statusCode = response.getStatusCode();
         Log.debug("Response status code is " + statusCode);
 
         //print headers and extract auth token for re-usage in further requests
         Log.debug("Response headers are");
-        Boolean authHeaderPresent = false;
+        boolean authHeaderPresent = false;
         Headers allHeaders = response.headers();
         for( Header header : allHeaders){
             Log.debug(header.getName() + ": " + header.getValue());
@@ -122,7 +122,7 @@ public class CloudDirectorCore {
                 .delete();
 
         //print status code
-        Integer statusCode = response.getStatusCode();
+        int statusCode = response.getStatusCode();
         Log.debug("Response status code is " + statusCode);
 
         //print headers and extract auth token for re-usage in further requests
@@ -214,9 +214,7 @@ public class CloudDirectorCore {
     public String getHrefOfVm(String name, ValidatableResponse getVAppResponse){
         Log.debug("Extract vm href for " + name + " from response /api/vApp request");
         XmlPath xml = setRoot(getVAppResponse,"VApp");
-        String href = extractHref(xml,"Children.Vm.@type", "Vm", "vcloud.vm+xml", name);
-
-        return href;
+        return extractHref(xml,"Children.Vm.@type", "Vm", "vcloud.vm+xml", name);
     }
 
 
@@ -593,7 +591,7 @@ public class CloudDirectorCore {
         Log.debug("Checking status of task " + href);
 
         String status = "running";
-        Integer count = 0;
+        int count = 0;
         while ( status.equals("running") ){
             status = checkTaskStatus(href);
 
@@ -625,9 +623,7 @@ public class CloudDirectorCore {
         Log.debug("Extract status of Task " + href + " from response /api/task request");
 
         XmlPath xml = setRoot(response,"Task");
-        String result = xml.getString("@status");
-
-        return result;
+        return xml.getString("@status");
     }
 
 
@@ -640,11 +636,9 @@ public class CloudDirectorCore {
         features.put("http://apache.org/xml/features/disallow-doctype-decl", false);
         features.put("http://xml.org/sax/features/namespaces", false);
 
-        XmlPath xml = new XmlPath(respBody).
+        return new XmlPath(respBody).
                 using(XmlPathConfig.xmlPathConfig().with().features(features))
                 .setRoot(path);
-
-        return xml;
     }
 
     private String extractHref(XmlPath xml, String listPath, String type, String typeContent, String name) {
@@ -676,12 +670,10 @@ public class CloudDirectorCore {
         String api = Storage.get("Environment.Active.vCloudDirector.api");
 
         //build specification
-        RequestSpecification request = given()
+        return given()
                 .baseUri(url)
                 .header("x-vcloud-authorization", authToken)
                 .header("Accept", "application/*+xml;version=" + api);
-
-        return request;
     }
 
     private ValidatableResponse triggerGetRequest(RequestSpecification request, Integer expectedStatusCode){
@@ -713,9 +705,7 @@ public class CloudDirectorCore {
             Log.error("Wrong status code received " + statusCode + " but expected was " + expectedStatusCode + ". Request failed!");
         }
 
-        ValidatableResponse result = response.then();
-
-        return result;
+        return response.then();
     }
 
 
@@ -748,9 +738,7 @@ public class CloudDirectorCore {
             Log.error("Wrong status code received " + statusCode + " but expected was " + expectedStatusCode + ". Request failed!");
         }
 
-        ValidatableResponse result = response.then();
-
-        return result;
+        return response.then();
     }
 
     private ValidatableResponse triggerPutRequest(RequestSpecification request, Integer expectedStatusCode){
@@ -781,9 +769,7 @@ public class CloudDirectorCore {
             Log.error("Wrong status code received " + statusCode + " but expected was " + expectedStatusCode + ". Request failed!");
         }
 
-        ValidatableResponse result = response.then();
-
-        return result;
+        return response.then();
     }
 
 
@@ -815,9 +801,7 @@ public class CloudDirectorCore {
             Log.error("Wrong status code received " + statusCode + " but expected was " + expectedStatusCode + ". Request failed!");
         }
 
-        ValidatableResponse result = response.then();
-
-        return result;
+        return response.then();
     }
 
 }

@@ -63,7 +63,7 @@ public class ProductPage extends BasePage {
                     " not found after AddToCart button click");
         }
 
-        PageCore.waitForElementToBeRemoved(fancyPopUpSelector);
+        PageCore.waitForElementToBeNotVisible(fancyPopUpSelector);
     }
 
     /**

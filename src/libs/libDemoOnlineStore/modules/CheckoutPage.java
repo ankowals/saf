@@ -40,9 +40,9 @@ public class CheckoutPage extends BasePage {
      * @return     price per product type as an ArrayList
      *
      */
-    public ArrayList<String> getTotalPricePerProduct() {
+    public List<String> getTotalPricePerProduct() {
         Log.debug("Extracting total price per product in the cart");
-        ArrayList result = new ArrayList();
+        List<String> result = new ArrayList<>();
         List<WebElement> priceOfProducts = PageCore.findElements(ProductTotalPriceElementSelector);
         List<WebElement> nameOfProducts = PageCore.findElements(ProductNameElementSelector);
 

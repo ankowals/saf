@@ -14,7 +14,6 @@ import org.apache.logging.log4j.ThreadContext;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -25,10 +24,15 @@ import java.util.regex.Pattern;
 import static io.restassured.config.ConnectionConfig.connectionConfig;
 import static io.restassured.config.HttpClientConfig.httpClientConfig;
 import static io.restassured.config.RedirectConfig.redirectConfig;
-import static io.restassured.config.SSLConfig.sslConfig;
 
 @SuppressWarnings("unchecked")
 public class CustomEventListener implements ConcurrentEventListener {
+
+    public CustomEventListener(){
+        //required otherwise child threads will not be logged correctly in the scenario logs
+        //for example web driver will be created in a child thread of scenario thread
+        System.setProperty("isThreadContextMapInheritable","true");
+    }
 
     private EventHandler<TestStepFinished> stepFinishedHandler = new EventHandler<TestStepFinished>() {
         @Override
@@ -233,10 +237,12 @@ public class CustomEventListener implements ConcurrentEventListener {
 
             Storage storage = scenarioCtx.get("Storage", Storage.class);
             StepCore stepCore = scenarioCtx.get("StepCore", StepCore.class);
+            FileCore fileCore = scenarioCtx.get("FileCore", FileCore.class);
 
             //USE WITH CAUTION!!!
             //execute custom logic at the end of the scenario
             //can be used to for example to attach some logs to a report etc. even if scenario was unsuccessful
+            //avoid doing any validation checks here because error will not be thrown!
             String className = storage.get("Environment.Default.Plugins.handleTestStepFinished");
             if ( className != null && !className.equals("") ){
 
@@ -256,8 +262,6 @@ public class CustomEventListener implements ConcurrentEventListener {
                     Method method = aClass.getMethod("load");
                     logger.info("Invoking method with name " + method.getName());
                     method.invoke(aClassObject);
-                } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                    Log.error(e.getMessage());
                 } catch (Exception e){
                     logger.error(e.getMessage());
                 }
@@ -267,13 +271,13 @@ public class CustomEventListener implements ConcurrentEventListener {
 
             //close web driver and take screenshot in case scenario has failed
             //has to be done here otherwise screenshot will not be attached to allure report
+            Log.debug("Returning web driver to the pool");
             WebDriverObjectPool webDriverPool = globalCtx.get("WebDriverObjectPool", WebDriverObjectPool.class);
             Boolean closeAfterScenario = storage.get("Environment.Active.WebDrivers.CloseBrowserAfterScenario");
             if (!closeAfterScenario) {
-                Log.debug("Returning web driver to the pool");
                 webDriverPool.checkInAllPerThread(event, testCaseName, stepCore);
             } else {
-                Log.debug("Closing web driver");
+                Log.debug("Closing web browser");
                 webDriverPool.closeAllPerThread(event, testCaseName, stepCore);
             }
 
@@ -286,6 +290,10 @@ public class CustomEventListener implements ConcurrentEventListener {
             Log.debug("Returning jdbc connections to the pool");
             JdbcDriverObjectPool jdbcDriverObjectPool = globalCtx.get("JdbcDriverObjectPool", JdbcDriverObjectPool.class);
             jdbcDriverObjectPool.checkInAllPerThread();
+
+            //update allure properties to give possibility to overwrite them during test execution
+            String targetDirPath = fileCore.getProjectPath().replaceAll("src$", "target");
+            updateAllureProperties(storage, targetDirPath);
 
             //attach log file to allure report
             Log.debug("Removing scenario context");
@@ -684,9 +692,7 @@ public class CustomEventListener implements ConcurrentEventListener {
         Boolean relaxedHTTPSValidation = storage.get("Environment." + configType + ".Rest.relaxedHTTPSValidation");
         if ( relaxedHTTPSValidation ) {
             Log.debug("Setting relaxedHTTPSValidation=true");
-            RestAssured.config.sslConfig(
-                    sslConfig().relaxedHTTPSValidation()
-            );
+            RestAssured.useRelaxedHTTPSValidation();
         }
 
         Boolean followRedirects = storage.get("Environment." + configType + ".Rest.followRedirects");

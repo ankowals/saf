@@ -36,11 +36,8 @@ public class JdbcDriverFactory {
         if ( connectionString.contains("jdbc:oracle") ) {
             return createOracleConnection(connectionString);
         }
-        if ( connectionString.contains("jdbc:sqlserver") ) {
+        if ( connectionString.contains("jdbc:sqlserver") || connectionString.contains("jdbc:jtds:sqlserver") ) {
             return createMsSqlConnection(connectionString);
-        }
-        if ( connectionString.contains("jdbc:jtds:sqlserver") ) {
-            return createJtdsConnection(connectionString);
         } else {
             Log.error("Can't read driver type or wrong name provided. Supported drivers types are: " +
                     "jdbc:oracle, jdbc:sqlserver, jdbc:jtds:sqlserver");
@@ -88,21 +85,9 @@ public class JdbcDriverFactory {
             URL url = new URL("jar:file:" + FileCore.getProjectPath() + File.separator + pathToDriver + "!/");
             String classname = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
 
-            return getConnection(classname, url, connectionString);
-
-        } catch (MalformedURLException e) {
-            Log.error(e.getMessage());
-        }
-
-        return null;
-    }
-
-    private Connection createJtdsConnection(String connectionString){
-        try {
-            Log.debug("Try to load MsSql driver");
-            String pathToDriver = Storage.get("Environment.Active.JdbcDrivers.Mssql.path");
-            URL url = new URL("jar:file:" + FileCore.getProjectPath() + File.separator + pathToDriver + "!/");
-            String classname = "net.sourceforge.jtds.jdbc.Driver";
+            if ( connectionString.contains("jdbc:jtds:sqlserver") ){
+                classname = "net.sourceforge.jtds.jdbc.Driver";
+            }
 
             return getConnection(classname, url, connectionString);
 

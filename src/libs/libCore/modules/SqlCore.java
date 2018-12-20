@@ -91,19 +91,21 @@ public class SqlCore {
         if ( list.size() > 0 ) {
             //print header
             Map<String, Object> firstRow = list.get(0);
-            String header = "";
+            StringBuilder header = new StringBuilder();
             for (Map.Entry<String, Object> lme : firstRow.entrySet()) {
-                header = header + ", " + lme.getKey();
+                header.append(", ");
+                header.append(lme.getKey());
             }
-            Log.debug(header.substring(2));
+            Log.debug(header.toString().substring(2));
 
             //print rows
+            StringBuilder row = new StringBuilder();
             for (Map<String, Object> map : list) {
-                String row = "";
                 for (Map.Entry<String, Object> lme : map.entrySet()) {
-                    row = row + ", " + lme.getValue();
+                    row.append(", ");
+                    row.append(lme.getValue());
                 }
-                Log.debug(row.substring(2));
+                Log.debug(row.toString().substring(2));
             }
         }
     }
@@ -117,31 +119,36 @@ public class SqlCore {
      */
     public String listToString(List<Map<String, Object>> list) {
 
-        String result = "";
-        String n = System.lineSeparator();
+        StringBuilder result = new StringBuilder();
 
         if ( list.size() > 0 ) {
             //append header to string
             Map<String, Object> firstRow = list.get(0);
-            String header = "";
+            StringBuilder header = new StringBuilder();
             for (Map.Entry<String, Object> lme : firstRow.entrySet()) {
-                header = header + ", " + lme.getKey();
+                header.append(", ");
+                header.append(lme.getKey());
             }
-            result = header + n;
+
+            result.append(header.toString());
+            result.append(System.lineSeparator());
 
             //append rows to string
             for (Map<String, Object> map : list) {
-                String row = "";
+                StringBuilder row = new StringBuilder();
                 for (Map.Entry<String, Object> lme : map.entrySet()) {
-                    row = row + ", " + lme.getValue();
+                    row.append(", ");
+                    row.append(lme.getValue());
                 }
-                result = result + row + n;
+                result.append(row.toString());
+                result.append(System.lineSeparator());
+
             }
 
-            return result.trim();
+            return result.toString().trim();
         }
 
-        return result;
+        return result.toString();
     }
 
 
@@ -162,19 +169,21 @@ public class SqlCore {
         if ( list.size() > 0 ) {
             //write header to file
             Map<String, Object> firstRow = list.get(0);
-            String header = "";
+            StringBuilder header = new StringBuilder();
             for (Map.Entry<String, Object> lme : firstRow.entrySet()) {
-                header = header + ", " + lme.getKey();
+                header.append(", ");
+                header.append(lme.getKey());
             }
-            FileCore.writeToFile(temp, header.substring(2) + System.getProperty("line.separator"));
+            FileCore.writeToFile(temp, header.toString().substring(2) + System.getProperty("line.separator"));
 
             //append rows to file
             for (Map<String, Object> map : list) {
-                String row = "";
+                StringBuilder row = new StringBuilder();
                 for (Map.Entry<String, Object> lme : map.entrySet()) {
-                    row = row + ", " + lme.getValue();
+                    row.append(", ");
+                    row.append(lme.getValue());
                 }
-                FileCore.appendToFile(temp, row.substring(2) + System.getProperty("line.separator"));
+                FileCore.appendToFile(temp, row.toString().substring(2) + System.getProperty("line.separator"));
             }
 
             return temp;
@@ -247,7 +256,7 @@ public class SqlCore {
      */
     public Integer update (String connectionString, String SqlQuery) {
         Log.debug("Going to execute Sql " + SqlQuery);
-        Integer scalar = 0;
+        int scalar = 0;
         QueryRunner runner = new QueryRunner();
 
         Connection connection = open(connectionString);
@@ -272,7 +281,7 @@ public class SqlCore {
      */
     public Integer delete (String connectionString, String SqlQuery) {
         Log.debug("Going to execute Sql " + SqlQuery);
-        Integer scalar = 0;
+        int scalar = 0;
         QueryRunner runner = new QueryRunner();
 
         Connection connection = open(connectionString);
@@ -381,22 +390,22 @@ public class SqlCore {
                                     Storage.get(typeMapping+"["+idx+"]").equals("LONGVARCHAR") ){
                                 ps.setString(index++, string);
                             } else if ( Storage.get(typeMapping+"["+idx+"]").equals("BIT") ) {
-                                Boolean b = BooleanUtils.toBoolean(string);
+                                boolean b = BooleanUtils.toBoolean(string);
                                 ps.setBoolean(index++, b);
                             } else if ( Storage.get(typeMapping+"["+idx+"]").equals("TINYINT") ||
                                     Storage.get(typeMapping+"["+idx+"]").equals("SMALLINT") ||
                                     Storage.get(typeMapping+"["+idx+"]").equals("INTEGER") ) {
-                                Integer number = Integer.getInteger(string);
+                                int number = Integer.getInteger(string);
                                 ps.setInt(index++, number);
                             } else if ( Storage.get(typeMapping+"["+idx+"]").equals("BIGINT") ) {
-                                Long number = Long.getLong(string);
+                                long number = Long.getLong(string);
                                 ps.setLong(index++, number);
                             } else if ( Storage.get(typeMapping+"["+idx+"]").equals("REAL") ) {
-                                Float number = Float.parseFloat(string);
+                                float number = Float.parseFloat(string);
                                 ps.setFloat(index++, number);
                             } else if ( Storage.get(typeMapping+"["+idx+"]").equals("FLOAT") ||
                                     Storage.get(typeMapping+"["+idx+"]").equals("DOUBLE PRECISION") ) {
-                                Double number = Double.valueOf(string);
+                                double number = Double.valueOf(string);
                                 ps.setDouble(index++, number);
                             } else if ( Storage.get(typeMapping+"["+idx+"]").equals("BINARY") ||
                                     Storage.get(typeMapping+"["+idx+"]").equals("VARBINARY") ||

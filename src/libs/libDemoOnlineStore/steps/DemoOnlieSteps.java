@@ -8,7 +8,7 @@ import libs.libCore.modules.Log;
 import libs.libDemoOnlineStore.modules.CheckoutPage;
 import libs.libDemoOnlineStore.modules.MainPage;
 import libs.libDemoOnlineStore.modules.ProductPage;
-import java.util.ArrayList;
+import java.util.List;
 
 public class DemoOnlieSteps extends BaseSteps {
 
@@ -63,7 +63,7 @@ public class DemoOnlieSteps extends BaseSteps {
     @Then("^verify that SubTotal value equals sum of totals per product type$")
     public void verify_sum_of_totals_per_product_type_equals_subTotal(){
         String totalPrice = checkout.getTotalPrice();
-        ArrayList<String> totalPerProductType = checkout.getTotalPricePerProduct();
+        List<String> totalPerProductType = checkout.getTotalPricePerProduct();
 
         double sum = 0d;
         for(String price : totalPerProductType){

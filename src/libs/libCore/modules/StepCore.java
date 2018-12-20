@@ -223,7 +223,11 @@ public class StepCore {
             }
             String result = checkIfInputIsVariable(toCheck).toString();
 
-            if (  ! toReplace.equals("ctx." + result) ) {
+            if ( result == null ){
+                Log.warn("Can't replace variable ${ctx." + toCheck + "} because its value does not exists or null!");
+            }
+
+            if ( ! toReplace.equals("ctx." + result) ) {
                 return replaceInTemplate(input.replace("${" + toReplace + "}", result));
             }
         }
@@ -302,7 +306,6 @@ public class StepCore {
 
         StringBuilder sb = new StringBuilder();
         for (String filter : filters) {
-            //sFilter = sFilter + ", " + filter;
             sb.append(filter);
             sb.append(", ");
         }
@@ -313,7 +316,6 @@ public class StepCore {
         for ( String line : lines ) {
             for ( String filter : filters) {
                 if ( line.contains(filter) ) {
-                    //output = output + line + n;
                     sb.append(line);
                     sb.append(System.lineSeparator());
                 }
@@ -347,7 +349,6 @@ public class StepCore {
 
         StringBuilder sb = new StringBuilder();
         for (String filter : filters) {
-            //sFilter = sFilter + ", " + filter;
             sb.append(filter);
             sb.append(", ");
         }
@@ -363,7 +364,6 @@ public class StepCore {
                 }
             }
             if ( ! isMatch ) {
-                //output = output + line + n;
                 sb.append(line);
                 sb.append(System.lineSeparator());
             }
@@ -411,7 +411,6 @@ public class StepCore {
 
             for ( String line : lines ) {
                 if ( line.contains( end ) ) {
-                    //output = output + line + n;
                     sb.append(line);
                     sb.append(System.lineSeparator());
                     isMatch = false;
@@ -420,7 +419,6 @@ public class StepCore {
                     isMatch = true;
                     }
                 if ( isMatch ) {
-                    //output = output + line + n;
                     sb.append(line);
                     sb.append(System.lineSeparator());
                 }
@@ -528,7 +526,12 @@ public class StepCore {
 
     public String decodeString(String input) {
         Log.debug("Decoding input string " + input);
-        String secretKey = Storage.get("Environment.Active.EncoderKey");
+        //String secretKey = Storage.get("Environment.Active.EncoderKey");
+
+        //do not log secret key value
+        Map<String, Object> envMap = scenarioCtx.get("Environment", HashMap.class);
+        String secretKey = (String)((Map)envMap.get("Active")).get("EncoderKey");
+
         String decryptedKey = "";
         try {
             decryptedKey = new String(Base64.getDecoder().decode(secretKey), "UTF-8");

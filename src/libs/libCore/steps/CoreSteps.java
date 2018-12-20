@@ -16,9 +16,6 @@ public class CoreSteps extends BaseSteps{
         WebDriverObjectPool webDriverPool = globalCtx.get("WebDriverObjectPool", WebDriverObjectPool.class);
         String browser = Storage.get("Environment.Active.Web.browser");
         webDriverPool.checkOut(browser);
-        //EventFiringWebDriver driver = webDriverPool.checkOut(browser);
-
-        //scenarioCtx.put("SeleniumWebDriver", EventFiringWebDriver.class, driver);
         PageCore pageCore = new PageCore();
         scenarioCtx.put("PageCore", PageCore.class, pageCore);
     }

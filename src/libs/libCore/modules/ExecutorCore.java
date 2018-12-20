@@ -39,8 +39,8 @@ public class ExecutorCore {
         executor.setWorkingDirectory(workingDir);
 
         try {
-            Log.debug("Command to execute is " + cmd);
-            Log.debug("Working dir is " + workingDir.getAbsolutePath());
+            //Log.debug("Command to execute is " + cmd);
+            //Log.debug("Working dir is " + workingDir.getAbsolutePath());
             executor.execute(fixCommandLine(CommandLine.parse(cmd)), resultHandler);
             resultHandler.waitFor();
         } catch (IllegalArgumentException | IOException | InterruptedException e) {

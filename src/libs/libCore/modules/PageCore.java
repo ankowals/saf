@@ -6,9 +6,7 @@ import org.openqa.selenium.interactions.Action;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -21,15 +19,11 @@ public class PageCore {
     private Storage Storage;
     private EventFiringWebDriver driver;
 
+    //should depend on the driver to avoid null pointer exceptions!
     public PageCore () {
         this.scenarioCtx = GlobalCtxSingleton.getInstance().get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
         this.Storage = scenarioCtx.get("Storage", Storage.class);
         this.driver = scenarioCtx.get("SeleniumWebDriver", EventFiringWebDriver.class);
-
-        if (driver == null) {
-            Log.error("Selenium Web Driver not started or null! Please make sure that step 'open browser' was executed!");
-        }
-
     }
 
 
@@ -68,6 +62,9 @@ public class PageCore {
      * Does this in a loop and checks document.readState every 1 second.
      */
     public void waitForPageToLoad() {
+        if ( driver == null ){
+            Log.error("WebDriver null! Please make sure that step 'open browser' was executed!");
+        }
         Log.debug("Going to wait for page load");
         Integer timeOutInSeconds = Storage.get("Environment.Active.Web.timeout");
         JavascriptExecutor js = driver;
@@ -127,13 +124,13 @@ public class PageCore {
 
 
     /**
-     * Waits for an element to not be visible or present. Waits for max of browser_timeout second.
+     * Waits for an element to be not visible. Waits for max of browser_timeout second.
      * Implicit wait timer is ignored.
      *
      * @param locator By, web element locator - usually css selector or xpath
      */
-    public void waitForElementToBeRemoved(By locator) {
-        Log.debug("Going to wait for an element identified " + locator.toString() + " to be removed");
+    public void waitForElementToBeNotVisible(By locator) {
+        Log.debug("Going to wait for an element identified " + locator.toString() + " to be not visible");
         turnOffImplicitWaits();
         Integer timeOut = Storage.get("Environment.Active.Web.timeout");
         WebDriverWait wait = new WebDriverWait(driver, timeOut);
@@ -147,14 +144,34 @@ public class PageCore {
 
 
     /**
-     * Checks if element is removed and returns true or false.
+     * Waits for an element to be not present. Waits for max of browser_timeout second.
+     * Implicit wait timer is ignored.
+     *
+     * @param locator By, web element locator - usually css selector or xpath
+     */
+    public void waitForElementToBeNotPresent(By locator) {
+        Log.debug("Going to wait for an element identified " + locator.toString() + " to be not present");
+        turnOffImplicitWaits();
+        Integer timeOut = Storage.get("Environment.Active.Web.timeout");
+        WebDriverWait wait = new WebDriverWait(driver, timeOut);
+        try {
+            wait.until(ExpectedConditions.numberOfElementsToBe(locator,0));
+        } catch (TimeoutException e) {
+            Log.error(e.getMessage());
+        }
+        turnOnImplicitWaits();
+    }
+
+
+    /**
+     * Checks if element is not visible and returns true or false.
      * Implicit wait timer is ignored.
      *
      * @param locator web element locator, usually css selector or xpath
      * @return boolean
      *
      */
-    protected boolean checkIfElemnetIsRemoved(By locator) {
+    protected boolean checkIfElemnetIsNotVisible(By locator) {
         turnOffImplicitWaits();
         boolean result;
         try {
@@ -185,40 +202,6 @@ public class PageCore {
         driver.manage().timeouts().implicitlyWait(seconds, TimeUnit.SECONDS);
     }
 
-
-//    /**
-//     * Looks for a visible OR invisible element via the provided locator for up
-//     * to maxWaitTime. Returns as soon as the element is found.
-//     *
-//     * @param byLocator
-//     * @param maxWaitTime - In seconds
-//     * @return
-//     *
-//     */
-    /*
-    public WebElement findElementWithFluentTimeout(final By byLocator, int maxWaitTime) {
-        Log.debug("Going to wait for an element identified " + byLocator.toString() + " to be present with timeout " + maxWaitTime);
-
-        FluentWait<EventFiringWebDriver> wait = new FluentWait<>(driver).withTimeout(Duration.ofSeconds(maxWaitTime))
-                .pollingEvery(Duration.ofMillis(200));
-        try {
-            return wait.until((EventFiringWebDriver webDriver) -> {
-                turnOffImplicitWaits();
-                List<WebElement> elems = driver.findElements(byLocator);
-                turnOnImplicitWaits();
-                if (elems.size() > 0) {
-                    return elems.get(0);
-                } else {
-                    Log.warn("Element identified " + byLocator + " not found");
-                    return null;
-                }
-            });
-        } catch (Exception e) {
-            Log.warn("Timeout! Element identified " + byLocator + " not found");
-            return null;
-        }
-    }
-    */
 
     /**
      * Tries to find an element on the web page identified by locator like xpath, css or others
@@ -529,61 +512,5 @@ public class PageCore {
 
         return screenshot;
     }
-
-
-    ///**
-    // * awaits for a page refresh
-    // */
-    /*
-    public void awaitForAnElementToBeRefreshed(WebElement element){
-
-        Log.debug("Awaiting for page refresh");
-        Integer timeout = Storage.get("Environment.Active.Web.timeout");
-        WebDriverWait wait = new WebDriverWait(driver, timeout);
-        try {
-            wait.until(ExpectedConditions.stalenessOf(element));
-        } catch (AssertionError | StaleElementReferenceException e){
-            Log.warn("Refresh was done, element is no longer attached to the dom");
-        }
-
-    }
-    */
-
-    ///**
-    // * Attempts to click on an element multiple times (to avoid stale element
-    // * exceptions caused by rapid DOM refreshes)
-    // *
-    // * @param by By, element locator
-    // */
-    /*
-    public void dependableClick(By by)
-    {
-        final int MAXIMUM_WAIT_TIME = 10;
-        final int MAX_STALE_ELEMENT_RETRIES = 5;
-
-        WebDriverWait wait = new WebDriverWait(driver, MAXIMUM_WAIT_TIME);
-        int retries = 0;
-        while (true)
-        {
-            try
-            {
-                wait.until(ExpectedConditions.elementToBeClickable(by)).click();
-                return;
-            }
-            catch (StaleElementReferenceException e)
-            {
-                if (retries < MAX_STALE_ELEMENT_RETRIES)
-                {
-                    retries++;
-                    continue;
-                }
-                else
-                {
-                    Log.error("", e);
-                }
-            }
-        }
-    }
-    */
 
 }

@@ -47,20 +47,20 @@ public class Macro {
             String calculatedValue = null;
             String type = null;
             String format = "MM/dd/yyyy HH:mm:ss S";
-            Integer length = 10;
-            Boolean useNumbers = true;
-            Boolean useLetters = true;
+            int length = 10;
+            boolean useNumbers = true;
+            boolean useLetters = true;
             String suffix = "";
             String prefix = "";
             String sZoneId = ZoneId.systemDefault().getId();
-            Integer addDays = 0;
-            Integer addWeeks = 0;
-            Integer addMonths = 0;
-            Integer addYears = 0;
-            Integer addHours = 0;
-            Integer addMinutes = 0;
-            Integer addSeconds = 0;
-            Integer addNanos = 0;
+            int addDays = 0;
+            int addWeeks = 0;
+            int addMonths = 0;
+            int addYears = 0;
+            int addHours = 0;
+            int addMinutes = 0;
+            int addSeconds = 0;
+            int addNanos = 0;
 
             //read user defined values for particular macro
             if (entry.getValue().getClass().getName().contains("HashMap")) {

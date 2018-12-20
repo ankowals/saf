@@ -68,7 +68,7 @@ public class SshCore {
         SSHClient client = sshClientObjectPool.checkOut(node);
         Session session = startSession(client);
         try {
-            Log.debug("Going to execute following command via ssh " + cmd);
+            //Log.debug("Going to execute following command via ssh " + cmd);
             Session.Command command = session.exec(cmd);
             command.join(timeout, TimeUnit.SECONDS);
             int exitStatus = command.getExitStatus();
@@ -305,7 +305,7 @@ public class SshCore {
             Log.error("Expect object null or empty! Please make sure that interactive shall was started!");
         }
         try {
-            Log.debug("Command to execute via interactive ssh shell is " + cmd);
+            //Log.debug("Command to execute via interactive ssh shell is " + cmd);
             expect.sendLine(cmd);
             String stdOut  = expect.expect(regexp(expectedOutput)).getBefore();
             return new ExecResult(stdOut, "", 0);
