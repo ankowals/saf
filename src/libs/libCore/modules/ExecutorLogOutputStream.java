@@ -8,11 +8,12 @@ public class ExecutorLogOutputStream extends LogOutputStream {
 
     private List<String> lines = new ArrayList<>();
 
-    public ExecutorLogOutputStream(int logLevel) {
+    ExecutorLogOutputStream(int logLevel) {
         super(logLevel);
     }
 
-    @Override protected void processLine(String line, int level) {
+    @Override
+    protected void processLine(String line, int level) {
         if ( level == 0 ) {
             Log.debug(line);
         } else {
@@ -21,7 +22,7 @@ public class ExecutorLogOutputStream extends LogOutputStream {
         lines.add(line);
     }
 
-    public String getOutput() {
+    String getOutput() {
         return String.join(System.getProperty("line.separator"), lines);
     }
 }

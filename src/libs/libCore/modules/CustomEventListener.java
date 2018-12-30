@@ -113,6 +113,9 @@ public class CustomEventListener implements ConcurrentEventListener {
         JdbcDriverObjectPool jdbcDriverObjectPool = new JdbcDriverObjectPool();
         globalCtx.put("JdbcDriverObjectPool", JdbcDriverObjectPool.class, jdbcDriverObjectPool);
 
+        WiniumDriverObjectPool winiumDriverPool = new WiniumDriverObjectPool();
+        globalCtx.put("WiniumDriverObjectPool", WiniumDriverObjectPool.class, winiumDriverPool);
+
         //read default and global configuration once
         FileCore fileCore = new FileCore();
         String projPath = fileCore.getProjectPath();
@@ -163,7 +166,7 @@ public class CustomEventListener implements ConcurrentEventListener {
         Log.debug("Cleaning up global resources");
         Context globalCtx = GlobalCtxSingleton.getInstance();
 
-        //closing all web drivers in the wed driver pool
+        //closing all web drivers in the web driver pool
         Log.debug("Closing web drivers");
         WebDriverObjectPool webDriverPool = globalCtx.get("WebDriverObjectPool", WebDriverObjectPool.class);
         webDriverPool.closeAll();
@@ -173,10 +176,15 @@ public class CustomEventListener implements ConcurrentEventListener {
         SshClientObjectPool sshClientObjectPool = globalCtx.get("SshClientObjectPool", SshClientObjectPool.class);
         sshClientObjectPool.closeAll();
 
-        //closing all jdbc drivers in the jdbc drivers pool
+        //closing all jdbc drivers in the jdbc driver pool
         Log.debug("Closing jdbc connections");
         JdbcDriverObjectPool jdbcDriverObjectPool = globalCtx.get("JdbcDriverObjectPool", JdbcDriverObjectPool.class);
         jdbcDriverObjectPool.closeAll();
+
+        //closing all winium drivers in the winium driver pool
+        Log.debug("Closing winium drivers");
+        WiniumDriverObjectPool winiumDriverPool = globalCtx.get("WiniumDriverObjectPool", WiniumDriverObjectPool.class);
+        winiumDriverPool.closeAll();
 
         logger.info("+-----------------------------+");
         logger.info("+--- Features run finished ---+");
@@ -273,7 +281,7 @@ public class CustomEventListener implements ConcurrentEventListener {
             //has to be done here otherwise screenshot will not be attached to allure report
             Log.debug("Returning web driver to the pool");
             WebDriverObjectPool webDriverPool = globalCtx.get("WebDriverObjectPool", WebDriverObjectPool.class);
-            Boolean closeAfterScenario = storage.get("Environment.Active.WebDrivers.CloseBrowserAfterScenario");
+            boolean closeAfterScenario = storage.get("Environment.Active.WebDrivers.CloseBrowserAfterScenario");
             if (!closeAfterScenario) {
                 webDriverPool.checkInAllPerThread(event, testCaseName, stepCore);
             } else {
@@ -290,6 +298,17 @@ public class CustomEventListener implements ConcurrentEventListener {
             Log.debug("Returning jdbc connections to the pool");
             JdbcDriverObjectPool jdbcDriverObjectPool = globalCtx.get("JdbcDriverObjectPool", JdbcDriverObjectPool.class);
             jdbcDriverObjectPool.checkInAllPerThread();
+
+            //close winium driver and take screenshot in case scenario has failed
+            //has to be done here otherwise screenshot will not be attached to allure report
+            Log.debug("Returning winium driver to the pool");
+            WiniumDriverObjectPool winiumDriverPool = globalCtx.get("WiniumDriverObjectPool", WiniumDriverObjectPool.class);
+            closeAfterScenario = storage.get("Environment.Active.WebDrivers.WiniumDesktop.CloseAppAfterScenario");
+            if ( !closeAfterScenario ) {
+                winiumDriverPool.checkInAllPerThread(event, testCaseName, stepCore);
+            } else {
+                winiumDriverPool.closeAllPerThread(event, testCaseName, stepCore);
+            }
 
             //update allure properties to give possibility to overwrite them during test execution
             String targetDirPath = fileCore.getProjectPath().replaceAll("src$", "target");
@@ -418,6 +437,12 @@ public class CustomEventListener implements ConcurrentEventListener {
 
         CloudDirectorCore cloudDirectorCore = new CloudDirectorCore();
         scenarioCtx.put("CloudDirectorCore", CloudDirectorCore.class, cloudDirectorCore);
+
+        WinRSCore winRSCore = new WinRSCore();
+        scenarioCtx.put("WinRSCore", WinRSCore.class, winRSCore);
+
+        //PageCore is created when new driver is instantiated via WebDriverFactory
+        //WiniumCore is created when new driver is instantiated via WiniumDriverFactory
 
         Log.debug("Finished scenario resources initialisation");
 

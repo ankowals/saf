@@ -22,14 +22,14 @@ import java.io.PrintStream;
  * @version 1.0 (28.10.2015)
  * @author  Heri Bender
  */
-public class ToLoggerPrintStream {
+class ToLoggerPrintStream {
 
     private PrintStream myPrintStream;
 
     /**
      * @return printStream
      */
-    public PrintStream getPrintStream() {
+    PrintStream getPrintStream() {
         if (myPrintStream == null) {
             OutputStream output = new OutputStream() {
                 private StringBuilder myStringBuilder = new StringBuilder();

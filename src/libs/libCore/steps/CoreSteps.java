@@ -69,11 +69,11 @@ public class CoreSteps extends BaseSteps{
     public void pause_execution() {
         File workingDir = FileCore.createTempDir();
         String scriptsPath = Storage.get("Environment.Active.libCoreScripts.path");
-        Integer timeout = Storage.get("Environment.Active.PauseDuration");
+        int timeout = Storage.get("Environment.Active.PauseDuration");
 
         String cmd = FileCore.getProjectPath() +
                 File.separator + scriptsPath + File.separator + "pause.exe" + " " +
-                Integer.toString(timeout);
+                timeout;
 
         Log.debug("Calling autoIt pause script with timeout " + timeout + " seconds");
         ExecutorCore.execute(cmd, workingDir, timeout + 1);
@@ -105,6 +105,38 @@ public class CoreSteps extends BaseSteps{
     public void decode_string(String input) {
         String output = StepCore.decodeString(input);
         Log.debug("Decoded input is " + output);
+    }
+
+
+    /**
+     * Opens a gui app on a windows remote host without additional arguments
+     *
+     * @param node String,
+     * @param path String, path to the executable file
+     */
+    @Given("^on remote host (.+), open an app from (.+)")
+    public void on_remote_host_open_an_app_from(String node, String path) {
+        String pathToApp = StepCore.checkIfInputIsVariable(path);
+        Storage.set("Environment.Active.App.path", pathToApp);
+        WiniumDriverObjectPool winiumDriverPool = globalCtx.get("WiniumDriverObjectPool", WiniumDriverObjectPool.class);
+        winiumDriverPool.checkOut(node);
+    }
+
+
+    /**
+     * Opens a gui app on a windows host without additional arguments
+     *
+     * @param path String, path to the executable file
+     * @param args String, app arguments
+     */
+    @Given("^open an app from (.+) with args (.+)")
+    public void open_an_app_from(String path, String args) {
+        String pathToApp = StepCore.checkIfInputIsVariable(path);
+        String argsToApp = StepCore.checkIfInputIsVariable(args);
+        Storage.set("Environment.Active.App.path", pathToApp);
+        Storage.set("Environment.Active.App.args", argsToApp);
+        WiniumDriverObjectPool winiumDriverPool = globalCtx.get("WiniumDriverObjectPool", WiniumDriverObjectPool.class);
+        winiumDriverPool.checkOut("localhost");
     }
 
 }

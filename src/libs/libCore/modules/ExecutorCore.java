@@ -9,18 +9,22 @@ import java.util.Vector;
 public class ExecutorCore {
 
     /**
-     * Execute a Command as a background or blocking process.
+     * Execute a Command as a blocking process.<br>
+     *     Use Start-Process cmd-let to run a powershell command/script in background<br>
+     *         For example Start-Process -FilePath 'powershell.exe' -ArgumentList '-command "& {gci c:\ -rec}"'
+     *     See more here https://ss64.com/ps/start-process.html<br>
+     *     When in bash use nohup command &>/dev/null &<br>
+     *     See more here https://ss64.com/bash/nohup.html
      *
      * @param cmd     String, Command to execute
      * @param workingDir  File, Working directory
      * @param timeout     Integer, Kill process after this time (in sec) (0: no timeout)
      * @return  String, contains content of StdOut/StdErr output
      */
-    public ExecResult execute(String cmd, File workingDir, int timeout)
-    {
+    public ExecResult execute(String cmd, File workingDir, int timeout) {
 
         if (timeout <= 0) {
-            Log.error("Please timeout in seconds!");
+            Log.error("Please set timeout in seconds!");
         }
 
         Executor executor = new DefaultExecutor();

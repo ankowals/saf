@@ -83,8 +83,6 @@ public class SshCore {
         }
 
         return new ExecResult("", "", Integer.MIN_VALUE);
-
-
     }
 
 

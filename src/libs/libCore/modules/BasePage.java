@@ -1,7 +1,5 @@
 package libs.libCore.modules;
 
-import org.openqa.selenium.support.events.EventFiringWebDriver;
-
 @SuppressWarnings("unchecked")
 public class BasePage {
 

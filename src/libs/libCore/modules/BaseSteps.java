@@ -16,6 +16,8 @@ public class BaseSteps {
     protected RestCore RestCore;
     protected PdfCore PdfCore;
     protected CsvCore CsvCore;
+    protected WinRSCore WinRSCore;
+    protected WiniumCore WiniumCore;
 
     public BaseSteps() {
         this.globalCtx = GlobalCtxSingleton.getInstance();
@@ -32,6 +34,8 @@ public class BaseSteps {
         this.RestCore = scenarioCtx.get("RestCore", RestCore.class);
         this.PdfCore = scenarioCtx.get("PdfCore", PdfCore.class);
         this.CsvCore = scenarioCtx.get("CsvCore", CsvCore.class);
+        this.WinRSCore = scenarioCtx.get("WinRSCore", WinRSCore.class);
+        this.WiniumCore = scenarioCtx.get("WiniumCore", WiniumCore.class);
     }
 
 }

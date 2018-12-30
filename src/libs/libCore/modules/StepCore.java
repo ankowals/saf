@@ -37,7 +37,7 @@ public class StepCore {
     public void sleep (Integer seconds) {
         try {
             Log.debug("Waiting for " + seconds + " seconds");
-            Thread.sleep(seconds*1000);
+            Thread.sleep(seconds * 1000);
         } catch (InterruptedException e) {
             // don't do anything
         }
@@ -288,12 +288,12 @@ public class StepCore {
      * will pass the filter
      * Filter shall be defined as a List of Strings
      *
-     * @param input File, file handle
+     * @param input String, input content
      * @param filters List<String>, list of positive filters to apply
      *
      * @return String, file content after filtering
      */
-    public String applyPositiveFilter (File input, List<String> filters) {
+    public String applyPositiveFilter (String input, List<String> filters) {
 
         if ( filters == null ) {
             Log.error("List of positive filters null!");
@@ -302,7 +302,8 @@ public class StepCore {
             Log.error("List of positive filters is empty!");
         }
 
-        List<String> lines = FileCore.readLines(input);
+        //List<String> lines = FileCore.readLines(input);
+        List<String> lines = Arrays.asList(input.split("\\r?\\n"));
 
         StringBuilder sb = new StringBuilder();
         for (String filter : filters) {
@@ -311,7 +312,7 @@ public class StepCore {
         }
         String sFilter = sb.toString();
 
-        Log.debug("Going to apply positive filter [" + sFilter.substring(0,sFilter.length()-1) + "]");
+        Log.debug("Going to apply positive filter [" + sFilter.trim().substring(0,sFilter.length()-1) + "]");
         sb = new StringBuilder();
         for ( String line : lines ) {
             for ( String filter : filters) {
@@ -331,12 +332,12 @@ public class StepCore {
      * keywords will pass the filter
      * Filter shall be defined as a List of Strings
      *
-     * @param input File, file handle
+     * @param input String, input content
      * @param filters List<String>, list of negative filters to apply
      *
      * @return String, file content after filtering
      */
-    public String applyNegativeFilter (File input, List<String> filters) {
+    public String applyNegativeFilter (String input, List<String> filters) {
 
         if ( filters == null ) {
             Log.error("List of negative filters null!");
@@ -345,7 +346,8 @@ public class StepCore {
             Log.error("List of negative filters is empty!");
         }
 
-        List<String> lines = FileCore.readLines(input);
+        //List<String> lines = FileCore.readLines(input);
+        List<String> lines = Arrays.asList(input.split("\\r?\\n"));
 
         StringBuilder sb = new StringBuilder();
         for (String filter : filters) {
@@ -354,7 +356,7 @@ public class StepCore {
         }
         String sFilter = sb.toString();
 
-        Log.debug("Going to apply negative filter [" + sFilter.substring(0,sFilter.length()-1) + "]");
+        Log.debug("Going to apply negative filter [" + sFilter.trim().substring(0,sFilter.length()-1) + "]");
         sb = new StringBuilder();
         for ( String line : lines ) {
             boolean isMatch = false;
@@ -379,12 +381,12 @@ public class StepCore {
      * Filter shall be defined as a List of Maps where each map contains 'begin' and 'end' keys
      * In this way multiple block filters can be defined
      *
-     * @param input File, file handle
+     * @param input String, input content
      * @param filters List<Map<String, String>>, list of block filters to apply
      *
      * @return String, file content after filtering
      */
-    public String applyBlockFilter (File input, List<Map<String, String>> filters) {
+    public String applyBlockFilter (String input, List<Map<String, String>> filters) {
 
         if ( filters == null ) {
             Log.error("List of block filters null!");
@@ -393,7 +395,9 @@ public class StepCore {
             Log.error("List of block filters is empty!");
         }
 
-        List<String> lines = FileCore.readLines(input);
+        //List<String> lines = FileCore.readLines(input);
+        List<String> lines = Arrays.asList(input.split("\\r?\\n"));
+
         StringBuilder sb = new StringBuilder();
 
         for ( Map<String, String> filter : filters) {

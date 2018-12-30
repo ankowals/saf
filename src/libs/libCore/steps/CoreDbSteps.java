@@ -47,7 +47,7 @@ public class CoreDbSteps extends BaseSteps {
 
         String query = "";
         String templateName = "";
-        Boolean templateComparison  = false;
+        boolean templateComparison  = false;
 
         //handle params
         if ( ! params.isEmpty() ) {

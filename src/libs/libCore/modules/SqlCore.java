@@ -362,82 +362,80 @@ public class SqlCore {
                 Log.debug("Reading csv file");
                 while ((nextLine = csvReader.readNext()) != null) {
 
-                    if (null != nextLine) {
-
-                        List<String> colToTypeList = Storage.get(typeMapping);
-                        if ( colToTypeList == null ) {
-                            Log.error("Type mapping " + typeMapping + " null!");
-                        }
-                        if ( colToTypeList.size() < 1 ) {
-                            Log.error("Type mapping " + typeMapping + " empty!");
-                        }
-                        if ( colToTypeList.size() != nextLine.length ) {
-                            Log.error("Number of columns in the file (" + nextLine.length +
-                                    ") and in type mapping (" + colToTypeList.size() +
-                                    ") is not equal");
-                        }
-
-                        int index = 1;
-                        for (String string : nextLine) {
-                            int idx = index -1;
-                            //type mapping
-                            if ( Storage.get(typeMapping+"["+idx+"]").equals("NUMERIC") ||
-                                    Storage.get(typeMapping+"["+idx+"]").equals("DECIMAL") ){
-                                BigDecimal number = new BigDecimal(string);
-                                ps.setBigDecimal(index++, number);
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("VARCHAR") ||
-                                    Storage.get(typeMapping+"["+idx+"]").equals("CHARACTER") ||
-                                    Storage.get(typeMapping+"["+idx+"]").equals("LONGVARCHAR") ){
-                                ps.setString(index++, string);
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("BIT") ) {
-                                boolean b = BooleanUtils.toBoolean(string);
-                                ps.setBoolean(index++, b);
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("TINYINT") ||
-                                    Storage.get(typeMapping+"["+idx+"]").equals("SMALLINT") ||
-                                    Storage.get(typeMapping+"["+idx+"]").equals("INTEGER") ) {
-                                int number = Integer.getInteger(string);
-                                ps.setInt(index++, number);
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("BIGINT") ) {
-                                long number = Long.getLong(string);
-                                ps.setLong(index++, number);
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("REAL") ) {
-                                float number = Float.parseFloat(string);
-                                ps.setFloat(index++, number);
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("FLOAT") ||
-                                    Storage.get(typeMapping+"["+idx+"]").equals("DOUBLE PRECISION") ) {
-                                double number = Double.valueOf(string);
-                                ps.setDouble(index++, number);
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("BINARY") ||
-                                    Storage.get(typeMapping+"["+idx+"]").equals("VARBINARY") ||
-                                    Storage.get(typeMapping+"["+idx+"]").equals("LONGVARBINARY") ){
-                                Log.error("Wrong type provided. " + "" +
-                                        "BINARY, VARBINARY and LONGVARBINARY are not supported");
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("DATE") ) {
-                                    Date date = DateParser.convertToDate(string);
-                                    ps.setDate(index++, new java.sql.Date(date.getTime()));
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("TIME") ) {
-                                Pattern p = Pattern.compile("\\d\\d:\\d\\d:\\d\\d"); // not perfect but good enough;)
-                                Matcher m = p.matcher(string);
-                                if (m.matches()) {
-                                    Time time = Time.valueOf(string);
-                                    ps.setTime(index++, time);
-                                } else {
-                                    Log.error("Wrong time format provided. Expected is hh:mm:ss" +
-                                    " but was " + string);
-                                }
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("TIMESTAMP") ) {
-                                try {
-                                    Timestamp timestamp = Timestamp.valueOf(string);
-                                    ps.setTimestamp(index++, timestamp);
-                                } catch ( IllegalArgumentException e) {
-                                    Log.error("Wrong timestamp format provided! " + e.getMessage());
-                                }
-                            } else {
-                                Log.error("Wrong type provided. Type in typeMapping[" + idx + "] not known");
-                            }
-                        }
-                        ps.addBatch();
+                    List<String> colToTypeList = Storage.get(typeMapping);
+                    if ( colToTypeList == null ) {
+                        Log.error("Type mapping " + typeMapping + " null!");
                     }
+                    if ( colToTypeList.size() < 1 ) {
+                        Log.error("Type mapping " + typeMapping + " empty!");
+                    }
+                    if ( colToTypeList.size() != nextLine.length ) {
+                        Log.error("Number of columns in the file (" + nextLine.length +
+                                ") and in type mapping (" + colToTypeList.size() +
+                                ") is not equal");
+                    }
+
+                    int index = 1;
+                    for (String string : nextLine) {
+                        int idx = index -1;
+                        //type mapping
+                        if ( Storage.get(typeMapping+"["+idx+"]").equals("NUMERIC") ||
+                                Storage.get(typeMapping+"["+idx+"]").equals("DECIMAL") ){
+                            BigDecimal number = new BigDecimal(string);
+                            ps.setBigDecimal(index++, number);
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("VARCHAR") ||
+                                Storage.get(typeMapping+"["+idx+"]").equals("CHARACTER") ||
+                                Storage.get(typeMapping+"["+idx+"]").equals("LONGVARCHAR") ){
+                            ps.setString(index++, string);
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("BIT") ) {
+                            boolean b = BooleanUtils.toBoolean(string);
+                            ps.setBoolean(index++, b);
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("TINYINT") ||
+                                Storage.get(typeMapping+"["+idx+"]").equals("SMALLINT") ||
+                                Storage.get(typeMapping+"["+idx+"]").equals("INTEGER") ) {
+                            int number = Integer.getInteger(string);
+                            ps.setInt(index++, number);
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("BIGINT") ) {
+                            long number = Long.getLong(string);
+                            ps.setLong(index++, number);
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("REAL") ) {
+                            float number = Float.parseFloat(string);
+                            ps.setFloat(index++, number);
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("FLOAT") ||
+                                Storage.get(typeMapping+"["+idx+"]").equals("DOUBLE PRECISION") ) {
+                            double number = Double.valueOf(string);
+                            ps.setDouble(index++, number);
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("BINARY") ||
+                                Storage.get(typeMapping+"["+idx+"]").equals("VARBINARY") ||
+                                Storage.get(typeMapping+"["+idx+"]").equals("LONGVARBINARY") ){
+                            Log.error("Wrong type provided. " + "" +
+                                    "BINARY, VARBINARY and LONGVARBINARY are not supported");
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("DATE") ) {
+                                Date date = DateParser.convertToDate(string);
+                                ps.setDate(index++, new java.sql.Date(date.getTime()));
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("TIME") ) {
+                            Pattern p = Pattern.compile("\\d\\d:\\d\\d:\\d\\d"); // not perfect but good enough;)
+                            Matcher m = p.matcher(string);
+                            if (m.matches()) {
+                                Time time = Time.valueOf(string);
+                                ps.setTime(index++, time);
+                            } else {
+                                Log.error("Wrong time format provided. Expected is hh:mm:ss" +
+                                " but was " + string);
+                            }
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("TIMESTAMP") ) {
+                            try {
+                                Timestamp timestamp = Timestamp.valueOf(string);
+                                ps.setTimestamp(index++, timestamp);
+                            } catch ( IllegalArgumentException e) {
+                                Log.error("Wrong timestamp format provided! " + e.getMessage());
+                            }
+                        } else {
+                            Log.error("Wrong type provided. Type in typeMapping[" + idx + "] not known");
+                        }
+                    }
+                    ps.addBatch();
+
                     if (++count % batchSize == 0) {
                         ps.executeBatch();
                     }

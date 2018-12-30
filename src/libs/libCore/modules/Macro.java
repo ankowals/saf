@@ -41,8 +41,6 @@ public class Macro {
         //for each macro calculate new value and store it in a result map as string
         for (HashMap.Entry<String, Object> entry : macro.entrySet())
         {
-            //Log.debug("Found macro " + entry.getKey());
-
             //set default values for particular macro
             String calculatedValue = null;
             String type = null;

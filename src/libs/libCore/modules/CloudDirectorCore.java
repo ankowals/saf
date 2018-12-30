@@ -60,6 +60,11 @@ public class CloudDirectorCore {
 
         url = url + "/api/sessions";
 
+        boolean useEncoding = Storage.get("Environment.Active.UseEncoding");
+        if ( useEncoding ){
+            passwd = StepCore.decodeString(passwd);
+        }
+
         //build specification
         RequestSpecification request = given()
                 .baseUri(url)

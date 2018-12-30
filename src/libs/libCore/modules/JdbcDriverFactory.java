@@ -15,11 +15,13 @@ public class JdbcDriverFactory {
     private Context scenarioCtx;
     private Storage Storage;
     private FileCore FileCore;
+    private StepCore StepCore;
 
     public JdbcDriverFactory() {
         this.scenarioCtx = GlobalCtxSingleton.getInstance().get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
         this.Storage = scenarioCtx.get("Storage",Storage.class);
         this.FileCore = scenarioCtx.get("FileCore",FileCore.class);
+        this.StepCore = scenarioCtx.get("StepCore", StepCore.class);
     }
 
 
@@ -32,6 +34,15 @@ public class JdbcDriverFactory {
      * @return Connection
      */
     public Connection create(String connectionString) {
+
+        boolean useEncoding = Storage.get("Environment.Active.UseEncoding");
+        if ( useEncoding ){
+            String passwd = Storage.get("Environment.Active.Jdbc.password");
+            if ( passwd == null || passwd.equals("") ) {
+                Log.error("Environment.Active.UseEncoding=true thus password decoding required but provided password is null or empty!");
+            }
+            connectionString = connectionString.replace(passwd, StepCore.decodeString(passwd));
+        }
 
         if ( connectionString.contains("jdbc:oracle") ) {
             return createOracleConnection(connectionString);
