@@ -163,13 +163,6 @@
             <version>0.9.0</version>
         </dependency>
 
-        <!-- WinRM -->
-        <dependency>
-            <groupId>io.cloudsoft.windows</groupId>
-            <artifactId>winrm4j</artifactId>
-            <version>0.5.0</version>
-        </dependency>
-
         <!--SikuliX -->
         <dependency>
             <groupId>com.sikulix</groupId>
@@ -242,7 +235,7 @@
 					<source>1.${java.version}</source>
 					<target>1.${java.version}</target>
                     <fork>true</fork>
-                    <executable>${jdk.path}</executable>
+                    <!--<executable>${jdk.path}</executable>-->
                 </configuration>
                 <executions>
                     <execution>

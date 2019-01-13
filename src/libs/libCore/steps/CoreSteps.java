@@ -94,17 +94,14 @@ public class CoreSteps extends BaseSteps{
     }
 
 
+    /**
+     * Masks input using an encoding algorithm so it can't be easily read in the log file
+     * @param input String, input string to be encoded
+     */
     @And("^encode string (.+)$")
     public void encode_string(String input) {
        String output = StepCore.encodeString(input);
         Log.debug("Encoded input is " + output);
-    }
-
-
-    @And("^decode string (.+)$")
-    public void decode_string(String input) {
-        String output = StepCore.decodeString(input);
-        Log.debug("Decoded input is " + output);
     }
 
 

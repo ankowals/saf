@@ -1,8 +1,7 @@
 Refactor of Storage and ConfigReader to get rid of hadouken coding
 Test cloudDirector api after refactoring
-Add support for Winium -> implement new desktop driver pool
-Add support for winRM -> implement new winRM4j client pool
-Add support for winRS and add steps removed from CloudDirectorCoreSteps
+Test WinRs after refactoring
+Test winiumCore after refactoring on remote host
 Create StringCore and expose basic String manipulation methods
 Integrate Sikuli -> create SikuliCore
 Integrate Appium -> create AppiumCore

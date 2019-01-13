@@ -114,17 +114,17 @@ public class StepCore {
                     }
                 }
             } catch (Exception e) {
-                Log.debug("Checking if String contains a numeric value " + input);
-                Log.error("Not able to parse String to Number for " + input + "! " + e.getMessage());
+                Log.debug("Checking if String " + input + " contains numeric value");
+                Log.error("Not able to parse String " + input + " to Number! " + e.getMessage());
             }
             Class<T> typeKey = (Class<T>) getType(num);
             result = typeKey.cast(num);
-            Log.debug("Converted String " + input + " to number of class " + result.getClass().getName());
+            Log.debug("Converting String " + input + " to number of class " + result.getClass().getName());
         }
 
         if ( tmp != null ){
             result = tmp;
-            Log.debug("Converted element from storage: " + input + " to " + result + " of class " + result.getClass().getName());
+            Log.debug("Converting element from storage: " + input + " to " + result + " of class " + result.getClass().getName());
         }
 
         return result;
@@ -149,7 +149,7 @@ public class StepCore {
         String sResults = FileCore.readToString(results);
 
         //evaluate the template
-        String templateAfteEval = replaceInTemplate(sFile);
+        String templateAfteEval = replaceInString(sFile);
 
         //attach template after evaluation to the report
         File temp = FileCore.createTempFile(templateName,"template");
@@ -186,7 +186,7 @@ public class StepCore {
         String sFile = FileCore.readToString(template);
 
         //evaluate the template
-        String templateAfteEval = replaceInTemplate(sFile);
+        String templateAfteEval = replaceInString(sFile);
 
         //attach template after evaluation to the report
         File temp = FileCore.createTempFile(templateName,"template");
@@ -196,43 +196,6 @@ public class StepCore {
 
         return temp;
 
-    }
-
-
-    /**
-     * helper function used in evaluateTemplate method
-     * replaces variables with values from storage
-     *
-     * @param input String, template content
-     *
-     * @return String
-     */
-    private String replaceInTemplate (String input) {
-        int beignIdx = input.indexOf("${");
-        int endIdx = input.indexOf("}", beignIdx);
-
-        if (beignIdx != -1) {
-            if ( endIdx == -1 ){
-                Log.error("Typo in template! Missing closing bracket }. Can't do variable substitution!");
-            }
-
-            String toReplace = input.substring(beignIdx+2, endIdx);
-            String toCheck = toReplace;
-            if ( toReplace.startsWith("ctx.") ){
-                toCheck = toReplace.substring(4);
-            }
-            String result = checkIfInputIsVariable(toCheck).toString();
-
-            if ( result == null ){
-                Log.warn("Can't replace variable ${ctx." + toCheck + "} because its value does not exists or null!");
-            }
-
-            if ( ! toReplace.equals("ctx." + result) ) {
-                return replaceInTemplate(input.replace("${" + toReplace + "}", result));
-            }
-        }
-
-        return input;
     }
 
 
@@ -489,7 +452,7 @@ public class StepCore {
      *
      */
     public String replaceInString(String input) {
-        Log.debug("Input is " + input);
+        //Log.debug("Input is " + input);
         int beignIdx = input.indexOf("${");
         int endIdx = input.indexOf("}", beignIdx);
 
@@ -500,12 +463,23 @@ public class StepCore {
 
             String toReplace = input.substring(beignIdx+2, endIdx);
             String toCheck = toReplace;
+            String result = null;
             if ( toReplace.startsWith("ctx.") ){
                 toCheck = toReplace.substring(4);
+                result = checkIfInputIsVariable(toCheck).toString();
             }
-            String result = checkIfInputIsVariable(toCheck).toString();
 
-            if (  ! toReplace.equals("ctx." + result) ) {
+            if ( toReplace.startsWith("mcr.") ){
+                toCheck = toReplace.substring(4);
+                HashMap<String, String> macros = scenarioCtx.get("CalculatedMacros", HashMap.class);
+                result = macros.get(toCheck);
+            }
+
+            if ( result == null ){
+                Log.warn("Can't replace variable " + toReplace + " because its value does not exists or null!");
+            }
+
+            if (  ! toReplace.equals("ctx." + result) && ! toReplace.equals("mcr." + result) ) {
                 return replaceInString(input.replace("${" + toReplace + "}", result));
             }
         }

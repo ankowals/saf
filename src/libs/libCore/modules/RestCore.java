@@ -86,22 +86,19 @@ public class RestCore {
 
     public void extractValueFromBodyAndStoreItInStorage(ValidatableResponse vResp, String key, String pathInStorage){
 
-        String cType = null;
-
         //log null pointer exception in case message body is empty
         try {
-            cType = vResp.extract().path(key).getClass().getName();
+           String cType = vResp.extract().path(key).getClass().getName();
+
+           Log.debug("Key " + key + " value is");
+           Log.debug(vResp.extract().path(key));
+           Log.debug("Its type is " + cType);
+           Storage.set(pathInStorage, vResp.extract().path(key));
         } catch (NullPointerException e) {
             Log.error("Key " + key + " not found in the message body" + e.getMessage() );
         }
 
-        Log.debug("Key " + key + " value is");
-        Log.debug(vResp.extract().path(key));
-        Log.debug("Its type is " + cType);
-
-        Storage.set(pathInStorage, vResp.extract().path(key));
     }
-
 
 
 }

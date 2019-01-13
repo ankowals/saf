@@ -240,7 +240,7 @@ public class Macro {
                 for (int i=0; i < ((ArrayList) entry.getValue()).size(); i++){
                     if ( ((ArrayList) entry.getValue()).get(i).getClass().getName().contains("String")) {
                         for (HashMap.Entry<String, String> macroEntry : macrosAfterEvaluation.entrySet()) {
-                            if (((ArrayList) entry.getValue()).get(i).equals("mcr." + macroEntry.getKey())) {
+                            if (((ArrayList) entry.getValue()).get(i).equals("${mcr." + macroEntry.getKey() + "}")) {
                                 ((ArrayList) entry.getValue()).set(i,macroEntry.getValue());
                             }
                         }
@@ -251,7 +251,7 @@ public class Macro {
             } else {
                 if (entry.getValue().getClass().getName().contains("String")) {
                     for (HashMap.Entry<String, String> macroEntry : macrosAfterEvaluation.entrySet()) {
-                        if (entry.getValue().equals("mcr." + macroEntry.getKey())) {
+                        if (entry.getValue().equals("${mcr." + macroEntry.getKey() + "}")) {
                             map.put(entry.getKey(), macroEntry.getValue());
                         }
                     }

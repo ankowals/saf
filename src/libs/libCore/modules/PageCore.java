@@ -236,6 +236,26 @@ public class PageCore {
 
 
     /**
+     * Retrieves value of WebElement attribute<br>
+     *     Returns an empty string in case of an exception
+     *
+     * @param locator By, locator used to identify web element
+     * @param attribute String, name of the attribute of an element
+     * @return String
+     */
+    public String getAttribute(By locator, String attribute) {
+        WebElement elem = findElement(locator);
+        try {
+            Log.debug("Going to extract an attribute " + attribute + " of an element identified " + locator);
+            return elem.getAttribute(attribute);
+        } catch (StaleElementReferenceException e) {
+            Log.warn(e.getMessage());
+            return "";
+        }
+    }
+
+
+    /**
      * navigates to provided url in the current browser window
      *
      * @param url String

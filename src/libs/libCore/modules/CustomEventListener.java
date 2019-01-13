@@ -479,21 +479,22 @@ public class CustomEventListener implements ConcurrentEventListener {
             macro.eval("TestData");
             Log.debug("Evaluating macros in Expected object");
             macro.eval("Expected");
+            Log.debug("Evaluating macros in Expected object");
+            macro.eval("Environment");
         }
 
         //allow to use values from one entity in other entities of Storage
-        evaluateConfigEntities(storage.get("Environment.Active"), stepCore);
         evaluateConfigEntities(storage.get("TestData"), stepCore);
         evaluateConfigEntities(storage.get("Expected"), stepCore);
+        evaluateConfigEntities(storage.get("Environment.Active"), stepCore);
 
         //print storage
-        Log.debug("*** Following configuration Environment.Active is going to be used ***");
-        storage.print("Environment.Active");
         Log.debug("*** Following TestData configuration is going to be used");
         storage.print("TestData");
         Log.debug("*** Following Expected configuration is going to be used");
         storage.print("Expected");
-        Log.debug("***");
+        Log.debug("*** Following configuration Environment.Active is going to be used ***");
+        storage.print("Environment.Active");
 
         //update allure properties
         String targetDirPath = fileCore.getProjectPath().replaceAll("src$", "target");
@@ -583,7 +584,7 @@ public class CustomEventListener implements ConcurrentEventListener {
                 for (int i=0; i < ((List) entry.getValue()).size(); i++) {
                     if ( ((List) entry.getValue()).get(i).getClass().getName().contains("String") ) {
                         String tmp = (String) ((List) entry.getValue()).get(i);
-                        if ( tmp.contains("${ctx.") ) {
+                        if ( tmp.contains("${ctx.") || tmp.contains("${mcr.") ) {
                             String newVal = stepCore.replaceInString(tmp);
                             ((List) entry.getValue()).set(i, newVal);
                         }
@@ -594,7 +595,7 @@ public class CustomEventListener implements ConcurrentEventListener {
             } else {
                 if (entry.getValue().getClass().getName().contains("String")) {
                     String tmp = (String) entry.getValue();
-                    if ( tmp.contains("${ctx.") ) {
+                    if ( tmp.contains("${ctx.") || tmp.contains("${mcr.") ) {
                         String newVal = stepCore.replaceInString(tmp);
                         map.put(entry.getKey(), newVal);
                     }

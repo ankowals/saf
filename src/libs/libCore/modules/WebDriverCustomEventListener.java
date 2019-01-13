@@ -16,22 +16,22 @@ public class WebDriverCustomEventListener implements WebDriverEventListener{
 
     @Override
     public void beforeAlertAccept(WebDriver webDriver) {
-
+        Log.debug("Going to accept an alert");
     }
 
     @Override
     public void afterAlertAccept(WebDriver webDriver) {
-
+        Log.debug("Alert accepted");
     }
 
     @Override
     public void afterAlertDismiss(WebDriver webDriver) {
-
+        Log.debug("Alert dismissed");
     }
 
     @Override
     public void beforeAlertDismiss(WebDriver webDriver) {
-
+        Log.debug("Going to dismiss an alert");
     }
 
     @Override
@@ -110,16 +110,17 @@ public class WebDriverCustomEventListener implements WebDriverEventListener{
 
     @Override
     public void afterScript(String s, WebDriver webDriver) {
+        Log.debug("Script " + s + " executed");
     }
 
     @Override
     public void beforeSwitchToWindow(String s, WebDriver webDriver) {
-
+        Log.debug("Going to switch to window " + s);
     }
 
     @Override
     public void afterSwitchToWindow(String s, WebDriver webDriver) {
-
+        Log.debug("Switched to window " + s);
     }
 
     @Override
@@ -139,12 +140,12 @@ public class WebDriverCustomEventListener implements WebDriverEventListener{
 
     @Override
     public void beforeGetText(WebElement webElement, WebDriver webDriver) {
-
+        Log.debug("Going to extract text from element " + webElement);
     }
 
     @Override
     public void afterGetText(WebElement webElement, WebDriver webDriver, String s) {
-
+        Log.debug("Text " + s + " extracted from element " + webElement);
     }
 
 
