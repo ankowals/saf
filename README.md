@@ -702,7 +702,7 @@ How to allow desktop interaction?
 
 By default Jenkins runs as a service under Windows host. This means it can be managed by going to services.msc. Unfortunately this will not allow for desktop interaction. This means that when a browser is open via Jenkins job or RDP session is open by Jenkins job user will not see it on the host. 
  
-In general this is great because it allows to use this host when jobs are getting executed without a fear that user actions like mouse clicking or typing will influence test execution. Unfortunately Sikuli usage requires desktop integration. Currently it is used to handle flash based elements in Navigator UI of Wfc. 
+In general this is great because it allows to use this host when jobs are getting executed without a fear that user actions like mouse clicking or typing will influence test execution. Unfortunately Sikuli usage requires desktop integration. 
  
 To enable desktop integration we can run Jenkins from cmd as a current user. To do so please follow steps described below 
 
