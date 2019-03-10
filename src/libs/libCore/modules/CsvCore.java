@@ -15,6 +15,14 @@ public class CsvCore {
         return Arrays.asList(header).indexOf(columnName);
     }
 
+
+    /**
+     * Extracts row from a csv file content
+     *
+     * @param input String, content of a csv file
+     * @param lineNumber Integer, number of row which shall be extracted
+     * @return Array
+     */
     public String[] extractLine(String input, int lineNumber){
         CSVReader reader = new CSVReader(new StringReader(input));
         String[] nextLine = null;
@@ -34,6 +42,15 @@ public class CsvCore {
         return nextLine;
     }
 
+
+    /**
+     * Extracts value from particular column in a row
+     *
+     * @param header Array, list that contains csv header
+     * @param line Array, csv row content
+     * @param columnName String, name of the column from which we want to extract the value
+     * @return String
+     */
     public String extractValueFromColumnAtLine(String[] header, String[] line, String columnName){
         if ( header == null || header.length == 0 ){
             Log.error("Supplied header null or empty!");
@@ -45,6 +62,15 @@ public class CsvCore {
         return line[getHeaderLocation(header, columnName)];
     }
 
+
+    /**
+     * Verifies if value in particular row and column equals or matches expected value
+     *
+     * @param columnName String, column name from csv file, it shall contain row number, for example Cname[1]
+     * @param action String, type of verification action can be either equals or matches
+     * @param expectedValue String, expected value in case of matches action can be a regex
+     * @param input String, content of the csv file as an input string
+     */
     public void verifyValueInParticularRowAndColumn(String columnName, String action, String expectedValue, String input){
         //extract desired line number
         if ( !columnName.contains("[") || !columnName.contains("]") ){
@@ -68,9 +94,13 @@ public class CsvCore {
         //extract value from particular column of particular line
         String extractedValue = extractValueFromColumnAtLine(header, line, columnName);
 
-
         if ( action.equals("equals") ){
             Assert.assertEquals(extractedValue, expectedValue);
+        }
+        if ( action.equals("matches") ){
+            if ( ! extractedValue.matches(expectedValue) ) {
+                Log.error("Verification failed! " + extractedValue + " does not matches " + expectedValue + "!");
+            }
         }
     }
 

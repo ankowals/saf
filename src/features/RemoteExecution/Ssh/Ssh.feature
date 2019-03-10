@@ -19,4 +19,4 @@ Feature: Ssh
 
   Scenario: download file from users home dir
 
-    Given check that file exists on remote node
+    Given download file from remote host

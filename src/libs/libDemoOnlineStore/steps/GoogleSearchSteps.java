@@ -19,12 +19,13 @@ public class GoogleSearchSteps extends BaseSteps {
         EventFiringWebDriver driver = scenarioCtx.get("SeleniumWebDriver", EventFiringWebDriver.class);
         driver.get("http://www.google.pl");
         StepCore.sleep(2);
+        StepCore.attachMessageToReport("Sample message", "Sample message");
     }
 
     @When("^enter (.+) into search input$")
     public void enter_into_search_input(String input){
         EventFiringWebDriver driver = scenarioCtx.get("SeleniumWebDriver", EventFiringWebDriver.class);
-        WebElement element = driver.findElement(By.id("lst-ib"));
+        WebElement element = driver.findElement(By.xpath("//input[@name='q']"));
         Log.debug("Entering text " + input);
         element.sendKeys(input);
         element.submit();

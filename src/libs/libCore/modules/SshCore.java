@@ -261,7 +261,8 @@ public class SshCore {
 
 
     /**
-     * Starts interactive shell
+     * Starts interactive shell. <br>
+     *     Please remember that by default ony 10 sessions can be open due to ssh configuration on the server side.
      *
      * @param timeout, Integer, timeout used for supervision of each command
      */
@@ -282,6 +283,7 @@ public class SshCore {
 
             scenarioCtx.put("SshExpect_" + node, Expect.class, expect);
             scenarioCtx.put("SshShellClient_" + node, SSHClient.class, client);
+            scenarioCtx.put("Session_" + node, Session.class, session);
 
         } catch (IOException e) {
             Log.error(e.getMessage());
@@ -322,11 +324,17 @@ public class SshCore {
     public void stopShell(String node) {
         Expect expect = scenarioCtx.get("SshExpect_" + node, Expect.class);
         SSHClient client = scenarioCtx.get("SshShellClient_" + node, SSHClient.class);
+        Session session = scenarioCtx.get("Session_" + node, Session.class);
         if ( expect == null ){
             Log.error("Expect object null or empty! Please make sure that interactive shall was started!");
         }
         try {
-            expect.close();
+            if ( expect != null ) {
+                expect.close();
+            }
+            if ( session != null ) {
+                stopSession(session);
+            }
         } catch (IOException e) {
             Log.error(e.getMessage());
         } finally {

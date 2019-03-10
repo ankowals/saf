@@ -58,15 +58,15 @@ public class RemoteExecutionSteps extends BaseSteps {
         SshCore.stopShell(node);
     }
 
-    @When("^check that file exists on remote node$")
-    public void check_that_file_exists_on_remote_node(){
+    @When("^download file from remote host$")
+    public void download_file_from_remote_host(){
         String node = "node1";
         Boolean isAlive = SshCore.checkThatNodeIsAlive(node);
         if ( ! isAlive ) {
             Log.error("Host node1 is not available");
         }
 
-        Log.debug("Check that file is present on the remote host");
+        Log.debug("Checking that file is present on the remote host");
         String pathToFile = "postinstall.sh";
         Boolean isAvailable = SshCore.checkThatFileExists(node, pathToFile);
         if ( ! isAvailable ){
@@ -74,8 +74,10 @@ public class RemoteExecutionSteps extends BaseSteps {
         }
 
         Log.debug("Download file via scp");
-        File file = SshCore.downloadFileViaScp(node,pathToFile,FileCore.getCurrentFeatureDirPath());
+
+        File file = SshCore.downloadFileViaScp(node,pathToFile,FileCore.getTempDir().getAbsolutePath());
         Log.debug("Path to file is " + file.getAbsolutePath());
+        StepCore.attachFileToReport("postinstall.sh", "text/plain", file.getAbsolutePath());
     }
 
 }

@@ -94,11 +94,12 @@ public class WiniumDriverFactory {
 
     private void downloadDriverOnRemote(String node){
         Log.debug("Downloading Winium.Desktop.Driver.zip file");
-        String cmd = "Invoke-WebRequest -Uri \"https://github.com/2gis/Winium.Desktop/releases/download/v1.6.0/Winium.Desktop.Driver.zip\" -OutFile \"Winium.Desktop.Driver.zip\"";
+        String uri = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.downloadUrl");
+        String cmd = "Invoke-WebRequest -Uri \"" + uri + "\" -OutFile \"Winium.Desktop.Driver.zip\"";
         WinRSCore.executeSingleCommandOnRemote("Powershell.exe \"" + cmd + "\"", node, 300);
 
         Log.debug("Extracting it");
-        WinRSCore.executeSingleCommandOnRemote("unzip -e -o Winium.zip", node, 60);
+        WinRSCore.executeSingleCommandOnRemote("unzip -e -o Winium.Desktop.Driver.zip", node, 60);
     }
 
     private boolean isDriverRunningOnRemote(String node){
@@ -132,13 +133,18 @@ public class WiniumDriverFactory {
         Log.debug("Trying to start WiniumDesktopDriver on node " + node);
         String port = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.port");
         String userDir = WinRSCore.getUserDir(node);
-        String script = "WiniumDriverStarter.ps1";
+        String script = FileCore.createTempFile("temp", "ps1").getName();
+        String taskName = script.replace(".ps1", "");
+
+        scenarioCtx.put( "WiniumDriverStarter_" + node, String.class, taskName);
+
         String cmd = "If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] \"Administrator\"))" +
             "{$arguments = \"& '\" + $myinvocation.mycommand.definition + \"'\";Start-Process powershell -WindowStyle Hidden -Verb runAs -ArgumentList $arguments;Break};" +
             "$port = \"--port " + port + "\";Start-Process \"" + userDir + "\\Winium.Desktop.Driver.exe\" $port -Wait -NoNewWindow;";
         WinRSCore.transferScript(node, cmd, script);
         String pathToScript = userDir + "\\" + script;
-        WinRSCore.runScriptAsScheduledTask(node, pathToScript);
+        WinRSCore.runScriptAsScheduledTask(node, pathToScript, taskName);
+
     }
 
     private void awaitForDriverToStartOnRemote(String node){
@@ -284,7 +290,7 @@ public class WiniumDriverFactory {
         }
 
         closeAllOpenWindows(node);
-        minimizeAllWindows(node, "minimizeWindowsTask");
+        minimizeAllWindows(node);
 
         startDriverOnRemote(node);
         awaitForDriverToStartOnRemote(node);
@@ -371,7 +377,8 @@ public class WiniumDriverFactory {
             cmds.add("{New-Item -Path $path -Force;New-ItemProperty -Path $path -Name $name -Value $val -PropertyType $type -Force}");
             cmds.add("else{New-ItemProperty -Path $path -Name $name -Value $val -PropertyType $type -Force}");
 
-            String script = "fixScalingSettings.ps1";
+            //String script = "fixScalingSettings.ps1";
+            String script = FileCore.createTempFile("temp", "ps1").getName();
             cmd = WinRSCore.joinCommands(cmds, "\r\n", false);
             WinRSCore.transferScript(node, cmd, script);
             WinRSCore.executeSingleCommandOnRemote("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File \"" + script + "\"", node, 120);
@@ -399,7 +406,8 @@ public class WiniumDriverFactory {
                 cmds.add("}");
                 cmds.add("}");
 
-                script = "forceLogoffUsers.ps1";
+                script = FileCore.createTempFile("temp", "ps1").getName();
+                //script = "forceLogoffUsers.ps1";
                 cmd = WinRSCore.joinCommands(cmds, "\r\n", false);
                 WinRSCore.transferScript(node, cmd, script);
                 WinRSCore.executeSingleCommandOnRemote("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File \"" + script + "\"", node, 120);
@@ -458,9 +466,8 @@ public class WiniumDriverFactory {
      * Minimizes all open windows on a remote windows host by calling powershell script as a scheduled task
      *
      * @param node String, node name from winrm configuration of the remote that shall be used
-     * @param taskName String, name that shall be assigned to the task
      */
-    public void minimizeAllWindows (String node, String taskName){
+    public void minimizeAllWindows (String node){
 
         Map<String, String> conn = WinRSCore.verifyConnectionDetails(node);
         String domain = conn.get("domain");
@@ -476,7 +483,8 @@ public class WiniumDriverFactory {
 
         Log.debug("Minimizing all open windows");
 
-        String script = "temp_minimize_windows.ps1";
+        String script = FileCore.createTempFile("temp", "ps1").getName();
+        String taskName = script.replace(".ps1", "");
 
         List<String> cmdList = new ArrayList<>();
         cmdList.add("$shell = New-Object -ComObject \"Shell.Application\";");
@@ -493,7 +501,7 @@ public class WiniumDriverFactory {
 
         //this script is used to run the original one
         //it will be called from a scheduled task and in turn it will call the original one:)
-        script = "wrapperTaskmw.ps1";
+        script = "wrapper" + taskName + ".ps1";
 
         cmd = "Start-process powershell -WindowStyle Hidden -Wait" +
                 " -ArgumentList \"-NoProfile -ExecutionPolicy Bypass" +
@@ -501,15 +509,15 @@ public class WiniumDriverFactory {
         WinRSCore.transferScript(node, cmd, script);
 
         //this script is used to create scheduled task
-        script = "tempTaskmw.ps1";
+        script = taskName + ".ps1";
 
         cmdList = new ArrayList<>();
         cmdList.add("schtasks /CREATE /TN '" + taskName + "' /SC MONTHLY /RL HIGHEST " +
                 "/RU \"" + domain + "\\" + user + "\" /IT " +
                 "/RP \"" + password + "\" " +
-                "/TR \"powershell -windowstyle hidden -NoProfile -ExecutionPolicy Bypass -File " + userDir + "\\wrapperTaskmw.ps1\" " +
+                "/TR \"powershell -windowstyle hidden -NoProfile -ExecutionPolicy Bypass -File " + userDir + "\\wrapper" + taskName + ".ps1\" " +
                 "/F;");
-        cmdList.add("$taskFile = \"" + userDir + "\\RemoteTask.txt\";");
+        cmdList.add("$taskFile = \"" + userDir + "\\Remote" + taskName + ".txt\";");
         cmdList.add("Remove-Item $taskFile -Force -ErrorAction SilentlyContinue;");
         cmdList.add("[xml]$xml = schtasks /QUERY /TN '" + taskName + "' /XML;");
         cmdList.add("$xml.Task.Settings.Priority=\"4\";");
@@ -523,16 +531,16 @@ public class WiniumDriverFactory {
 
         String result = WinRSCore.executeSingleCommandOnRemote("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File \"" + script + "\"", node, 120);
         if ( ! result.contains("SUCCESS:") ){
-            Log.error("Failed to create new scheduled task TempAutomationTask");
+            Log.error("Failed to create new scheduled task " + taskName);
         } else {
-            Log.debug("New scheduled task TempAutomationTask created");
+            Log.debug("New scheduled task " + taskName + " created");
         }
 
         Log.debug("Running scheduled task");
         cmd = "schtasks /RUN /I /TN '" + taskName + "';";
         result = WinRSCore.executeSingleCommandOnRemote("Powershell.exe \"" + cmd + "\"", node, 120);
         if ( ! result.contains("SUCCESS:") ){
-            Log.error("Failed to run scheduled task TempAutomationTask");
+            Log.error("Failed to run scheduled task " + taskName);
         }
 
         StepCore.sleep(2);
@@ -596,10 +604,12 @@ public class WiniumDriverFactory {
         String cmd = "(New-Object -comObject Shell.Application).Windows() | foreach-object {$_.quit()};" +
                 "(Get-Process | Where-Object {$_.MainWindowTitle -ne \"\"}).CloseMainWindow();";
 
-        String script = "temp.ps1";
+        String script = FileCore.createTempFile("temp", "ps1").getName();
+        String taskName = script.replace(".ps1", "");
+
         WinRSCore.transferScript(node, cmd, script);
         String userDir = WinRSCore.getUserDir(node);
-        WinRSCore.runScriptAsScheduledTask(node, userDir + "\\" + script);
+        WinRSCore.runScriptAsScheduledTask(node, userDir + "\\" + script, taskName);
     }
 
     private URL buildUrl(String node, String port){
@@ -680,13 +690,15 @@ public class WiniumDriverFactory {
     private void deleteWiniumDesktopDriverScheduledTaskOnRemote(String node){
         Log.debug("Deleting scheduled task used to run Winium driver");
 
-        String script = "tempTask.ps1";
-        String cmd = "schtasks /DELETE /TN 'TempAutomationTask' /F;";
+        String taskName = scenarioCtx.get( "WiniumDriverStarter_" + node, String.class);
+
+        String script = taskName + ".ps1";
+        String cmd = "schtasks /DELETE /TN '" + taskName + "' /F;";
         WinRSCore.transferScript(node, cmd, script);
 
         String result = WinRSCore.executeSingleCommandOnRemote("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File \"" + script + "\"", node, 120);
         if ( !result.contains("SUCCESS:") ) {
-            Log.error("Failed to remove scheduled task TempAutomationTask");
+            Log.error("Failed to remove scheduled task " + taskName);
         }
     }
 

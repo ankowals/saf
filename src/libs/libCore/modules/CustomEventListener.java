@@ -4,6 +4,8 @@ import com.rits.cloning.Cloner;
 import cucumber.api.PickleStepTestStep;
 import cucumber.api.event.*;
 import cucumber.api.event.EventHandler;
+import io.qameta.allure.Allure;
+import io.qameta.allure.util.ResultsUtils;
 import io.restassured.RestAssured;
 import io.restassured.config.DecoderConfig;
 import io.restassured.config.LogConfig;
@@ -186,6 +188,12 @@ public class CustomEventListener implements ConcurrentEventListener {
         WiniumDriverObjectPool winiumDriverPool = globalCtx.get("WiniumDriverObjectPool", WiniumDriverObjectPool.class);
         winiumDriverPool.closeAll();
 
+        Log.debug("Updating report properties");
+        Map<String, String> environmentProperties = globalCtx.get("AllureEnvironmentProperties", Map.class);
+        Map<String, String> trackerProperties = globalCtx.get("AllureTrackerProperties", Map.class);
+        String projSrcPath = globalCtx.get("AllureProjectSrcPath", String.class);
+        updateAllureProperties(projSrcPath, environmentProperties, trackerProperties);
+
         logger.info("+-----------------------------+");
         logger.info("+--- Features run finished ---+");
         logger.info("+-----------------------------+");
@@ -311,8 +319,17 @@ public class CustomEventListener implements ConcurrentEventListener {
             }
 
             //update allure properties to give possibility to overwrite them during test execution
-            String targetDirPath = fileCore.getProjectPath().replaceAll("src$", "target");
-            updateAllureProperties(storage, targetDirPath);
+            Log.debug("Setting report properties");
+            Map<String, String> environmentProperties = storage.get("Environment.Active.WriteToReport");
+            globalCtx.put("AllureEnvironmentProperties", Map.class, environmentProperties);
+
+            String issueTrackerUrlPattern = storage.get("Environment.Active.IssueTrackerUrlPattern");
+            String testTrackerUrlPattern = storage.get("Environment.Active.TestTrackerUrlPattern");
+            Map<String, String> trackerProperties = new HashMap<>();
+            trackerProperties.put("allure.link.tms.pattern", testTrackerUrlPattern.trim() + "/{}");
+            trackerProperties.put("allure.link.issue.pattern", issueTrackerUrlPattern.trim() + "/{}");
+            globalCtx.put("AllureTrackerProperties", Map.class, trackerProperties);
+            globalCtx.put("AllureProjectSrcPath", String.class, fileCore.getProjectPath());
 
             //attach log file to allure report
             Log.debug("Removing scenario context");
@@ -337,7 +354,7 @@ public class CustomEventListener implements ConcurrentEventListener {
         long threadId = Thread.currentThread().getId();
 
         //prepare log dir file name
-        String featurePath = event.testCase.getUri();
+        String featurePath = event.testCase.getUri().replaceFirst("^file:","");
         String featureFileName = createLogDirName(featurePath);
 
         //this is used to create log dir per feature and log file per scenario in a feature
@@ -432,6 +449,9 @@ public class CustomEventListener implements ConcurrentEventListener {
         SqlCore sqlCore = new SqlCore();
         scenarioCtx.put("SqlCore", SqlCore.class, sqlCore);
 
+        StringCore stringCore = new StringCore();
+        scenarioCtx.put("StringCore", StringCore.class, stringCore);
+
         StepCore stepCore = new StepCore();
         scenarioCtx.put("StepCore", StepCore.class, stepCore);
 
@@ -490,15 +510,11 @@ public class CustomEventListener implements ConcurrentEventListener {
 
         //print storage
         Log.debug("*** Following TestData configuration is going to be used");
-        storage.print("TestData");
+        storage.get("TestData");
         Log.debug("*** Following Expected configuration is going to be used");
-        storage.print("Expected");
+        storage.get("Expected");
         Log.debug("*** Following configuration Environment.Active is going to be used ***");
-        storage.print("Environment.Active");
-
-        //update allure properties
-        String targetDirPath = fileCore.getProjectPath().replaceAll("src$", "target");
-        updateAllureProperties(storage, targetDirPath);
+        storage.get("Environment.Active");
 
         logger.info("+-------------------------------" + scenarioFiller + "-------------------" + threadFiller + "----+");
         logger.info("+--- Running steps for scenario " + event.testCase.getName() + " in thread with id " + threadId + " ---+");
@@ -604,29 +620,27 @@ public class CustomEventListener implements ConcurrentEventListener {
         }
     }
 
-    private synchronized void updateAllureProperties(Storage storage, String targetDirPath){
-        File allureEnvironment = new File(targetDirPath + File.separator + "allure-results" + File.separator + "environment.properties");
-        File allureProperties = new File(targetDirPath + File.separator + "allure-results" + File.separator + "allure.properties");
-        File allureResultsDir = new File(targetDirPath + File.separator + "allure-results");
+    private synchronized void updateAllureProperties(String projSrcPath, Map<String, String> environmentProperties, Map<String, String> trackerProperties){
+        String projTargetPath = projSrcPath.replaceAll("src$", "target");
+        String allureResultDirPath = projTargetPath + File.separator + "allure-results";
+        String testResourcesPath = projSrcPath + File.separator + "libs" + File.separator + "libCore" +
+                File.separator + "resources";
+
+        File allureEnvironment = new File(allureResultDirPath + File.separator + "environment.properties");
+        File allureProperties = new File(testResourcesPath + File.separator + "allure.properties");
+
+        File allureResultsDir = new File(allureResultDirPath);
+        File allureResourcesDir = new File(testResourcesPath);
 
         //add information about used test environment to the report
         if ( ! Files.exists(allureEnvironment.toPath()) ) {
             Log.debug("Adding environment information to the report");
-            Map<String, String> environmentProperties = storage.get("Environment.Active.WriteToReport");
             writeAllurePropertiesToFile(allureEnvironment, allureResultsDir, environmentProperties);
         }
 
         //add links to issues and tests into to the report
-        if ( ! Files.exists(allureProperties.toPath()) ) {
-            Log.debug("Adding issue tracker and test tracker information to the report");
-            String issueTrackerUrlPattern = storage.get("Environment.Active.IssueTrackerUrlPattern");
-            String testTrackerUrlPattern = storage.get("Environment.Active.TestTrackerUrlPattern");
-            Map<String, String> trackerProperties = new HashMap<>();
-            trackerProperties.put("allure.results.directory", "target" + File.separator + "allure-results");
-            trackerProperties.put("allure.link.tms.pattern", testTrackerUrlPattern.trim() + "{}");
-            trackerProperties.put("allure.link.issue.pattern", issueTrackerUrlPattern.trim() + "{}");
-            writeAllurePropertiesToFile(allureProperties, allureResultsDir, trackerProperties);
-        }
+        Log.debug("Adding issue tracker and test tracker information to the report");
+        writeAllurePropertiesToFile(allureProperties, allureResourcesDir, trackerProperties);
     }
 
     private void writeAllurePropertiesToFile(File targetFile, File allureResultsDir, Map<String, String> propertiesMap){
@@ -670,16 +684,19 @@ public class CustomEventListener implements ConcurrentEventListener {
         Set<Object> propsSet = props.keySet();
         int nrOfSwitches = 0;
         for(Object key : propsSet ){
-            if ( key.toString().contains("ctx.TestData.") ||
-                    key.toString().contains("ctx.Environment.") ||
-                    key.toString().contains("ctx.Expected.") ){
+            String sKey = key.toString();
+            if ( sKey.contains("ctx.TestData.") ||
+                    sKey.contains("ctx.Environment.") ||
+                    sKey.contains("ctx.Expected.") ){
 
-                Log.debug("Trying to overwrite value of " + key.toString().substring(4,key.toString().length()) + " due to usage of command line switch -D" + key.toString());
+                String var = sKey.substring(4,sKey.length());
 
-                Object obj = stepCore.checkIfInputIsVariable(props.get(key.toString()).toString());
-                Log.debug("Class of " + key.toString().substring(4,key.toString().length()) + " is " + obj.getClass().getName());
+                Log.debug("Trying to overwrite value of " + var + " due to usage of command line switch -D" + sKey);
 
-                storage.set(key.toString().substring(4,key.toString().length()), obj);
+                Object obj = stepCore.checkIfInputIsVariable(props.get(sKey).toString());
+                Log.debug("Class of " + var + " is " + obj.getClass().getName());
+
+                storage.set(var, obj);
                 nrOfSwitches++;
             }
         }

@@ -1,13 +1,17 @@
 package libs.libCore.modules;
 
+import io.qameta.allure.Allure;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import io.qameta.allure.Attachment;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.NumberFormat;
@@ -58,11 +62,11 @@ public class StepCore {
         if(value.getClass().getName().contains("Double")){
             return Double.class;
         }
-        if(value.getClass().getName().contains("Long")){
-            return Long.class;
-        }
         if(value.getClass().getName().contains("Integer")){
             return Integer.class;
+        }
+        if(value.getClass().getName().contains("Long")){
+            return Long.class;
         }
         if(value.getClass().getName().contains("ArrayList")){
             return ArrayList.class;
@@ -97,16 +101,16 @@ public class StepCore {
         if ( BooleanUtils.toBooleanObject(input) != null ) {
             Boolean b = BooleanUtils.toBoolean(input);
             result = (T) b;
-            Log.debug("Converted String " + input + " to Boolean");
+            Log.debug("Converting String " + input + " to boolean of class " + result.getClass().getName());
         }
 
         //check if String contains number
-        if(NumberUtils.isNumber(input)){
+        if( NumberUtils.isNumber(input) ){
             Number num = null;
             try {
                 num = NumberFormat.getInstance(Locale.getDefault()).parse(input);
                 if ( num instanceof Long ) {
-                    Long tVal = (Long) num;
+                    long tVal = (long) num;
                     try {
                         num = toIntExact(tVal);
                     } catch (ArithmeticException e) {
@@ -398,7 +402,8 @@ public class StepCore {
 
 
     /**
-     * Attaches file to the report
+     * Attaches file to the report<br>
+     * List of MIME types is available under https://www.iana.org/assignments/media-types/media-types.xhtml
      *
      * @param name name of the file to be displayed in the report
      * @param type type of file like text/plain or application/pdf etc.
@@ -409,11 +414,16 @@ public class StepCore {
         byte[] bytes = null;
 
         File file = new File(path);
+        String extension = FilenameUtils.getExtension(file.getAbsolutePath());
+
         try {
             bytes = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
         } catch (IOException e) {
             Log.error( "File " + file.getAbsolutePath() + " not found! " + e.getMessage());
         }
+
+        String attachmentSource = Allure.getLifecycle().prepareAttachment(name, type, extension);
+        Allure.getLifecycle().writeAttachment(attachmentSource, new ByteArrayInputStream(bytes));
 
         Log.debug("File " + path + " with name " + name + " attached to report");
 
@@ -429,6 +439,10 @@ public class StepCore {
     public byte[] attachScreenshotToReport(String name, byte[] screenshot){
         String tName = StringUtils.deleteWhitespace(name);
         Log.debug("Screenshot with name " + tName + " attached to report");
+
+        String attachmentSource = Allure.getLifecycle().prepareAttachment(name, "image/png", "png");
+        Allure.getLifecycle().writeAttachment(attachmentSource, new ByteArrayInputStream(screenshot));
+
         return screenshot;
     }
 
@@ -441,6 +455,10 @@ public class StepCore {
     @Attachment(value="{0}", type="text/plain")
     public String attachMessageToReport(String name, String message){
         Log.debug("Message with name " + name + " attached to report");
+
+        String attachmentSource = Allure.getLifecycle().prepareAttachment(name, "text/plain", "txt");
+        Allure.getLifecycle().writeAttachment(attachmentSource,new ByteArrayInputStream(message.getBytes(Charset.forName("UTF-8"))));
+
         return message;
     }
 

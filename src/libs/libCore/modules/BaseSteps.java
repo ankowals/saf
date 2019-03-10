@@ -18,12 +18,14 @@ public class BaseSteps {
     protected CsvCore CsvCore;
     protected WinRSCore WinRSCore;
     protected WiniumCore WiniumCore;
+    protected StringCore StringCore;
 
     public BaseSteps() {
         this.globalCtx = GlobalCtxSingleton.getInstance();
         this.scenarioCtx = globalCtx.get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
         this.Macro = scenarioCtx.get("Macro",Macro.class);
         this.StepCore = scenarioCtx.get("StepCore",StepCore.class);
+        this.StringCore = scenarioCtx.get("StingCore",StringCore.class);
         this.PageCore = scenarioCtx.get("PageCore",PageCore.class);
         this.Storage = scenarioCtx.get("Storage", Storage.class);
         this.FileCore = scenarioCtx.get("FileCore", FileCore.class);

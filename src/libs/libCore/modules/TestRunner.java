@@ -6,7 +6,7 @@ import org.testng.annotations.DataProvider;
 
 public class TestRunner extends AbstractTestNGCucumberTests {
     @CucumberOptions(
-            plugin = {"io.qameta.allure.cucumber3jvm.AllureCucumber3Jvm", "libs.libCore.modules.CustomEventListener"},
+            plugin = {"io.qameta.allure.cucumber4jvm.AllureCucumber4Jvm", "libs.libCore.modules.CustomEventListener"},
             features = "src/features",
             glue = "libs")
     public class RunCukesTest extends AbstractTestNGCucumberTests {

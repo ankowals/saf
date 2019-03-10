@@ -182,7 +182,7 @@ public class WinRSCore {
                 "{$arguments = \"& '\" + $myinvocation.mycommand.definition + \"'\";Start-Process powershell -WindowStyle Hidden -Verb runAs -ArgumentList $arguments;Break};" +
                 runQuickConf + addToTrustedHots + checkClient;
 
-        File script = FileCore.createTempFile("addTrustedHost","ps1");
+        File script = FileCore.createTempFile("temp","ps1");
         FileCore.writeToFile(script, cmd);
 
         Log.debug("Script " + script.getAbsolutePath() + " content is " + cmd);
@@ -250,7 +250,9 @@ public class WinRSCore {
      */
     public String executeBatchFileOnRemote(List<String> cmdList, String node, Integer timeout){
         String cmd = joinCommands(cmdList, "\r\n", true);
-        String script = "temp.bat";
+
+        String script = FileCore.createTempFile("temp", "bat").getName();
+        //String script = "temp.bat";
         transferScript(node, cmd, script);
 
         Log.debug("Going to execute call " + script);
@@ -285,7 +287,8 @@ public class WinRSCore {
         }
 
         String cmd = joinCommands(cmdList, "\r\n", true);
-        String script = "temp.sql";
+        String script = FileCore.createTempFile("temp", "sql").getName();
+        //String script = "temp.sql";
         transferScript(node, cmd, script);
 
         boolean useEncoding = Storage.get("Environment.Active.UseEncoding");
@@ -395,7 +398,8 @@ public class WinRSCore {
             //cmdList.add("call winrm set winrm/config/service/auth @{Basic=\"true\"}");
 
             String cmd = joinCommands(cmdList, "\r\n", true);
-            String script = "adjustWinRmConfig.bat";
+            String script = FileCore.createTempFile("temp", "bat").getName();
+            //String script = "adjustWinRmConfig.bat";
             transferScript(node, cmd, script);
 
             String result = executeSingleCommandOnRemote("call " + script, node, 120);
@@ -759,7 +763,8 @@ public class WinRSCore {
         }
         String sPaths = sb.toString();
 
-        String script = "verifyThatFilesExist.ps1";
+        String script = FileCore.createTempFile("temp", "ps1").getName();
+        //String script = "verifyThatFilesExist.ps1";
         String cmd = "Write-Host \"Checking files availability\";$paths=@(" + sPaths.replaceFirst(", ","") + ");foreach($path in $paths){" +
                 "Write-Host $path;if (!(Test-Path $path)){Write-Host \"Error: Path '$path' not found\"}}";
 
@@ -1100,7 +1105,7 @@ public class WinRSCore {
      *
      * @return String
      */
-    public String runScriptAsScheduledTask (String node, String pathToScript){
+    public String runScriptAsScheduledTask (String node, String pathToScript, String taskName){
 
         Map<String, String> conn = verifyConnectionDetails(node);
         String domain = conn.get("domain");
@@ -1115,26 +1120,26 @@ public class WinRSCore {
         }
 
         String userDir = getUserDir(node);
-        String stdErr = userDir + "\\" + "tempTask.stdErr";
-        String stdOut = userDir + "\\" + "tempTask.stdOut";
+        String stdErr = userDir + "\\" + taskName + ".stdErr";
+        String stdOut = userDir + "\\" + taskName + ".stdOut";
 
         Log.debug("Removing old log files");
-        Boolean isFilePresent = checkThatFileExists(node, userDir + "\\" + "tempTask.stdErr");
+        Boolean isFilePresent = checkThatFileExists(node, userDir + "\\" + taskName + ".stdErr");
         if ( isFilePresent ){
-            executeSingleCommandOnRemote("\"Powershell.exe Remove-Item " + userDir + "\\" + "tempTask.stdErr\"", node, 120);
+            executeSingleCommandOnRemote("\"Powershell.exe Remove-Item " + userDir + "\\" + taskName + ".stdErr\"", node, 120);
         }
-        isFilePresent = checkThatFileExists(node, userDir + "\\" + "tempTask.stdOut");
+        isFilePresent = checkThatFileExists(node, userDir + "\\" + taskName + ".stdOut");
         if ( isFilePresent ){
-            executeSingleCommandOnRemote("\"Powershell.exe Remove-Item " + userDir + "\\" + "tempTask.stdOut\"", node, 120);
+            executeSingleCommandOnRemote("\"Powershell.exe Remove-Item " + userDir + "\\" + taskName + ".stdOut\"", node, 120);
         }
 
-        Log.debug("Creating new scheduled task TempAutomationTask. " +
+        Log.debug("Creating new scheduled task " + taskName + ". " +
                 "Assigning normal priority to it. " +
                 "Recreating task with priority");
 
         //this script is used to run the original one and redirect outputs to file
         //it will be called from a scheduled task and in turn it will call the original one:)
-        String script = "wrapperTask.ps1";
+        String script = "wrapper" + taskName + ".ps1";
         String cmd = "Start-process powershell -WindowStyle Hidden -Wait" +
                 " -RedirectStandardError " + stdErr +
                 " -RedirectStandardOutput " + stdOut +
@@ -1144,19 +1149,19 @@ public class WinRSCore {
         transferScript(node, cmd, script);
 
         //this script is used to create scheduled task
-        script = "tempTask.ps1";
+        script = taskName + ".ps1";
         List<String> cmdList = new ArrayList();
-        cmdList.add("schtasks /CREATE /TN 'TempAutomationTask' /SC MONTHLY /RL HIGHEST " +
+        cmdList.add("schtasks /CREATE /TN '" + taskName + "' /SC MONTHLY /RL HIGHEST " +
                 "/RU \"" + domain + "\\" + user + "\" /IT " +
                 "/RP \"" + password + "\" " +
-                "/TR \"powershell -windowstyle hidden -NoProfile -ExecutionPolicy Bypass -File " + userDir + "\\wrapperTask.ps1\" " +
+                "/TR \"powershell -windowstyle hidden -NoProfile -ExecutionPolicy Bypass -File " + userDir + "\\wrapper" + taskName + ".ps1\" " +
                 "/F;");
-        cmdList.add("$taskFile = \"" + userDir + "\\RemoteTask.txt\";");
+        cmdList.add("$taskFile = \"" + userDir + "\\Remote" + taskName + ".txt\";");
         cmdList.add("Remove-Item $taskFile -Force -ErrorAction SilentlyContinue;");
-        cmdList.add("[xml]$xml = schtasks /QUERY /TN 'TempAutomationTask' /XML;");
+        cmdList.add("[xml]$xml = schtasks /QUERY /TN '" + taskName + "' /XML;");
         cmdList.add("$xml.Task.Settings.Priority=\"4\";");
         cmdList.add("$xml.Save($taskFile);");
-        cmdList.add("schtasks /CREATE /TN 'TempAutomationTask' /RU \"" + domain + "\\" + user + "\" " +
+        cmdList.add("schtasks /CREATE /TN '" + taskName + "' /RU \"" + domain + "\\" + user + "\" " +
                 "/IT /RP \"" + password + "\" " +
                 "/XML $taskFile /F;");
 
@@ -1166,24 +1171,25 @@ public class WinRSCore {
 
         String result = executeSingleCommandOnRemote("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File \"" + script + "\"", node, 120);
         if ( ! result.contains("SUCCESS:") ){
-            Log.error("Failed to create new scheduled task TempAutomationTask");
+            Log.error("Failed to create new scheduled task " + taskName);
         } else {
-            Log.debug("New scheduled task TempAutomationTask created");
+            Log.debug("New scheduled task " + taskName + " created");
         }
 
         Log.debug("Running scheduled task");
-        cmd = "schtasks /RUN /I /TN 'TempAutomationTask';";
+        cmd = "schtasks /RUN /I /TN '" + taskName + "';";
         result = executeSingleCommandOnRemote("Powershell.exe \"" + cmd + "\"", node, 120);
         if ( ! result.contains("SUCCESS:") ){
-            Log.error("Failed to run scheduled task TempAutomationTask");
+            Log.error("Failed to run scheduled task " + taskName);
         }
 
         String processId = "";
         int i = 0;
         while( i < 2 ) {
-            Log.debug("Extracting process id of a scheduled task TempAutomationTask");
+            Log.debug("Extracting process id of a scheduled task " + taskName);
             String tmp = pathToScript.replaceAll("\\\\", "\\\\\\\\");
-            cmd = "$proc = Get-CimInstance Win32_Process | Where {$_.CommandLine -match 'Command " + tmp + "' -or $_.CommandLine -match ' & .*" + tmp + "'} | Select Caption, CommandLine, ProcessId;" +
+            cmd = "$proc = Get-CimInstance Win32_Process | Where {$_.CommandLine -match 'Command " + tmp +
+                    "' -or $_.CommandLine -match ' & .*" + tmp + "'} | Select Caption, CommandLine, ProcessId;" +
                     "Write-Host $proc.ProcessId, $proc.CommandLine -Separator ',';";
             result = executeSingleCommandOnRemote("Powershell.exe \"" + cmd + "\"", node, 120);
             processId = "";
@@ -1208,6 +1214,8 @@ public class WinRSCore {
             }
         }
 
+        scenarioCtx.put( processId + "_ScheduledTaskName", String.class, taskName);
+
         return processId;
     }
 
@@ -1223,36 +1231,38 @@ public class WinRSCore {
      * @return Boolean
      */
     public boolean superviseScheduledTaskExecution(String node, String processId, Integer timeout){
+        String taskName = scenarioCtx.get(processId + "_ScheduledTaskName", String.class);
 
         if ( timeout < 0 || processId.equals("") ) {
             String userDir = getUserDir(node);
-            String stdErr = userDir + "\\" + "tempTask.stdErr";
-            String stdOut = userDir + "\\" + "tempTask.stdOut";
+
+            String stdErr = userDir + "\\" + taskName + ".stdErr";
+            String stdOut = userDir + "\\" + taskName + ".stdOut";
 
             Log.warn("Probably an error happen during script execution. Printing stdErr output");
             executeSingleCommandOnRemote("type " + stdErr, node, 60);
             Log.warn("Probably an error happen during script execution. Printing stdOut output");
             executeSingleCommandOnRemote("type " + stdOut, node, 60);
-            Log.warn("Killing scheduled task TempAutomationTask");
+            Log.warn("Killing scheduled task " + taskName);
 
-            String script = "tempTask.ps1";
-            String cmd = "schtasks /END /TN 'TempAutomationTask';";
+            String script = taskName + ".ps1";
+            String cmd = "schtasks /END /TN '" + taskName + "';";
             Log.debug("Content of the script " + script + " to be created on remote node " + node + " is " + cmd);
             transferScript(node, cmd, script);
 
             String result = executeSingleCommandOnRemote("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File \"" + script + "\"", node, 120);
             if ( ! result.contains("SUCCESS:") ){
-                Log.warn("Failed to kill scheduled task TempAutomationTask");
+                Log.warn("Failed to kill scheduled task " + taskName);
             }
 
-            Log.warn("Deleting scheduled task TempAutomationTask");
-            cmd = "schtasks /DELETE /TN 'TempAutomationTask' /F;";
+            Log.warn("Deleting scheduled task " + taskName);
+            cmd = "schtasks /DELETE /TN '" + taskName + "' /F;";
             Log.debug("Content of the script " + script + " to be created on remote node " + node + " is " + cmd);
             transferScript(node, cmd, script);
 
             result = executeSingleCommandOnRemote("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File \"" + script + "\"", node, 120);
             if ( ! result.contains("SUCCESS:") ){
-                Log.warn("Failed to remove scheduled task TempAutomationTask");
+                Log.warn("Failed to remove scheduled task " + taskName);
             }
 
             if ( timeout < 0 ) {
@@ -1267,16 +1277,16 @@ public class WinRSCore {
         String result = executeSingleCommandOnRemote("Powershell.exe \"" + cmd + "\"", node, 120);
 
         if ( result.contains("Cannot find a process") ){
-            Log.debug("Removing scheduled task TempAutomationTask");
+            Log.debug("Removing scheduled task " + taskName);
 
-            String script = "tempTask.ps1";
-            cmd = "schtasks /DELETE /TN 'TempAutomationTask' /F;";
+            String script = taskName + ".ps1";
+            cmd = "schtasks /DELETE /TN '" + taskName + "' /F;";
             Log.debug("Content of the script " + script + " to be created on remote node " + node + " is " + cmd);
             transferScript(node, cmd, script);
 
             result = executeSingleCommandOnRemote("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File \"" + script + "\"", node, 120);
             if ( ! result.contains("SUCCESS:") ){
-                Log.error("Failed to remove scheduled task TempAutomationTask");
+                Log.error("Failed to remove scheduled task " + taskName);
             }
 
             return true;

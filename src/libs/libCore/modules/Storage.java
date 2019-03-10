@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 
 import java.io.*;
 import java.util.*;
-import java.util.regex.Pattern;
 
 @SuppressWarnings("unchecked")
 public class Storage {
@@ -121,21 +120,21 @@ public class Storage {
     }
 
 
-    /**
-     * Prints current content of a storage with name {} to the log file
-     *
-     * @param name of the storage
-     */
-    public void print(String name) {
-        HashMap<String, Object> dataMap = get(name);
-        if ( dataMap != null ) {
-            for (Map.Entry<String, Object> entry : dataMap.entrySet()) {
-                String[] tmp = entry.getValue().getClass().getName().split(Pattern.quote(".")); // Split on period.
-                String type = tmp[2];
-                Log.debug("(" + type + ")" + entry.getKey() + " = " + entry.getValue().toString());
-            }
-        }
-    }
+    ///**
+    // * Prints current content of a storage with name {} to the log file
+    // *
+    // * @param name of the storage
+    // */
+    //public void print(String name) {
+    //    HashMap<String, Object> dataMap = get(name);
+    //    if ( dataMap != null ) {
+    //        for (Map.Entry<String, Object> entry : dataMap.entrySet()) {
+    //            String[] tmp = entry.getValue().getClass().getName().split(Pattern.quote(".")); // Split on period.
+    //            String type = tmp[2];
+    //            Log.debug("(" + type + ")" + entry.getKey() + " = " + entry.getValue().toString());
+    //        }
+    //    }
+    //}
 
 
     /**
