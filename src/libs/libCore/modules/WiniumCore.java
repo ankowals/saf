@@ -203,8 +203,7 @@ public class WiniumCore {
         Log.debug("An entry with text " + text + " has been chosen");
     }
 
-
-    public void moveByOffsetAndClick(WebElement element, Integer xOffset, Integer yOffset){
+    public void moveByOffsetToAnElementAndClick(WebElement element, Integer xOffset, Integer yOffset){
         Log.debug("About to move to element " + element + " by x offset " + xOffset +
                 " and y offset " + yOffset + " and click");
 
@@ -217,6 +216,17 @@ public class WiniumCore {
         Log.debug("Click executed after " + t_FindBy.duration()  + " ms");
     }
 
+    public void moveToCoordinatesAndClick(int xCor, int yCor){
+        Log.debug("About to move to coordinates x=" + xCor + " and y=" + yCor + " and click");
+
+        ExecutionTimer t_FindBy = new ExecutionTimer();
+        new Actions(driver).moveByOffset(xCor, yCor)
+                .click()
+                .build().perform();
+        t_FindBy.end();
+        Log.debug("Click executed after " + t_FindBy.duration()  + " ms");
+
+    }
 
     public byte[] takeScreenshot() {
         byte[] screenshot = null;
@@ -264,7 +274,6 @@ public class WiniumCore {
             driver.switchTo().window(count.toString());
         }
     }
-
 
     //get windows handles,
     //for example powershell or windows cmd windows are returned here but we do not want to switch to them!

@@ -197,9 +197,6 @@ public class CustomEventListener implements ConcurrentEventListener {
         logger.info("+-----------------------------+");
         logger.info("+--- Features run finished ---+");
         logger.info("+-----------------------------+");
-        Log.debug("");
-        Log.debug("");
-        Log.debug("");
     }
 
     private void handleTestStepStarted(TestStepStarted event){
@@ -328,6 +325,7 @@ public class CustomEventListener implements ConcurrentEventListener {
             Map<String, String> trackerProperties = new HashMap<>();
             trackerProperties.put("allure.link.tms.pattern", testTrackerUrlPattern.trim() + "/{}");
             trackerProperties.put("allure.link.issue.pattern", issueTrackerUrlPattern.trim() + "/{}");
+            trackerProperties.put("allure.results.directory", "target/allure-results");
             globalCtx.put("AllureTrackerProperties", Map.class, trackerProperties);
             globalCtx.put("AllureProjectSrcPath", String.class, fileCore.getProjectPath());
 

@@ -111,7 +111,7 @@ public class CoreSteps extends BaseSteps{
      * @param node String,
      * @param path String, path to the executable file
      */
-    @Given("^on remote host (.+), open an app from (.+)")
+    @Given("^on remote host (.+), open an app from (.+)$")
     public void on_remote_host_open_an_app_from(String node, String path) {
         String pathToApp = StepCore.checkIfInputIsVariable(path);
         Storage.set("Environment.Active.App.path", pathToApp);
@@ -121,17 +121,31 @@ public class CoreSteps extends BaseSteps{
 
 
     /**
-     * Opens a gui app on a windows host without additional arguments
+     * Opens a gui app on a windows host with additional arguments
      *
      * @param path String, path to the executable file
      * @param args String, app arguments
      */
-    @Given("^open an app from (.+) with args (.+)")
-    public void open_an_app_from(String path, String args) {
+    @Given("^open an app (.+) with additional arguments (.+)$")
+    public void open_an_app_with_additional_arguments(String path, String args) {
         String pathToApp = StepCore.checkIfInputIsVariable(path);
         String argsToApp = StepCore.checkIfInputIsVariable(args);
         Storage.set("Environment.Active.App.path", pathToApp);
         Storage.set("Environment.Active.App.args", argsToApp);
+        WiniumDriverObjectPool winiumDriverPool = globalCtx.get("WiniumDriverObjectPool", WiniumDriverObjectPool.class);
+        winiumDriverPool.checkOut("localhost");
+    }
+
+
+    /**
+     * Opens a gui app on a windows host without additional arguments
+     *
+     * @param path String, path to the executable file
+     */
+    @Given("^open an app from (.+)$")
+    public void open_an_app_from(String path) {
+        String pathToApp = StepCore.checkIfInputIsVariable(path);
+        Storage.set("Environment.Active.App.path", pathToApp);
         WiniumDriverObjectPool winiumDriverPool = globalCtx.get("WiniumDriverObjectPool", WiniumDriverObjectPool.class);
         winiumDriverPool.checkOut("localhost");
     }

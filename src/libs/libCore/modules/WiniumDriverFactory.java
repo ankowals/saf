@@ -175,6 +175,7 @@ public class WiniumDriverFactory {
         String cmd = "netstat -an | findstr " + port;
         int i = 0;
         while ( i < 30 ){
+            Log.debug("Command to execute is " + cmd);
             String result = ExecutorCore.execute("Powershell.exe \"" +cmd + "\"", workingDir, 60).getStdOut();
             if (result.contains("LISTENING")){
                 break;
