@@ -87,26 +87,26 @@ public class SqlCore {
      * @param list List<Map<String, Object>>, list as returned by method selectList
      */
     public void printList(List<Map<String, Object>> list) {
-        Log.debug("Query result is");
         if ( list.size() > 0 ) {
-            //print header
-            Map<String, Object> firstRow = list.get(0);
-            StringBuilder header = new StringBuilder();
-            for (Map.Entry<String, Object> lme : firstRow.entrySet()) {
-                header.append(", ");
-                header.append(lme.getKey());
-            }
-            Log.debug(header.toString().substring(2));
-
-            //print rows
             StringBuilder row = new StringBuilder();
+            //extract header
+            Map<String, Object> firstRow = list.get(0);
+            for (Map.Entry<String, Object> lme : firstRow.entrySet()) {
+                row.append(lme.getKey());
+                row.append(", ");
+            }
+            row.deleteCharAt(row.lastIndexOf(","));
+            row.append(System.lineSeparator());
+            //extract data rows
             for (Map<String, Object> map : list) {
                 for (Map.Entry<String, Object> lme : map.entrySet()) {
-                    row.append(", ");
                     row.append(lme.getValue());
+                    row.append(", ");
                 }
-                Log.debug(row.toString().substring(2));
+                row.deleteCharAt(row.lastIndexOf(","));
+                row.append(System.lineSeparator());
             }
+            Log.debug("Query result is" + System.lineSeparator() + row.toString().trim());
         }
     }
 
@@ -124,25 +124,21 @@ public class SqlCore {
         if ( list.size() > 0 ) {
             //append header to string
             Map<String, Object> firstRow = list.get(0);
-            StringBuilder header = new StringBuilder();
             for (Map.Entry<String, Object> lme : firstRow.entrySet()) {
-                header.append(", ");
-                header.append(lme.getKey());
+                result.append(lme.getKey());
+                result.append(", ");
             }
-
-            result.append(header.toString());
+            result.deleteCharAt(result.lastIndexOf(","));
             result.append(System.lineSeparator());
 
             //append rows to string
             for (Map<String, Object> map : list) {
-                StringBuilder row = new StringBuilder();
                 for (Map.Entry<String, Object> lme : map.entrySet()) {
-                    row.append(", ");
-                    row.append(lme.getValue());
+                    result.append(lme.getValue());
+                    result.append(", ");
                 }
-                result.append(row.toString());
+                result.deleteCharAt(result.lastIndexOf(","));
                 result.append(System.lineSeparator());
-
             }
 
             return result.toString().trim();
@@ -169,27 +165,30 @@ public class SqlCore {
         if ( list.size() > 0 ) {
             //write header to file
             Map<String, Object> firstRow = list.get(0);
-            StringBuilder header = new StringBuilder();
+            StringBuilder row = new StringBuilder();
             for (Map.Entry<String, Object> lme : firstRow.entrySet()) {
-                header.append(", ");
-                header.append(lme.getKey());
+                row.append(lme.getKey());
+                row.append(", ");
             }
-            FileCore.writeToFile(temp, header.toString().substring(2) + System.getProperty("line.separator"));
+            row.deleteCharAt(row.lastIndexOf(","));
+            row.append(System.lineSeparator());
 
             //append rows to file
             for (Map<String, Object> map : list) {
-                StringBuilder row = new StringBuilder();
                 for (Map.Entry<String, Object> lme : map.entrySet()) {
-                    row.append(", ");
                     row.append(lme.getValue());
+                    row.append(", ");
                 }
-                FileCore.appendToFile(temp, row.toString().substring(2) + System.getProperty("line.separator"));
+                row.deleteCharAt(row.lastIndexOf(","));
+                row.append(System.lineSeparator());
             }
+
+            FileCore.writeToFile(temp, row.toString().trim());
 
             return temp;
 
         } else {
-            FileCore.appendToFile(temp, "" + System.getProperty("line.separator"));
+            FileCore.appendToFile(temp, "" + System.lineSeparator());
         }
 
         return temp;

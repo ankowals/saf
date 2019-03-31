@@ -14,23 +14,43 @@ public class CoreDbSteps extends BaseSteps {
 
     /**
      * Loads data from csv file to data base<br>
-     * It uses csv file as an input and TestData.{filename}.TypeMapping object<br>
+     * It uses csv file as an input and TestData.{filename}TypeMapping object<br>
      * TypeMapping shall contain mapping columns to type for particular csv<br>
      * Type mapping shall be in the form of a List. For example<br>
-     * inputTypeMapping : ["NUMERIC","VARCHAR","VARCHAR"], where input file name is input.csv<br>
-     * Input file shall be located in subdirectory input
+     * inputTypeMapping : ["NUMERIC","VARCHAR","VARCHAR"], where file name is input.csv<br>
+     * input.csv file shall be located in subdirectory resources
      *
-     * @param fileName, String, name of the input csv file that contains input data (without .csv extension)
-     * @param tableName, String, name of the table to which data shall be loaded
      * @param url String, connection string of the database that shall be used
+     * @param params Map, table that contains sql query and template name
      */
-    @Given("^load data from csv file (.*?) into a table (.*?) in (.+) database$")
-    public void load_data_from_csv_file_into_a_table(String fileName, String tableName, String url) {
+    @Given("^load into a table in (.+) database$")
+    public void load_data_from_csv_file_into_a_table(String url, Map<String, String> params) {
         String connectionString = StepCore.checkIfInputIsVariable(url);
-        File input = new File(FileCore.getCurrentFeatureDirPath() + "/input/" + fileName + ".csv");
-        StepCore.attachFileToReport(fileName+".csv", "text/csv", input.getAbsolutePath());
+
+        String fileName = "";
+        String tableName = "";
+
+        //handle params
+        if ( ! params.isEmpty() ) {
+
+            for (Map.Entry<String, String> row : params.entrySet()) {
+                String param_name = row.getKey();
+                String param_value = StepCore.checkIfInputIsVariable(row.getValue());
+
+                if ( param_name.equals("file") ) {
+                    fileName = StepCore.checkIfInputIsVariable(param_value);
+                    fileName = fileName.replaceAll(".csv$","");
+                }
+                if ( param_name.equals("table") ) {
+                    tableName = StepCore.checkIfInputIsVariable(param_value);
+                }
+            }
+        }
+
+        File input = new File(FileCore.getCurrentFeatureDirPath() + "/resources/" + fileName + ".csv");
+        StepCore.attachFileToReport(fileName + ".csv", "text/csv", input.getAbsolutePath());
         Log.debug("Path to csv input file is " + input.getAbsolutePath());
-        SqlCore.insertFromFile(connectionString, input,tableName,true, "TestData." + fileName + "TypeMapping");
+        SqlCore.insertFromFile(connectionString, input, tableName,true, "TestData." + fileName + "TypeMapping");
     }
 
     /**

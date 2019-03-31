@@ -1,0 +1,4 @@
+{
+    "name": "${ctx.TestData.User.name}",
+    "job": "janitor"
+}

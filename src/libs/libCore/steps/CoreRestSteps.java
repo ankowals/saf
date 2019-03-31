@@ -23,16 +23,12 @@ public class CoreRestSteps extends BaseSteps {
      * It triggers GET request towards defined url<br>
      * It checks that http response code is 200 (OK)<br><br>
      *
-     * Uses following objects:<br>
-     *  Expected.statusOK<br>
-     *  env.REST_url
-     *
      */
     @Given("^service is available$")
     public void service_is_available(){
 
         String url = Storage.get("Environment.Active.Rest.url");
-        Integer expectedCode = Storage.get("Expected.statusOK");
+        int expectedCode = 200;
             given()
                     .when()
                     .log()

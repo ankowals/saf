@@ -1,1 +1,0 @@
-This template is used to check if we can put into a file macro directly like this ${mcr.currentDate} and test data variables as well ${ctx.TestData.entry2}
