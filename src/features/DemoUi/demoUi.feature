@@ -1,7 +1,7 @@
-@demoTest
-Feature: demo test
+@demoUi
+Feature: demo Ui
 
-  Scenario: demo test ui automation
+  Scenario: test ui automation
 
     Given open browser
       And in the browser, navigate to a demo shop web page

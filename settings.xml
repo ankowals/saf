@@ -1,0 +1,21 @@
+<settings>
+    <profiles>
+        <profile>
+            <id>inject-application-home</id>
+            <!-- Properties that can be changed by the user -->
+            <properties>
+                <jetty.start_port>8082</jetty.start_port>
+                <jetty.stop_port>8085</jetty.stop_port>
+                <!--<jdk.path>C:/Program Files/Java/jdk1.8.0_144/bin/javac</jdk.path>-->
+                <java.version>8</java.version>
+                <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+            </properties>
+            <!-- End -->
+        </profile>
+    </profiles>
+
+    <activeProfiles>
+        <activeProfile>inject-application-home</activeProfile>
+    </activeProfiles>
+
+</settings>

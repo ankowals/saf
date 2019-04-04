@@ -18,7 +18,7 @@ public class BasePage {
         this.globalCtx = GlobalCtxSingleton.getInstance();
         this.scenarioCtx = globalCtx.get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
         this.StepCore = scenarioCtx.get("StepCore",StepCore.class);
-        this.StringCore = scenarioCtx.get("StingCore",StringCore.class);
+        this.StringCore = scenarioCtx.get("StringCore",StringCore.class);
         this.PageCore  = scenarioCtx.get("PageCore",PageCore.class);
         this.SqlCore = scenarioCtx.get("SqlCore",SqlCore.class);
         this.Storage = scenarioCtx.get("Storage", Storage.class);

@@ -12,7 +12,12 @@ import java.util.Arrays;
 public class CsvCore {
 
     private int getHeaderLocation(String[] header, String columnName){
-        return Arrays.asList(header).indexOf(columnName);
+        int value = Arrays.asList(header).indexOf(columnName);
+        if ( value == -1 ){
+            Log.error("Column with name " + columnName + " not found!");
+        }
+
+        return value;
     }
 
 

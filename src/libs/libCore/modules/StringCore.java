@@ -4,6 +4,8 @@ import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.List;
+
 public class StringCore {
 
     private Context scenarioCtx;
@@ -40,4 +42,15 @@ public class StringCore {
         return StringUtils.equalsIgnoreCase(input, expectedStr);
     }
 
+    public String join(List elements, String separator){
+        return StringUtils.join(elements, separator);
+    }
+
+    public String removeLastDelimiter(String str, String delimiter) {
+        if (str != null && str.length() > delimiter.length() && str.substring(str.length() - delimiter.length()).equals(delimiter)) {
+            str = str.substring(0, str.length() - delimiter.length());
+        }
+
+        return str;
+    }
 }
