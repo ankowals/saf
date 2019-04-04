@@ -10,3 +10,4 @@ Feature: demo Ui
     When write page title to a file TestData.TmpFile.path
     Then open an app Environment.Active.App.path with additional arguments TestData.TmpFile.path
       And in notepad, verify that page title is Expected.PageTitle
+      And pause execution
