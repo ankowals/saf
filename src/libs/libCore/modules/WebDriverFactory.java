@@ -8,9 +8,13 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.ie.InternetExplorerDriver;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
 import org.openqa.selenium.support.events.WebDriverEventListener;
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -64,15 +68,64 @@ public class WebDriverFactory {
             options.setExperimentalOption("prefs", prefs);
             options.setExperimentalOption("useAutomationExtension", false);
 
+            //add support for Selenium Grid
+            boolean isGridUsed = Storage.get("Environment.Active.Selenium.useGrid");
+            if ( isGridUsed ){
+                String hub = Storage.get("Environment.Active.Selenium.hub");
+
+                DesiredCapabilities capabilities = DesiredCapabilities.chrome();
+                capabilities.setCapability(ChromeOptions.CAPABILITY, options);
+                capabilities.setBrowserName("chrome");
+
+                try{
+                    Log.debug("Going to use Selenium Grid");
+                    return createEventFiringWebDriver(new RemoteWebDriver(new URL(hub), capabilities));
+                } catch (MalformedURLException e) {
+                    Log.error(e.getMessage());
+                }
+            }
+
             return createEventFiringWebDriver(new ChromeDriver(options));
         } else if (browser.equalsIgnoreCase("firefox")) {
             String path = Storage.get("Environment.Active.WebDrivers.FireFox.path");
             System.setProperty("webdriver.firefox.marionette", FileCore.getProjectPath() + File.separator + path);
 
+            //add support for Selenium Grid
+            boolean isGridUsed = Storage.get("Environment.Active.Selenium.useGrid");
+            if ( isGridUsed ) {
+                String hub = Storage.get("Environment.Active.Selenium.hub");
+
+                DesiredCapabilities capabilities = DesiredCapabilities.firefox();
+                capabilities.setBrowserName("firefox");
+
+                try{
+                    Log.debug("Going to use Selenium Grid");
+                    return createEventFiringWebDriver(new RemoteWebDriver(new URL(hub), capabilities));
+                } catch (MalformedURLException e) {
+                    Log.error(e.getMessage());
+                }
+            }
+
             return createEventFiringWebDriver(new FirefoxDriver());
         } else if (browser.equalsIgnoreCase("ie")) {
             String path = Storage.get("Environment.Active.WebDrivers.InternetExplorer.path");
             System.setProperty("webdriver.ie.driver", FileCore.getProjectPath() + File.separator + path);
+
+            //add support for Selenium Grid
+            boolean isGridUsed = Storage.get("Environment.Active.Selenium.useGrid");
+            if ( isGridUsed ) {
+                String hub = Storage.get("Environment.Active.Selenium.hub");
+
+                DesiredCapabilities capabilities = DesiredCapabilities.internetExplorer();
+                capabilities.setBrowserName("ie");
+
+                try{
+                    Log.debug("Going to use Selenium Grid");
+                    return createEventFiringWebDriver(new RemoteWebDriver(new URL(hub), capabilities));
+                } catch (MalformedURLException e) {
+                    Log.error(e.getMessage());
+                }
+            }
 
             return createEventFiringWebDriver(new InternetExplorerDriver());
         } else {

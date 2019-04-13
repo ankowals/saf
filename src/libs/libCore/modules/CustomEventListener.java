@@ -256,29 +256,8 @@ public class CustomEventListener implements ConcurrentEventListener {
             //execute custom logic at the end of the scenario
             //can be used to for example to attach some logs to a report etc. even if scenario was unsuccessful
             //avoid doing any validation checks here because error will not be thrown!
-            String className = storage.get("Environment.Default.Plugins.handleTestStepFinished");
-            if ( className != null && !className.equals("") ){
-
-                // Create a new ClassLoader
-                ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-
-                try {
-                    // Load the target class using its name
-                    Class aClass = classLoader.loadClass(className);
-                    logger.info("Plugin detected! Loading " + aClass.getName() + " class!");
-
-                    // Create a new instance from the loaded class
-                    Constructor constructor = aClass.getConstructor();
-                    Object aClassObject = constructor.newInstance();
-
-                    // Getting the target method from the loaded class and invoke it using its name
-                    Method method = aClass.getMethod("load");
-                    logger.info("Invoking method with name " + method.getName());
-                    method.invoke(aClassObject);
-                } catch (Exception e){
-                    logger.error(e.getMessage());
-                }
-            }
+            String className = storage.get("Environment.Default.Plugins.handleTestCaseFinished");
+            handleCustomizationPoint(className);
 
             Log.debug("Cleaning up scenario resources");
 
@@ -513,6 +492,13 @@ public class CustomEventListener implements ConcurrentEventListener {
         storage.get("Expected");
         Log.debug("*** Following configuration Environment.Active is going to be used ***");
         storage.get("Environment.Active");
+
+        //USE WITH CAUTION!!!
+        //execute custom logic at the start of the scenario
+        //can be used to for example to attach some logs to a report etc.
+        //avoid doing any validation checks here because error will not be thrown!
+        String className = storage.get("Environment.Default.Plugins.handleTestCaseStarted");
+        handleCustomizationPoint(className);
 
         logger.info("+-------------------------------" + scenarioFiller + "-------------------" + threadFiller + "----+");
         logger.info("+--- Running steps for scenario " + event.testCase.getName() + " in thread with id " + threadId + " ---+");
@@ -832,6 +818,31 @@ public class CustomEventListener implements ConcurrentEventListener {
 
         if ( count > 1){
             Log.error("More than 1 feature defined in a feature file " + featurePath + "!");
+        }
+    }
+
+    private void handleCustomizationPoint(String className){
+        if ( className != null && !className.equals("") ){
+            Logger logger = LogManager.getLogger("libs.libCore.modules");
+            // Create a new ClassLoader
+            ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+
+            try {
+                // Load the target class using its name
+                Class aClass = classLoader.loadClass(className);
+                logger.info("Plugin detected! Loading " + aClass.getName() + " class!");
+
+                // Create a new instance from the loaded class
+                Constructor constructor = aClass.getConstructor();
+                Object aClassObject = constructor.newInstance();
+
+                // Getting the target method from the loaded class and invoke it using its name
+                Method method = aClass.getMethod("load");
+                logger.info("Invoking method with name " + method.getName());
+                method.invoke(aClassObject);
+            } catch (Exception e){
+                logger.error(e.getMessage());
+            }
         }
     }
 
