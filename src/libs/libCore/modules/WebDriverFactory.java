@@ -42,11 +42,21 @@ public class WebDriverFactory {
      *  @return EventFiringWebDriver
      */
     public EventFiringWebDriver create(String browser){
-        Log.debug("Going to create new web browser driver");
+
+        //check if driver exists and download it if required
+        new WebDriverDownloader(Storage, FileCore).manageDriver();
+
+        Log.debug("Going to create new web browser driver object");
 
         if (browser.equalsIgnoreCase("chrome")) {
             String path = Storage.get("Environment.Active.WebDrivers.Chrome.path");
-            System.setProperty("webdriver.chrome.driver", FileCore.getProjectPath() + File.separator + path);
+            if ( path.startsWith("resources")){
+                System.setProperty("webdriver.chrome.driver", FileCore.getProjectPath() + File.separator + path);
+            } else {
+                System.setProperty("webdriver.chrome.driver", path);
+            }
+
+
             System.setProperty("webdriver.chrome.verboseLogging", "false");
 
             ChromeOptions options = new ChromeOptions();
@@ -88,8 +98,11 @@ public class WebDriverFactory {
             return createEventFiringWebDriver(new ChromeDriver(options));
         } else if (browser.equalsIgnoreCase("firefox")) {
             String path = Storage.get("Environment.Active.WebDrivers.FireFox.path");
-            System.setProperty("webdriver.firefox.marionette", FileCore.getProjectPath() + File.separator + path);
-
+            if ( path.startsWith("resources")) {
+                System.setProperty("webdriver.firefox.marionette", FileCore.getProjectPath() + File.separator + path);
+            } else {
+                System.setProperty("webdriver.firefox.marionette", path);
+            }
             //add support for Selenium Grid
             boolean isGridUsed = Storage.get("Environment.Active.Selenium.useGrid");
             if ( isGridUsed ) {
@@ -109,7 +122,11 @@ public class WebDriverFactory {
             return createEventFiringWebDriver(new FirefoxDriver());
         } else if (browser.equalsIgnoreCase("ie")) {
             String path = Storage.get("Environment.Active.WebDrivers.InternetExplorer.path");
-            System.setProperty("webdriver.ie.driver", FileCore.getProjectPath() + File.separator + path);
+            if ( path.startsWith("resources")) {
+                System.setProperty("webdriver.ie.driver", FileCore.getProjectPath() + File.separator + path);
+            } else {
+                System.setProperty("webdriver.ie.driver", path);
+            }
 
             //add support for Selenium Grid
             boolean isGridUsed = Storage.get("Environment.Active.Selenium.useGrid");
@@ -199,6 +216,5 @@ public class WebDriverFactory {
 
         return eventFiringWebDriver;
     }
-
 
 }

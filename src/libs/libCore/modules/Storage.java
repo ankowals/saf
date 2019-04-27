@@ -9,6 +9,7 @@ import java.util.*;
 @SuppressWarnings("unchecked")
 public class Storage {
 
+    private final static Object MUTEX = new Object();//guarantees synchronisation on a MUTEX object thus avoids concurrent file modification
     private Context context;
     private FileCore FileCore;
     private ConfigReader ConfigReader;
@@ -211,55 +212,57 @@ public class Storage {
 
     }
 
-    public synchronized void writeToFile(String name, String identifier) {
-        Log.debug("Flushing current content of the storage " + name + " to the file");
-        if ( name == null || name.equals("") ){
-            Log.error("Storage name null or empty!");
-        }
-        if ( identifier == null || identifier.equals("") ){
-            Log.error("identifier null or empty!");
-        }
+    public void writeToFile(String name, String identifier) {
+        synchronized (MUTEX) {
+            Log.debug("Flushing current content of the storage " + name + " to the file");
+            if (name == null || name.equals("")) {
+                Log.error("Storage name null or empty!");
+            }
+            if (identifier == null || identifier.equals("")) {
+                Log.error("identifier null or empty!");
+            }
 
-        HashMap<String, Object> dataMap = context.get(name,HashMap.class);
-        if ( dataMap != null ) {
+            HashMap<String, Object> dataMap = context.get(name, HashMap.class);
+            if (dataMap != null) {
 
-            //Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            Gson gson = new GsonBuilder().create();
-            String content = gson.toJson(dataMap);
+                //Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                Gson gson = new GsonBuilder().create();
+                String content = gson.toJson(dataMap);
 
-            String tmpDirPath = FileCore.getTempDir().getAbsolutePath();
-            File storageFile = new File(tmpDirPath + File.separator + STORAGE_FILE_NAME);
+                String tmpDirPath = FileCore.getTempDir().getAbsolutePath();
+                File storageFile = new File(tmpDirPath + File.separator + STORAGE_FILE_NAME);
 
-            if ( ! storageFile.exists() ) {
-                FileCore.writeToFile(storageFile, identifier + "=" + content + System.getProperty("line.separator"));
-                Log.debug("Storage file " + storageFile.getAbsolutePath() + " created");
-            } else {
-                //overwrite line with identifier if exist else add new line
-                Boolean overwriteWasDone = false;
-                List<String> lines = FileCore.readLines(storageFile);
-
-                //just in case file exists but is empty
-                if ( lines.size() == 0 ) {
+                if (!storageFile.exists()) {
                     FileCore.writeToFile(storageFile, identifier + "=" + content + System.getProperty("line.separator"));
+                    Log.debug("Storage file " + storageFile.getAbsolutePath() + " created");
+                } else {
+                    //overwrite line with identifier if exist else add new line
+                    Boolean overwriteWasDone = false;
+                    List<String> lines = FileCore.readLines(storageFile);
+
+                    //just in case file exists but is empty
+                    if (lines.size() == 0) {
+                        FileCore.writeToFile(storageFile, identifier + "=" + content + System.getProperty("line.separator"));
+                        Log.debug("Storage file " + storageFile.getAbsolutePath() + " updated");
+                    }
+
+                    for (int i = 0; i < lines.size(); i++) {
+                        if (lines.get(i).startsWith(identifier + "={")) {
+                            lines.set(i, identifier + "=" + content);
+                            overwriteWasDone = true;
+                        }
+                    }
+
+                    if (overwriteWasDone.equals(true)) {
+                        FileCore.removeFile(storageFile);
+                        for (int i = 0; i < lines.size(); i++) {
+                            FileCore.appendToFile(storageFile, lines.get(i) + System.getProperty("line.separator"));
+                        }
+                    } else {
+                        FileCore.appendToFile(storageFile, identifier + "=" + content + System.getProperty("line.separator"));
+                    }
                     Log.debug("Storage file " + storageFile.getAbsolutePath() + " updated");
                 }
-
-                for (int i = 0; i < lines.size(); i++) {
-                    if ( lines.get(i).startsWith(identifier+"={") ) {
-                        lines.set( i, identifier + "=" + content );
-                        overwriteWasDone = true;
-                    }
-                }
-
-                if ( overwriteWasDone.equals(true) ) {
-                    FileCore.removeFile(storageFile);
-                    for (int i = 0; i < lines.size(); i++) {
-                        FileCore.appendToFile(storageFile, lines.get(i) + System.getProperty("line.separator"));
-                    }
-                } else {
-                    FileCore.appendToFile(storageFile, identifier + "=" + content + System.getProperty("line.separator"));
-                }
-                Log.debug("Storage file " + storageFile.getAbsolutePath() + " updated");
             }
         }
     }

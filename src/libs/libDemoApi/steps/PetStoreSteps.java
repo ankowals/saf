@@ -59,7 +59,6 @@ public class PetStoreSteps extends BaseSteps {
         Assert.assertEquals(name, expectedName);
     }
 
-
     @Given("^add pet with validation filter$")
     public void add_pet_with_validation_filter(){
         OpenApiValidationFilter validationFilter = new OpenApiValidationFilter("http://petstore.swagger.io/v2/swagger.json");

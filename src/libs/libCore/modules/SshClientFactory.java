@@ -2,6 +2,10 @@ package libs.libCore.modules;
 
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.transport.verification.HostKeyVerifier;
+import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
+import net.schmizz.sshj.userauth.keyprovider.KeyProvider;
+
+import java.io.File;
 import java.io.IOException;
 import java.security.PublicKey;
 
@@ -22,34 +26,55 @@ public class SshClientFactory {
         Integer port = Storage.get("Environment.Active.Ssh." + node + ".port");
         String user = Storage.get("Environment.Active.Ssh." + node + ".user");
         String passwd = Storage.get("Environment.Active.Ssh." + node + ".password");
+        String rsaPrivateKeyLocation = Storage.get("Environment.Active.Ssh." + node + ".key");
 
         if (address == null) {
-            Log.error("Environment.Active.Ssh. " + node + ".host " + " is null or empty!");
+            Log.error("Environment.Active.Ssh." + node + ".host " + " is null or empty!");
         }
         if (port == null) {
-            Log.error("Environment.Active.Ssh. " + node + ".port " + " is null or empty!");
+            Log.error("Environment.Active.Ssh." + node + ".port " + " is null or empty!");
         }
         if (user == null) {
-            Log.error("Environment.Active.Ssh. " + node + ".user " + " is null or empty!");
+            Log.error("Environment.Active.Ssh." + node + ".user " + " is null or empty!");
         }
-        if (passwd == null) {
-            Log.error("Environment.Active.Ssh. " + node + ".password " + " is null or empty!");
+        if (passwd == null && rsaPrivateKeyLocation == null) {
+            Log.error("Environment.Active.Ssh." + node + ".password and Environment.Active.Ssh." + node + ".key is null or empty!");
         }
 
         boolean useEncoding = Storage.get("Environment.Active.UseEncoding");
         if ( useEncoding ){
+            if (passwd == null) {
+                Log.error("Environment.Active.Ssh." + node + ".password " + " is null or empty!");
+            }
             passwd = StepCore.decodeString(passwd);
         }
 
         try {
             SSHClient instance = new SSHClient();
-            instance.addHostKeyVerifier(dummyHostKeyVerifier());
-            instance.connect(address, port);
-            instance.authPassword(user, passwd);
-            Log.debug("Connected via ssh to " + node + " as " + user + " on " + address + " and port " + port);
+            if ( rsaPrivateKeyLocation == null ) {
+                instance.addHostKeyVerifier(dummyHostKeyVerifier());
+                instance.connect(address, port);
+                instance.authPassword(user, passwd);
+                Log.debug("Connected via ssh to " + node + " as " + user + " on " + address + " and port " + port);
 
-            return instance;
+                return instance;
+            } else {
+                instance.addHostKeyVerifier(new PromiscuousVerifier());
+                instance.connect(address, port);
 
+                File keyFile = new File(rsaPrivateKeyLocation);
+                KeyProvider keyProvider = null;
+
+                if ( passwd == null || passwd.equals("") ){
+                    keyProvider = instance.loadKeys(keyFile.getPath());
+                } else {
+                    keyProvider = instance.loadKeys(keyFile.getPath(), passwd);
+                }
+                instance.authPublickey(user, keyProvider);
+                Log.debug("Connected via ssh to " + node + " as " + user + " on " + address + " and port " + port);
+
+                return instance;
+            }
         } catch (
                 IOException e) {
             Log.error("Unable to connect via ssh to " + node + " as " + user
