@@ -116,10 +116,10 @@ public class WiniumDriverFactory {
     private void openFirewallOnRemote(String node){
        String port = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.port");
        Log.debug("Opening firewall port " + port + " for domain profile on node " + node);
-       String cmd = "New-NetFirewallRule -DisplayName 'HTTP(S) Inbound' -Profile Domain -Direction Inbound" +
+       String cmd = "New-NetFirewallRule -DisplayName 'HTTP(S) Inbound' -Profile Any -Direction Inbound" +
                     " -Action Allow -Protocol TCP -LocalPort '" + port + "';";
        WinRSCore.executeSingleCommandOnRemote("Powershell.exe \"" + cmd + "\"", node, 120);
-       cmd = "New-NetFirewallRule -DisplayName 'HTTP(S) Outbound' -Profile Domain -Direction Outbound" +
+       cmd = "New-NetFirewallRule -DisplayName 'HTTP(S) Outbound' -Profile Any -Direction Outbound" +
                     " -Action Allow -Protocol TCP -LocalPort '" + port + "';";
        WinRSCore.executeSingleCommandOnRemote("Powershell.exe \"" + cmd + "\"", node, 120);
     }
@@ -281,20 +281,37 @@ public class WiniumDriverFactory {
     private void startWiniumResourcesOnRemote(String node){
         Log.debug("Starting winium resources");
 
-        scenarioCtx.put("WiniumRemoteNodeId", String.class, node);
-        String rdpProcessId = openRdpToRemote(node);
-        scenarioCtx.put("WiniumRemoteRDPProcessId", String.class, rdpProcessId);
-
-        boolean isAvailable = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.uploadAndStart");
-        if ( !isAvailable ) {
+        boolean openRdpConnectionToRemote = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.openRdpConnectionToRemote");
+        if ( openRdpConnectionToRemote ){
+            scenarioCtx.put("WiniumRemoteNodeId", String.class, node);//if set driver will be killed
+            String rdpProcessId = openRdpToRemote(node);
+            scenarioCtx.put("WiniumRemoteRDPProcessId", String.class, rdpProcessId);
+        }
+        boolean uploadDriver = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.uploadDriverToRemote");
+        if ( uploadDriver ){
             uploadDriverOnRemote(node);
         }
-
-        closeAllOpenWindows(node);
-        minimizeAllWindows(node);
-
-        startDriverOnRemote(node);
-        awaitForDriverToStartOnRemote(node);
+        boolean downloadDriver = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.downloadDriverToRemote");
+        if ( downloadDriver ){
+            downloadDriverOnRemote(node);
+        }
+        boolean modifyFirewallSettings = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.modifyFirewallRulesOnRemote");
+        if ( modifyFirewallSettings ){
+            openFirewallOnRemote(node);
+        }
+        boolean closeAllOpenWindows = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.closeOpenWindowsOnRemote");
+        if ( closeAllOpenWindows ){
+            closeAllOpenWindows(node);
+        }
+        boolean minimizeAllWindows = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.minimizeWindowsOnRemote");
+        if ( minimizeAllWindows ){
+            minimizeAllWindows(node);
+        }
+        boolean startDriverOnRemote = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.startDriverOnRemote");
+        if ( startDriverOnRemote ){
+            startDriverOnRemote(node);
+            awaitForDriverToStartOnRemote(node);
+        }
     }
 
     /**
@@ -330,35 +347,108 @@ public class WiniumDriverFactory {
             killRdpSession(rdpProcessId);
         }
 
-        //add certificate hash to the registry so we can avoid any popUp with invalid cert confirmation
-        Boolean isCertificateSet = globalCtx.get("CertificateHash_" + address, Boolean.class);
-
-        if ( isCertificateSet == null){
-            isCertificateSet = false;
+        boolean addCertificate = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.addRemoteHostCertificateHashToTheRegistry");
+        if ( addCertificate ) {
+            addCertificateToRepository(address, workingDir);
         }
 
-        if ( !isCertificateSet ) {
-            Log.debug("Checking cert hash for node " + address + " in windows registry");
-            cmd = "wmic /node:" + address + " /namespace:\\\\root\\CIMV2\\TerminalServices PATH Win32_TSGeneralSetting get SSLCertificateSHA1Hash";
-            out = ExecutorCore.execute(cmd, workingDir, 10);
-            output = out.getStdOut();
-            String hashCode = output.trim().replaceAll("SSLCertificateSHA1Hash", "").trim();
+        boolean switchOffScaling = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.switchOffScalingOnRemote");
+        if ( switchOffScaling ) {
+            switchOffScalingOnRemote(node, address, forceLogOff);
+        }
 
-            Log.debug("Node's " + address + " cert hashCode is " + hashCode);
-            if (!hashCode.equals("")) {
-                Log.debug("Adding cert hash to the registry");
-                cmd = "REG ADD \"HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\Servers\\" + address + "\" /v \"CertHash\" /t REG_BINARY /d " + hashCode + " /f";
-                ExecutorCore.execute(cmd, workingDir, 10);
+        String size = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.RdpWindowSize");
+        cmd = "";
+        if ( size == null || size.equals("") ) {
+            Log.debug("Going to use default resolution of RDP window");
+            String rdpPort = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.RdpPort");
+            if ( rdpPort != null && !rdpPort.equals("") ){
+                address = address + ":" + rdpPort;
+            }
+            cmd = "powershell.exe \"$Server='" + address + "';$User='" + user + "';" +
+                    "$Pass='" + passwd + "';cmdkey /generic:$Server /user:$User /pass:$Pass;" +
+                    "Start-Process mstsc -ArgumentList \"/v:$Server\"\"";
+            if ( domain != null && !domain.equals("") ) {
+                cmd = "powershell.exe \"$Server='" + address + "';$User='" + domain + "\\" + user + "';" +
+                        "$Pass='" + passwd + "';cmdkey /generic:$Server /user:$User /pass:$Pass;" +
+                        "Start-Process mstsc -ArgumentList \"/v:$Server\"\"";
+            }
+        } else {
+            Log.debug("Going to use " + size + " resolution of RDP window");
+            //expected format is width x height
+            String tmp = StringUtils.deleteWhitespace(size).trim();
+            String[] dimensions = tmp.split("[xX]");
+            Integer width = null;
+            Integer height = null;
+            try {
+                width = Integer.parseInt(dimensions[0]);
+                height = Integer.parseInt(dimensions[1]);
+            } catch (NumberFormatException e) {
+                Log.error(e.getMessage());
+            }
+
+            String rdpPort = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.RdpPort");
+            if ( rdpPort != null && !rdpPort.equals("") ){
+                address = address + ":" + rdpPort;
+            }
+
+            cmd = "powershell.exe \"$Server='" + address + "';$User='" + user + "';" +
+                    "$Pass='" + passwd + "';cmdkey /generic:$Server /user:$User /pass:$Pass;" +
+                    "Start-Process mstsc -ArgumentList \"/v:$Server /h:" + height + " /w:" + width + "\"\"";
+            if ( domain != null && !domain.equals("") ) {
+                cmd = "powershell.exe \"$Server='" + address + "';$User='" + domain + "\\" + user + "';" +
+                        "$Pass='" + passwd + "';cmdkey /generic:$Server /user:$User /pass:$Pass;" +
+                        "Start-Process mstsc -ArgumentList \"/v:$Server /h:" + height + " /w:" + width + "\"\"";
             }
         }
+        Log.debug("Opening Rdp session to " + node);
+        Log.debug("Command to execute is " + cmd);
 
-        //set global variable per node
-        globalCtx.put("CertificateHash_" + address, Boolean.class, true);
+        //RDP session needs to be started in the background
+        ExecutorCore.execute(cmd, workingDir, 10);
 
+        Log.debug("Extracting process id of RDP session");
+
+        cmd = "powershell.exe \"Get-CimInstance Win32_Process | Where {$_.name -match '.*mstsc.*'" +
+                " -and $_.CommandLine -match '.*" + address + ".*'} | Select ProcessId | Format-list\"";
+        out = ExecutorCore.execute(cmd, workingDir, 10);
+        output = out.getStdOut();
+        rdpProcessId = output.trim().replace("ProcessId :","").trim();
+        Log.debug("Rdp session process id is " + rdpProcessId);
+
+        //RDP needs few seconds to establish a desktop connection
+        StepCore.sleep(3);
+
+        return rdpProcessId;
+    }
+
+    /**
+     * Minimizes all open windows on a remote windows host by calling powershell script as a scheduled task
+     *
+     * @param node String, node name from winrm configuration of the remote that shall be used
+     */
+    public void minimizeAllWindows (String node){
+        Log.debug("Minimizing all open windows");
+
+        String script = FileCore.createTempFile("temp", "ps1").getName();
+        String taskName = script.replace(".ps1", "");
+
+        List<String> cmdList = new ArrayList<>();
+        cmdList.add("$shell = New-Object -ComObject \"Shell.Application\";");
+        cmdList.add("$shell.MinimizeAll()");
+
+        String cmd = WinRSCore.joinCommands(cmdList, "\r\n", true);
+        WinRSCore.transferScript(node, cmd, script);
+        String userDir = WinRSCore.getUserDir(node);
+        String pathToScript = userDir + "\\" + script;
+        WinRSCore.runScriptAsScheduledTask(node, pathToScript, taskName);
+    }
+
+    private void switchOffScalingOnRemote(String node, String address, boolean forceLogOff){
         //switch off scaling so we do not run into issues when winium is started
         Boolean isScalingSet = globalCtx.get("ScalingSet_" + address, Boolean.class);
 
-        if ( isScalingSet == null){
+        if ( isScalingSet == null ) {
             isScalingSet = false;
         }
 
@@ -380,7 +470,7 @@ public class WiniumDriverFactory {
 
             //String script = "fixScalingSettings.ps1";
             String script = FileCore.createTempFile("temp", "ps1").getName();
-            cmd = WinRSCore.joinCommands(cmds, "\r\n", false);
+            String cmd = WinRSCore.joinCommands(cmds, "\r\n", false);
             WinRSCore.transferScript(node, cmd, script);
             WinRSCore.executeSingleCommandOnRemote("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File \"" + script + "\"", node, 120);
 
@@ -417,146 +507,34 @@ public class WiniumDriverFactory {
 
         //set global variable per node
         globalCtx.put("ScalingSet_" + address, Boolean.class, true);
+    }
 
-        String size = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.size");
-        cmd = "";
-        if ( size == null
-                || size.equals("")
-                || StringUtils.containsIgnoreCase(size, "Default") ) {
-            //default is set to maximise browser window
-            Log.debug("Going to use default resolution of RDP window");
-            cmd = "powershell.exe \"Start-Job{$Server='" + address + "';$User='" + domain + "\\" + user + "';" +
-                    "$Pass='" + passwd + "';cmdkey /generic:$Server /user:$User /pass:$Pass;mstsc /v:$Server}\"";
-        } else {
-            Log.debug("Going to use " + size + " resolution of RDP window");
-            //expected format is width x height
-            String tmp = StringUtils.deleteWhitespace(size).trim();
-            String[] dimensions = tmp.split("[xX]");
-            Integer width = null;
-            Integer height = null;
-            try {
-                width = Integer.parseInt(dimensions[0]);
-                height = Integer.parseInt(dimensions[1]);
-            } catch (NumberFormatException e) {
-                Log.error(e.getMessage());
+    private void addCertificateToRepository(String address, File workingDir){
+        //add certificate hash to the registry so we can avoid any popUp with invalid cert confirmation
+        Boolean isCertificateSet = globalCtx.get("CertificateHash_" + address, Boolean.class);
+
+        if (isCertificateSet == null) {
+            isCertificateSet = false;
+        }
+
+        if (!isCertificateSet) {
+            Log.debug("Checking cert hash for node " + address + " in windows registry");
+            String cmd = "wmic /node:" + address + " /namespace:\\\\root\\CIMV2\\TerminalServices PATH Win32_TSGeneralSetting get SSLCertificateSHA1Hash";
+            ExecResult out = ExecutorCore.execute(cmd, workingDir, 10);
+            String output = out.getStdOut();
+            String hashCode = output.trim().replaceAll("SSLCertificateSHA1Hash", "").trim();
+
+            Log.debug("Node's " + address + " cert hashCode is " + hashCode);
+            if (!hashCode.equals("")) {
+                Log.debug("Adding cert hash to the registry");
+                cmd = "REG ADD \"HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\Servers\\" + address + "\" /v \"CertHash\" /t REG_BINARY /d " + hashCode + " /f";
+                ExecutorCore.execute(cmd, workingDir, 10);
             }
-            cmd = "powershell.exe \"Start-Job{$Server='" + address + "';$User='" + domain + "\\" + user + "';" +
-                    "$Pass='" + passwd + "';cmdkey /generic:$Server /user:$User /pass:$Pass;mstsc /v:$Server /h:" + height + " /w:" + width + "}\"";
         }
-        Log.debug("Opening Rdp session to " + node);
 
-        //RDP session needs to be started in the background
-        ExecutorCore.execute(cmd, workingDir, 10);
-
-        Log.debug("Extracting process id of RDP session");
-
-        cmd = "powershell.exe \"Get-CimInstance Win32_Process | Where {$_.name -match '.*mstsc.*'" +
-                " -and $_.CommandLine -match '.*" + address + ".*'} | Select ProcessId | Format-list\"";
-        out = ExecutorCore.execute(cmd, workingDir, 10);
-        output = out.getStdOut();
-        rdpProcessId = output.trim().replace("ProcessId :","").trim();
-        Log.debug("Rdp session process id is " + rdpProcessId);
-
-        //RDP needs few seconds to establish a desktop connection
-        StepCore.sleep(3);
-
-        return rdpProcessId;
+        //set global variable per node
+        globalCtx.put("CertificateHash_" + address, Boolean.class, true);
     }
-
-    /**
-     * Minimizes all open windows on a remote windows host by calling powershell script as a scheduled task
-     *
-     * @param node String, node name from winrm configuration of the remote that shall be used
-     */
-    public void minimizeAllWindows (String node){
-
-        Map<String, String> conn = WinRSCore.verifyConnectionDetails(node);
-        String domain = conn.get("domain");
-        String user = conn.get("user");
-        String password = conn.get("password");
-
-        boolean useEncoding = Storage.get("Environment.Active.UseEncoding");
-        if ( useEncoding ){
-            password = StepCore.decodeString(password);
-        }
-
-        String userDir = WinRSCore.getUserDir(node);
-
-        Log.debug("Minimizing all open windows");
-
-        String script = FileCore.createTempFile("temp", "ps1").getName();
-        String taskName = script.replace(".ps1", "");
-
-        List<String> cmdList = new ArrayList<>();
-        cmdList.add("$shell = New-Object -ComObject \"Shell.Application\";");
-        cmdList.add("$shell.MinimizeAll()");
-
-        String cmd = WinRSCore.joinCommands(cmdList, "\r\n", true);
-        WinRSCore.transferScript(node, cmd, script);
-
-        String pathToScript = userDir + "\\" + script;
-
-        Log.debug("Creating new scheduled task " + taskName +
-                "Assigning normal priority to it. " +
-                "Recreating task with priority");
-
-        //this script is used to run the original one
-        //it will be called from a scheduled task and in turn it will call the original one:)
-        script = "wrapper" + taskName + ".ps1";
-
-        cmd = "Start-process powershell -WindowStyle Hidden -Wait" +
-                " -ArgumentList \"-NoProfile -ExecutionPolicy Bypass" +
-                " -Command " + pathToScript + "\"";
-        WinRSCore.transferScript(node, cmd, script);
-
-        //this script is used to create scheduled task
-        script = taskName + ".ps1";
-
-        cmdList = new ArrayList<>();
-        cmdList.add("schtasks /CREATE /TN '" + taskName + "' /SC MONTHLY /RL HIGHEST " +
-                "/RU \"" + domain + "\\" + user + "\" /IT " +
-                "/RP \"" + password + "\" " +
-                "/TR \"powershell -windowstyle hidden -NoProfile -ExecutionPolicy Bypass -File " + userDir + "\\wrapper" + taskName + ".ps1\" " +
-                "/F;");
-        cmdList.add("$taskFile = \"" + userDir + "\\Remote" + taskName + ".txt\";");
-        cmdList.add("Remove-Item $taskFile -Force -ErrorAction SilentlyContinue;");
-        cmdList.add("[xml]$xml = schtasks /QUERY /TN '" + taskName + "' /XML;");
-        cmdList.add("$xml.Task.Settings.Priority=\"4\";");
-        cmdList.add("$xml.Save($taskFile);");
-        cmdList.add("schtasks /CREATE /TN '" + taskName + "' /RU \"" + domain + "\\" + user + "\" " +
-                "/IT /RP \"" + password + "\" " +
-                "/XML $taskFile /F;");
-
-        cmd = WinRSCore.joinCommands(cmdList, "\r\n", true);
-        WinRSCore.transferScript(node, cmd, script);
-
-        String result = WinRSCore.executeSingleCommandOnRemote("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File \"" + script + "\"", node, 120);
-        if ( ! result.contains("SUCCESS:") ){
-            Log.error("Failed to create new scheduled task " + taskName);
-        } else {
-            Log.debug("New scheduled task " + taskName + " created");
-        }
-
-        Log.debug("Running scheduled task");
-        cmd = "schtasks /RUN /I /TN '" + taskName + "';";
-        result = WinRSCore.executeSingleCommandOnRemote("Powershell.exe \"" + cmd + "\"", node, 120);
-        if ( ! result.contains("SUCCESS:") ){
-            Log.error("Failed to run scheduled task " + taskName);
-        }
-
-        StepCore.sleep(2);
-
-        Log.warn("Deleting scheduled task " + taskName);
-        cmd = "schtasks /DELETE /TN '" + taskName + "' /F;";
-        WinRSCore.transferScript(node, cmd, script);
-
-        result = WinRSCore.executeSingleCommandOnRemote("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File \"" + script + "\"", node, 120);
-        if ( ! result.contains("SUCCESS:") ){
-            Log.warn("Failed to remove scheduled task " + taskName);
-        }
-
-    }
-
 
     /**
      * Checks if an RDP session is open towards particular node
@@ -692,6 +670,10 @@ public class WiniumDriverFactory {
         Log.debug("Deleting scheduled task used to run Winium driver");
 
         String taskName = scenarioCtx.get( "WiniumDriverStarter_" + node, String.class);
+
+        if ( taskName == null ){
+            return;
+        }
 
         String script = taskName + ".ps1";
         String cmd = "schtasks /DELETE /TN '" + taskName + "' /F;";

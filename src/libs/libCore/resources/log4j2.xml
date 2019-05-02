@@ -3,6 +3,7 @@
     <Appenders>
         <CountingNoOp name="DEV_NULL"/>
         <Console name="ConsoleAppender" target="SYSTEM_OUT">
+            <ThresholdFilter level="ALL"/>
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [Thread %T] [%-5level] %msg%n"/>
         </Console>
         <RollingFile name="RollingFileAppender" fileName="target/logs/all.log"

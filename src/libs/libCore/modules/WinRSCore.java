@@ -67,7 +67,7 @@ public class WinRSCore {
             Log.error("Configuration for Environment.Active.WinRM." + node + ".user not found or null!");
         }
         if ( domain == null ){
-            Log.error("Configuration for Environment.Active.WinRM." + node + ".domain not found or null!");
+            Log.warn("Configuration for Environment.Active.WinRM." + node + ".domain not found or null!");
         }
         if ( passwd == null ){
             Log.error("Configuration for Environment.Active.WinRM." + node + ".password not found or null!");
@@ -133,14 +133,15 @@ public class WinRSCore {
         }
 
         File workingDir = FileCore.getTempDir();
-        ExecResult out = ExecutorCore.execute("Powershell.exe \"$ip = (Resolve-DnsName '" + name + "').IPAddress; Write-Host $ip\"" , workingDir, 60);
+        String cmd = "Powershell.exe \"$ip = (Resolve-DnsName '" + name + "').IPAddress; Write-Host $ip\"";
+        //Log.debug("Command to execute is " + cmd);
+        ExecResult out = ExecutorCore.execute(cmd , workingDir, 60);
         String result = out.getStdOut();
 
         if ( result.contains("DNS name does not exist") ){
             Log.warn("Can't resolve FQDN to an ip address");
             result = "";
         }
-
 
         ip = result.trim();
         addToTrustedHosts(ip);
@@ -168,7 +169,7 @@ public class WinRSCore {
         }
 
         if ( isHostTrusted ) {
-            Log.debug("Host was already added to trust host list");
+            Log.debug("Host was already added to trusted host list");
             return;
         }
 
@@ -228,7 +229,10 @@ public class WinRSCore {
             passwd = StepCore.decodeString(passwd);
         }
 
-        String invocation = "winrs -r:http://" + address + ":" + port + " -u:" + domain + "\\" + user + " -p:" + passwd;
+        String invocation = "winrs -r:http://" + address + ":" + port + " -u:" + user + " -p:" + passwd;
+        if ( domain != null && !domain.equals("") ) {
+            invocation = "winrs -r:http://" + address + ":" + port + " -u:" + domain + "\\" + user + " -p:" + passwd;
+        }
         cmd =  invocation + " " + cmd;
 
         Log.debug("Going to execute " + cmd.replace(passwd, encodedPass).replaceAll(" -P \\w+ -i ", " -P ***** -i "));
@@ -252,7 +256,6 @@ public class WinRSCore {
         String cmd = joinCommands(cmdList, "\r\n", true);
 
         String script = FileCore.createTempFile("temp", "bat").getName();
-        //String script = "temp.bat";
         transferScript(node, cmd, script);
 
         Log.debug("Going to execute call " + script);
@@ -288,7 +291,6 @@ public class WinRSCore {
 
         String cmd = joinCommands(cmdList, "\r\n", true);
         String script = FileCore.createTempFile("temp", "sql").getName();
-        //String script = "temp.sql";
         transferScript(node, cmd, script);
 
         boolean useEncoding = Storage.get("Environment.Active.UseEncoding");
@@ -332,7 +334,10 @@ public class WinRSCore {
 
             address = getIpOfHost(address);
 
-            String invocation = "winrs -r:http://" + address + ":" + port + " -u:" + domain + "\\" + user + " -p:" + passwd;
+            String invocation = "winrs -r:http://" + address + ":" + port + " -u:" + user + " -p:" + passwd;
+            if ( domain != null && !domain.equals("") ) {
+                invocation = "winrs -r:http://" + address + ":" + port + " -u:" + domain + "\\" + user + " -p:" + passwd;
+            }
             Log.debug("Going to execute " + invocation.replace(passwd, encodedPass));
             ExecResult out = ExecutorCore.execute(invocation + " cd", workingDir, 120);
             String result = out.getStdOut();
@@ -399,7 +404,6 @@ public class WinRSCore {
 
             String cmd = joinCommands(cmdList, "\r\n", true);
             String script = FileCore.createTempFile("temp", "bat").getName();
-            //String script = "adjustWinRmConfig.bat";
             transferScript(node, cmd, script);
 
             String result = executeSingleCommandOnRemote("call " + script, node, 120);
@@ -440,12 +444,13 @@ public class WinRSCore {
 
         address = getIpOfHost(address);
 
-        Log.debug("Refreshing DNS cache to make connection quicker");
+        //Log.debug("Refreshing DNS cache to make connection quicker");
         File workingDir = FileCore.getTempDir();
         String cmd = "ipconfig /flushdns";
+        //Log.debug("Command to execute is " + cmd);
         ExecutorCore.execute(cmd, workingDir, 60);
 
-        Log.debug("Checking if host " + address + " is accessible");
+        //Log.debug("Checking if host " + address + " is accessible");
 
         String result = "";
         int i = 0;
@@ -518,7 +523,7 @@ public class WinRSCore {
                 if ( ((HashMap) entry.getValue()).containsKey("VApp") ) {
                     vMkey = entry.getKey();
                     String name = ((HashMap) entry.getValue()).get("NewVmName").toString();
-                    if ( name != null || (!name.equals("")) ) {
+                    if ( name != null && (!name.equals("")) ) {
                         String[] tmp = address.split("[.]");
                         if ( name.equalsIgnoreCase(tmp[0]) ) {
                             Log.debug("Cloud configuration for Vm has been found. Rebooting");
@@ -764,7 +769,6 @@ public class WinRSCore {
         String sPaths = sb.toString();
 
         String script = FileCore.createTempFile("temp", "ps1").getName();
-        //String script = "verifyThatFilesExist.ps1";
         String cmd = "Write-Host \"Checking files availability\";$paths=@(" + sPaths.replaceFirst(", ","") + ");foreach($path in $paths){" +
                 "Write-Host $path;if (!(Test-Path $path)){Write-Host \"Error: Path '$path' not found\"}}";
 
@@ -801,6 +805,7 @@ public class WinRSCore {
         String domain = conn.get("domain");
         String user = conn.get("user");
         String passwd = conn.get("password");
+        String port = conn.get("port");
 
         String encodedPass = passwd;
 
@@ -830,22 +835,27 @@ public class WinRSCore {
         int i = 0;
         String output = "Connecting to remote server failed";
         String error = output;
+
+        String cred = "$U='" + user + "';$P='" + passwd + "';";
+        if ( domain != null && !domain.equals("") ) {
+            cred = "$U='" + domain + "\\" + user + "';$P='" + passwd + "';";
+        }
+
+        String cmd = "cmd.exe /c \"Powershell.exe " + cred +
+                "$pw=ConvertTo-SecureString $p -AsPlainText -Force;" +
+                "$cred=New-Object Management.Automation.PSCredential($U, $pw);" +
+                "$Src=[System.IO.File]::ReadAllBytes('" + item + "');" +
+                "$s=New-PSSession -computerName " + address + " -port " + port + " -credential $cred;" +
+                "Enter-PSSession $s;" +
+                "Invoke-Command -Session $s -Scriptblock " +
+                "{if(test-path " + target + "){Remove-Item " + target + " -force -recurse}};" +
+                "Invoke-Command -Session $s -ArgumentList $Src -Scriptblock " +
+                "{[System.IO.File]::WriteAllBytes('" + target + "', $args)};" +
+                //"Write-Host 'Content of created file " + userDir + "\\" + fileName + " is';" +
+                //"Invoke-Command -Session $s -Scriptblock " +
+                //"{type " + userDir + "\\" + fileName + "};" +
+                "Remove-PSSession $s\"";
         while( i < 5 ) {
-            String cmd = "cmd.exe /c \"Powershell.exe $U='" + domain + "\\" + user + "';" +
-                    "$P='" + passwd + "';" +
-                    "$pw=ConvertTo-SecureString $p -AsPlainText -Force;" +
-                    "$cred=New-Object Management.Automation.PSCredential($U, $pw);" +
-                    "$Src=[System.IO.File]::ReadAllBytes('" + item + "');" +
-                    "$s=New-PSSession -computerName " + address + " -credential $cred;" +
-                    "Enter-PSSession $s;" +
-                    "Invoke-Command -Session $s -Scriptblock " +
-                    "{if(test-path " + target + "){Remove-Item " + target + " -force -recurse}};" +
-                    "Invoke-Command -Session $s -ArgumentList $Src -Scriptblock " +
-                    "{[System.IO.File]::WriteAllBytes('" + target + "', $args)};" +
-                    //"Write-Host 'Content of created file " + userDir + "\\" + fileName + " is';" +
-                    //"Invoke-Command -Session $s -Scriptblock " +
-                    //"{type " + userDir + "\\" + fileName + "};" +
-                    "Remove-PSSession $s\"";
             Log.debug("Going to execute " + cmd.replace(passwd, encodedPass));
             ExecResult out = ExecutorCore.execute(cmd, workingDir, 60);
             output = out.getStdOut();
@@ -924,12 +934,16 @@ public class WinRSCore {
         */
 
         String userDir = getUserDir(node);
-        String letter = Storage.get("TestData.MountPoint2");
+        String letter = Storage.get("Environment.Active.WinRS.mountPoint");
 
         //using SMB protocol shall work as long as user has admin rights
         //
-        String cmd = "cmd.exe /c \"Powershell.exe $U='" + domain + "\\" + user + "';" +
-                "$P='" + passwd + "';" +
+        String cred = "$U='" + user + "';$P='" + passwd + "';";
+        if ( domain != null && !domain.equals("") ) {
+            cred = "$U='" + domain + "\\" + user + "';$P='" + passwd + "';";
+        }
+
+        String cmd = "cmd.exe /c \"Powershell.exe " + cred +
                 "$pw=ConvertTo-SecureString $P -AsPlainText -Force;" +
                 "$cred=New-Object Management.Automation.PSCredential($U, $pw);" +
                 "New-PSDrive -name " + letter.replace(":","") + " -Root \\\\" + address +"\\" + userDir.replaceFirst(":","\\$") +
@@ -1005,12 +1019,17 @@ public class WinRSCore {
         String target = workingDir + File.separator + fileName;
         String source = "\\\\" + address + File.separator + item.replaceFirst(":","\\$");
 
-        String letter = Storage.get("TestData.MountPoint2");
+        String letter = Storage.get("Environment.Active.WinRS.mountPoint");
 
         //using SMB protocol shall work as long as user has admin rights
         //
-        String cmd = "cmd.exe /c \"Powershell.exe $U='" + domain + "\\" + user + "';" +
-                "$P='" + passwd + "';" +
+
+        String cred = "$U='" + user + "';$P='" + passwd + "';";
+        if ( domain != null && !domain.equals("") ) {
+            cred = "$U='" + domain + "\\" + user + "';$P='" + passwd + "';";
+        }
+
+        String cmd = "cmd.exe /c \"Powershell.exe " + cred +
                 "$pw=ConvertTo-SecureString $P -AsPlainText -Force;" +
                 "$cred=New-Object Management.Automation.PSCredential($U, $pw);" +
                 "New-PSDrive -name " + letter.replace(":","") + " -Root " + source.replace(File.separator + fileName,"").replaceFirst(":","\\$") +
@@ -1044,7 +1063,7 @@ public class WinRSCore {
      * @return Boolean
      */
     public boolean fileContains(String node, String path, String lookUpString){
-        String cmd = "gc " + path + " | Where-Object {$_.contains('" + lookUpString + "')}";
+        String cmd = "Get-Content " + path + " | Where-Object {$_.contains('" + lookUpString + "')}";
 
         Log.debug("Going to execute " + cmd);
         String results = executeSingleCommandOnRemote("Powershell.exe \"" + cmd + "\"", node, 120);
@@ -1069,7 +1088,7 @@ public class WinRSCore {
 
 
     /**
-     * Checks if particular file is locked on a remote host
+     * Checks if particular file is locked on a remote host. Requires write access to the file!
      *
      * @param node String, node name from winrm configuration of the remote that shall be used
      * @param path String, path to text file
@@ -1149,10 +1168,16 @@ public class WinRSCore {
         transferScript(node, cmd, script);
 
         //this script is used to create scheduled task
-        script = taskName + ".ps1";
+        script = "schTask_" + taskName + ".ps1";
         List<String> cmdList = new ArrayList();
+
+        String ru = "/RU \"" + user + "\" /IT ";
+        if ( domain != null && !domain.equals("") ) {
+            ru = "/RU \"" + domain + "\\" + user + "\" /IT ";
+        }
+
         cmdList.add("schtasks /CREATE /TN '" + taskName + "' /SC MONTHLY /RL HIGHEST " +
-                "/RU \"" + domain + "\\" + user + "\" /IT " +
+                ru +
                 "/RP \"" + password + "\" " +
                 "/TR \"powershell -windowstyle hidden -NoProfile -ExecutionPolicy Bypass -File " + userDir + "\\wrapper" + taskName + ".ps1\" " +
                 "/F;");
@@ -1161,8 +1186,8 @@ public class WinRSCore {
         cmdList.add("[xml]$xml = schtasks /QUERY /TN '" + taskName + "' /XML;");
         cmdList.add("$xml.Task.Settings.Priority=\"4\";");
         cmdList.add("$xml.Save($taskFile);");
-        cmdList.add("schtasks /CREATE /TN '" + taskName + "' /RU \"" + domain + "\\" + user + "\" " +
-                "/IT /RP \"" + password + "\" " +
+        cmdList.add("schtasks /CREATE /TN '" + taskName + "' " + ru +
+                "/RP \"" + password + "\" " +
                 "/XML $taskFile /F;");
 
         cmd = joinCommands(cmdList, "\r\n", true);
