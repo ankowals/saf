@@ -34,7 +34,7 @@ public class WiniumDriverFactory {
 
 
     public WiniumDriver create(String node){
-        String port = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.port");
+        int port = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.port");
         String path = Storage.get("Environment.Active.App.path");
         String args = Storage.get("Environment.Active.App.args");
 
@@ -114,7 +114,7 @@ public class WiniumDriverFactory {
     }
 
     private void openFirewallOnRemote(String node){
-       String port = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.port");
+       int port = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.port");
        Log.debug("Opening firewall port " + port + " for domain profile on node " + node);
        String cmd = "New-NetFirewallRule -DisplayName 'HTTP(S) Inbound' -Profile Any -Direction Inbound" +
                     " -Action Allow -Protocol TCP -LocalPort '" + port + "';";
@@ -131,7 +131,7 @@ public class WiniumDriverFactory {
         }
 
         Log.debug("Trying to start WiniumDesktopDriver on node " + node);
-        String port = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.port");
+        int port = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.port");
         String userDir = WinRSCore.getUserDir(node);
         String script = FileCore.createTempFile("temp", "ps1").getName();
         String taskName = script.replace(".ps1", "");
@@ -149,7 +149,7 @@ public class WiniumDriverFactory {
 
     private void awaitForDriverToStartOnRemote(String node){
         Log.debug("Checking if WiniumDesktopDriver was started with timeout 60 seconds");
-        String port = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.port");
+        int port = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.port");
         String cmd = "netstat -an | findstr \"" + port + "\"";
         int i = 0;
         while ( i < 30 ){
@@ -169,7 +169,7 @@ public class WiniumDriverFactory {
 
     }
 
-    private void awaitForDriverToStartOnLocal(String port){
+    private void awaitForDriverToStartOnLocal(int port){
         Log.debug("Checking if WiniumDesktopDriver was started with timeout 60 seconds");
         File workingDir = FileCore.getTempDir();
         String cmd = "netstat -an | findstr " + port;
@@ -193,7 +193,7 @@ public class WiniumDriverFactory {
     }
 
 
-    private WiniumDriver createOnLocal(String port, String path, String args){
+    private WiniumDriver createOnLocal(int port, String path, String args){
         startWiniumResourcesOnLocal(port);
         URL url = buildUrl("localhost", port);
         DesktopOptions options = buildOptions("localhost", path, args);
@@ -207,7 +207,7 @@ public class WiniumDriverFactory {
         return driver;
     }
 
-    private WiniumDriver createOnRemote(String node, String port, String path, String args){
+    private WiniumDriver createOnRemote(String node, int port, String path, String args){
         startWiniumResourcesOnRemote(node);
 
         URL url = buildUrl(node, port);
@@ -252,7 +252,7 @@ public class WiniumDriverFactory {
     }
 
 
-    private void startWiniumResourcesOnLocal(String port){
+    private void startWiniumResourcesOnLocal(int port){
         File workingDir = FileCore.getTempDir();
         String path = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.path");
         //Set winium driver path
@@ -267,14 +267,6 @@ public class WiniumDriverFactory {
         Log.debug("Command to execute is " + cmd);
         ExecutorCore.execute("powershell.exe \"" + cmd + "\"", workingDir, 60);
 
-        /*
-        File script = FileCore.createTempFile("WiniumDriverStarter", "ps1");
-        String cmd = "If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] \"Administrator\"))" +
-                "{$arguments = \"& '\" + $myinvocation.mycommand.definition + \"'\";Start-Process powershell -WindowStyle Hidden -Verb runAs -ArgumentList $arguments;Break};" +
-                "Start-Job {" + FileCore.getProjectPath() + File.separator + path + " --port " + port + "}";
-        FileCore.writeToFile(script, cmd);
-        ExecutorCore.execute("Powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -InputFormat None -File '" + script.getAbsolutePath() + "'", workingDir, 60);
-        */
         awaitForDriverToStartOnLocal(port);
     }
 
@@ -333,17 +325,9 @@ public class WiniumDriverFactory {
 
         address = WinRSCore.getIpOfHost(address);
 
-        Log.debug("Checking if there is RDP session open towards node " + address);
-
-        String cmd = "powershell.exe \"Get-CimInstance Win32_Process | Where {$_.name -match '.*mstsc.*'" +
-                " -and $_.CommandLine -match '.*" + address + ".*'} | Select ProcessId | Format-list\"";
-        ExecResult out = ExecutorCore.execute(cmd, workingDir, 10);
-        String output = out.getStdOut();
-        String rdpProcessId = "";
-        rdpProcessId = output.trim().replace("ProcessId :","").trim();
+        String rdpProcessId = findProcessIdOfRdpSesssion(address, workingDir);
         if ( ! rdpProcessId.equals("") ) {
             Log.debug("Rdp session is open towards " + address + " with process id " + rdpProcessId);
-
             killRdpSession(rdpProcessId);
         }
 
@@ -357,67 +341,51 @@ public class WiniumDriverFactory {
             switchOffScalingOnRemote(node, address, forceLogOff);
         }
 
+        Integer width = null;
+        Integer height = null;
+        int rdpPort = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.RdpPort");
         String size = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.RdpWindowSize");
-        cmd = "";
-        if ( size == null || size.equals("") ) {
-            Log.debug("Going to use default resolution of RDP window");
-            String rdpPort = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.RdpPort");
-            if ( rdpPort != null && !rdpPort.equals("") ){
-                address = address + ":" + rdpPort;
-            }
-            cmd = "powershell.exe \"$Server='" + address + "';$User='" + user + "';" +
-                    "$Pass='" + passwd + "';cmdkey /generic:$Server /user:$User /pass:$Pass;" +
-                    "Start-Process mstsc -ArgumentList \"/v:$Server\"\"";
-            if ( domain != null && !domain.equals("") ) {
-                cmd = "powershell.exe \"$Server='" + address + "';$User='" + domain + "\\" + user + "';" +
-                        "$Pass='" + passwd + "';cmdkey /generic:$Server /user:$User /pass:$Pass;" +
-                        "Start-Process mstsc -ArgumentList \"/v:$Server\"\"";
-            }
-        } else {
-            Log.debug("Going to use " + size + " resolution of RDP window");
+
+        Log.debug("Going to use " + size + " resolution of RDP window");
+        if ( !size.equalsIgnoreCase("Max") ) {
             //expected format is width x height
             String tmp = StringUtils.deleteWhitespace(size).trim();
             String[] dimensions = tmp.split("[xX]");
-            Integer width = null;
-            Integer height = null;
             try {
                 width = Integer.parseInt(dimensions[0]);
                 height = Integer.parseInt(dimensions[1]);
             } catch (NumberFormatException e) {
                 Log.error(e.getMessage());
             }
-
-            String rdpPort = Storage.get("Environment.Active.WebDrivers.WiniumDesktop.RdpPort");
-            if ( rdpPort != null && !rdpPort.equals("") ){
-                address = address + ":" + rdpPort;
-            }
-
-            cmd = "powershell.exe \"$Server='" + address + "';$User='" + user + "';" +
-                    "$Pass='" + passwd + "';cmdkey /generic:$Server /user:$User /pass:$Pass;" +
-                    "Start-Process mstsc -ArgumentList \"/v:$Server /h:" + height + " /w:" + width + "\"\"";
-            if ( domain != null && !domain.equals("") ) {
-                cmd = "powershell.exe \"$Server='" + address + "';$User='" + domain + "\\" + user + "';" +
-                        "$Pass='" + passwd + "';cmdkey /generic:$Server /user:$User /pass:$Pass;" +
-                        "Start-Process mstsc -ArgumentList \"/v:$Server /h:" + height + " /w:" + width + "\"\"";
-            }
         }
+
+        String argList = "-ArgumentList '/v:"+ address + ":" + rdpPort + " /span";
+        if ( !size.equalsIgnoreCase("Max" ) ){
+             argList = "-ArgumentList '/v:"+ address + ":" + rdpPort + " /w:" + width + " /h:" + height;
+        }
+
+        String cmd = "Powershell.exe \"$Server='" + address + ":" + rdpPort + "';$User='" + user + "';" +
+                "$Pass='" + passwd + "';cmdkey /generic:$Server /user:$User /pass:$Pass;" +
+                "Start-Process mstsc " + argList + "'\"";
+        if ( domain != null && !domain.equals("") ) {
+            cmd = "Powershell.exe \"$Server='" + address + ":" + rdpPort + "';$User='" + domain + "\\" + user + "';" +
+                    "$Pass='" + passwd + "';cmdkey /generic:$Server /user:$User /pass:$Pass;" +
+                    "Start-Process mstsc " + argList + "'\"";
+        }
+
         Log.debug("Opening Rdp session to " + node);
         Log.debug("Command to execute is " + cmd);
 
-        //RDP session needs to be started in the background
+        //RDP session needs to be started as a process
         ExecutorCore.execute(cmd, workingDir, 10);
-
-        Log.debug("Extracting process id of RDP session");
-
-        cmd = "powershell.exe \"Get-CimInstance Win32_Process | Where {$_.name -match '.*mstsc.*'" +
-                " -and $_.CommandLine -match '.*" + address + ".*'} | Select ProcessId | Format-list\"";
-        out = ExecutorCore.execute(cmd, workingDir, 10);
-        output = out.getStdOut();
-        rdpProcessId = output.trim().replace("ProcessId :","").trim();
-        Log.debug("Rdp session process id is " + rdpProcessId);
 
         //RDP needs few seconds to establish a desktop connection
         StepCore.sleep(3);
+
+        rdpProcessId = findProcessIdOfRdpSesssion(address, workingDir);
+        if ( rdpProcessId.equals("") ){
+            Log.error("Can't open Rdp session towards " + address);
+        }
 
         return rdpProcessId;
     }
@@ -427,7 +395,7 @@ public class WiniumDriverFactory {
      *
      * @param node String, node name from winrm configuration of the remote that shall be used
      */
-    public void minimizeAllWindows (String node){
+    private void minimizeAllWindows (String node){
         Log.debug("Minimizing all open windows");
 
         String script = FileCore.createTempFile("temp", "ps1").getName();
@@ -536,13 +504,24 @@ public class WiniumDriverFactory {
         globalCtx.put("CertificateHash_" + address, Boolean.class, true);
     }
 
+    private String findProcessIdOfRdpSesssion(String address, File workingDir){
+        Log.debug("Checking if there is RDP session open towards node " + address);
+
+        String cmd = "powershell.exe \"Get-CimInstance Win32_Process | Where {$_.name -match '.*mstsc.*'" +
+                " -and $_.CommandLine -match '.*" + address + ".*'} | Select ProcessId | Format-list\"";
+        ExecResult out = ExecutorCore.execute(cmd, workingDir, 10);
+        String output = out.getStdOut();
+
+        return output.trim().replace("ProcessId :","").trim();
+    }
+
     /**
      * Checks if an RDP session is open towards particular node
      *
      * @param rdpProcessId String, processID of an RDP session
      * @return Boolean
      */
-    private Boolean checkIfRdpSessionIsOpen(String rdpProcessId){
+    private boolean checkIfRdpSessionIsOpen(String rdpProcessId){
         Log.debug("Checking RDP session with process id  " + rdpProcessId);
 
         boolean exitValue = false;
@@ -591,7 +570,7 @@ public class WiniumDriverFactory {
         WinRSCore.runScriptAsScheduledTask(node, userDir + "\\" + script, taskName);
     }
 
-    private URL buildUrl(String node, String port){
+    private URL buildUrl(String node, int port){
         String host = "localhost";
         if ( ! node.equalsIgnoreCase("localhost") ) {
             host = WinRSCore.getIpOfHost(Storage.get("Environment.Active.WinRM." + node + ".host"));
