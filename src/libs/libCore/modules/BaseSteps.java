@@ -1,41 +1,42 @@
 package libs.libCore.modules;
 
-@SuppressWarnings("unchecked")
 public class BaseSteps {
 
-    protected Context scenarioCtx;
     protected Context globalCtx;
+    protected Context scenarioCtx;
     protected Macro Macro;
     protected StepCore StepCore;
     protected PageCore PageCore;
-    protected SqlCore SqlCore;
     protected Storage Storage;
     protected FileCore FileCore;
-    protected ExecutorCore ExecutorCore;
-    protected AssertCore AssertCore;
-    protected PdfCore PdfCore;
     protected SshCore SshCore;
-    protected WinRMCore WinRMCore;
-    protected WinRSCore WinRSCore;
+    protected ExecutorCore ExecutorCore;
+    protected SqlCore SqlCore;
     protected CloudDirectorCore CloudDirectorCore;
+    protected RestCore RestCore;
+    protected PdfCore PdfCore;
+    protected CsvCore CsvCore;
+    protected WinRSCore WinRSCore;
     protected WiniumCore WiniumCore;
+    protected StringCore StringCore;
 
-    public BaseSteps ()  {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
-        this.globalCtx = ThreadContext.getContext("Global");
+    public BaseSteps() {
+        this.globalCtx = GlobalCtxSingleton.getInstance();
+        this.scenarioCtx = globalCtx.get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
         this.Macro = scenarioCtx.get("Macro",Macro.class);
         this.StepCore = scenarioCtx.get("StepCore",StepCore.class);
+        this.StringCore = scenarioCtx.get("StringCore",StringCore.class);
         this.PageCore = scenarioCtx.get("PageCore",PageCore.class);
-        this.SqlCore = scenarioCtx.get("SqlCore",SqlCore.class);
         this.Storage = scenarioCtx.get("Storage", Storage.class);
-        this.FileCore = scenarioCtx.get("FileCore",FileCore.class);
-        this.ExecutorCore = scenarioCtx.get("ExecutorCore", ExecutorCore.class);
-        this.AssertCore = scenarioCtx.get("AssertCore", AssertCore.class);
-        this.PdfCore = scenarioCtx.get("PdfCore", PdfCore.class);
+        this.FileCore = scenarioCtx.get("FileCore", FileCore.class);
         this.SshCore = scenarioCtx.get("SshCore", SshCore.class);
-        this.WinRMCore = scenarioCtx.get("WinRMCore", WinRMCore.class);
-        this.WinRSCore = scenarioCtx.get("WinRSCore", WinRSCore.class);
+        this.ExecutorCore = scenarioCtx.get("ExecutorCore", ExecutorCore.class);
+        this.SqlCore = scenarioCtx.get("SqlCore",SqlCore.class);
         this.CloudDirectorCore = scenarioCtx.get("CloudDirectorCore", CloudDirectorCore.class);
+        this.RestCore = scenarioCtx.get("RestCore", RestCore.class);
+        this.PdfCore = scenarioCtx.get("PdfCore", PdfCore.class);
+        this.CsvCore = scenarioCtx.get("CsvCore", CsvCore.class);
+        this.WinRSCore = scenarioCtx.get("WinRSCore", WinRSCore.class);
         this.WiniumCore = scenarioCtx.get("WiniumCore", WiniumCore.class);
     }
 

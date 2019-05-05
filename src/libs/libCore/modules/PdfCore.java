@@ -12,12 +12,6 @@ import java.util.List;
 @SuppressWarnings("unchecked")
 public class PdfCore {
 
-    private Context scenarioCtx;
-
-    public PdfCore() {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
-    }
-
 
     /**
      * read pdf file line by line and returns list of lines
@@ -45,7 +39,7 @@ public class PdfCore {
                 Log.error("Pdf file " + file + " is encrypted. Can't read it!");
             }
         } catch (IOException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
 
         List<String> result = Arrays.asList(lines);

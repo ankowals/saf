@@ -1,11 +1,7 @@
 package libs.libCore.modules;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * A wrapper class which takes a logger as constructor argument and offers a PrintStream whose flush
@@ -26,23 +22,20 @@ import org.apache.logging.log4j.Logger;
  * @version 1.0 (28.10.2015)
  * @author  Heri Bender
  */
-public class ToLoggerPrintStream {
-    /**
-     * Logger for this class
-     */
-    private Logger myLog;
+class ToLoggerPrintStream {
+
     private PrintStream myPrintStream;
 
     /**
      * @return printStream
      */
-    public PrintStream getPrintStream() {
+    PrintStream getPrintStream() {
         if (myPrintStream == null) {
             OutputStream output = new OutputStream() {
                 private StringBuilder myStringBuilder = new StringBuilder();
 
                 @Override
-                public void write(int b) throws IOException {
+                public void write(int b) {
                     this.myStringBuilder.append((char) b);
                 }
 
@@ -51,7 +44,7 @@ public class ToLoggerPrintStream {
                  */
                 @Override
                 public void flush() {
-                    myLog.debug(this.myStringBuilder.toString());
+                    Log.debug(this.myStringBuilder.toString()); //customize to always use libs.libCore.modules logger
                     myStringBuilder = new StringBuilder();
                 }
             };
@@ -62,22 +55,4 @@ public class ToLoggerPrintStream {
         return myPrintStream;
     }
 
-
-    /**
-     * Constructor
-     */
-    public ToLoggerPrintStream() {
-        super();
-        myLog = LogManager.getLogger("libs.libCore.modules");
-    }
-
-    /**
-     * Constructor
-     *
-     * @param aLogger
-     */
-    public ToLoggerPrintStream(Logger aLogger) {
-        super();
-        myLog = aLogger;
-    }
 }

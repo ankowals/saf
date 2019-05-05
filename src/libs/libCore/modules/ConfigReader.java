@@ -1,9 +1,10 @@
 package libs.libCore.modules;
 
 import com.google.gson.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-
 import java.io.File;
+import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.*;
 
@@ -12,14 +13,13 @@ import static java.lang.Math.toIntExact;
 @SuppressWarnings("unchecked")
 public class ConfigReader {
 
-    private Context scenarioCtx;
-    private FileCore FileCore;
+    private Context context;
+    private String projectPath;
 
-    public ConfigReader() {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
-        this.FileCore = scenarioCtx.get("FileCore",FileCore.class);
+    public ConfigReader(Context context, String projectPath){
+        this.context = context;
+        this.projectPath = projectPath;
     }
-
 
     /**
      * Creates or updates existing storage based on the config file content
@@ -33,43 +33,43 @@ public class ConfigReader {
 
         JsonElement root = null;
         JsonObject object = null;
-        String sFile = null;
-        HashMap<String, Object> result = null;
+        String sFile;
+        HashMap<String, Object> result;
         File file = new File(path);
 
-        sFile = FileCore.readToString(file);
+        String confFileContent = readToString(new File(path));
 
-        if ( sFile.contains("#include ") ) {
-            List<String> lines = FileCore.readLines(file);
-            String sFileWithoutIncludes = "";
+        if ( confFileContent.contains("#include ") ) {
+            List<String> lines = Arrays.asList(confFileContent.split("\\s*\\r?\\n\\s*"));
+            String confFileContentWithoutIncludes = "";
             for (String line : lines){
                 String tLine = line.trim();
                 tLine = StringUtils.remove(tLine,'"');
                 tLine = StringUtils.remove(tLine,"'");
                 if ( tLine.startsWith("#include") && tLine.endsWith(".config")) {
                     String pathToIncludedConfigFile = tLine.substring(9);
-                    pathToIncludedConfigFile = FileCore.getProjectPath() + File.separator + pathToIncludedConfigFile.trim();
+                    pathToIncludedConfigFile = projectPath + File.separator + pathToIncludedConfigFile.trim();
                     Log.debug("Found included configuration file");
                     create(pathToIncludedConfigFile);
                 } else {
-                    sFileWithoutIncludes = sFileWithoutIncludes + line + System.getProperty("line.separator");
+                    confFileContentWithoutIncludes = confFileContentWithoutIncludes + line + System.getProperty("line.separator");
                 }
             }
-            sFileWithoutIncludes = sFileWithoutIncludes.trim();
-            sFile = sFileWithoutIncludes;
+            confFileContentWithoutIncludes = confFileContentWithoutIncludes.trim();
+            confFileContent = confFileContentWithoutIncludes;
         }
 
-        if ( ! sFile.startsWith("{") ) {
-            sFile = "{" + sFile + "}";
+        if ( ! confFileContent.startsWith("{") ) {
+            confFileContent = "{" + confFileContent + "}";
         }
 
         Log.debug("Reading configuration file " + path);
 
         //read the JSON file and make sure that format is correct
         try {
-            root = new JsonParser().parse(sFile);
+            root = new JsonParser().parse(confFileContent);
         } catch (JsonSyntaxException e) {
-                Log.error("Typo in file " + file.getAbsolutePath(), e);
+                Log.error("Typo in file " + file.getAbsolutePath() + "! " + e.getMessage());
         }
 
         //read each entry and create new shared object for it
@@ -80,26 +80,26 @@ public class ConfigReader {
                     try {
                         object = root.getAsJsonObject().get(entry.getKey()).getAsJsonObject();
                     } catch (NullPointerException e) {
-                        Log.error("No objects defined in configuration file!", e);
+                        Log.error("No objects defined in configuration file! " + e.getMessage());
                     }
 
                     result = parseObject(object);
 
                     //if ctx object already exists overwrite/update its content else create new one
-                    HashMap<String, Object> tmpMap = scenarioCtx.get(entry.getKey(), HashMap.class);
+                    HashMap<String, Object> tmpMap = context.get(entry.getKey(), HashMap.class);
                     if (tmpMap == null) {
-                        scenarioCtx.put(entry.getKey(), HashMap.class, result);
+                        context.put(entry.getKey(), HashMap.class, result);
                     } else {
-                        //tmpMap.putAll(result);
                         deepMerge(tmpMap, result);
-                        scenarioCtx.put(entry.getKey(), HashMap.class, tmpMap);
+                        context.put(entry.getKey(), HashMap.class, tmpMap);
                     }
                 }
-            } else {
-                Log.debug("No objects found");
             }
+        } else {
+            Log.debug("No json objects found in configuration file " + path);
         }
     }
+
 
     /**
      * Parses json object
@@ -127,15 +127,14 @@ public class ConfigReader {
                         if ( num instanceof Long ) {
                             Long tVal = (Long) num;
                             try {
-                                int iVal = toIntExact(tVal);
-                                num = iVal;
+                                num = toIntExact(tVal);
                             } catch (ArithmeticException e) {
                                 //do nothing just return Long
                             }
                         }
                     } catch (Exception e) {
                         Log.error("Not able to parse String to Number for " + key + " : " +
-                                entry.getValue().getAsString(), e);
+                                entry.getValue().getAsString() + "! " + e.getMessage());
                     }
                     if (num != null){
                         map.put(key, num);
@@ -163,8 +162,7 @@ public class ConfigReader {
                                 if ( num instanceof Long ) {
                                     Long tVal = (Long) num;
                                     try {
-                                        int iVal = toIntExact(tVal);
-                                        num = iVal;
+                                        num = toIntExact(tVal);
                                     } catch (ArithmeticException e) {
                                         //do nothing just return Long
                                     }
@@ -172,7 +170,8 @@ public class ConfigReader {
                             } catch (Exception e) {
                                 Log.error("Not able to parse String to Number for " +
                                         key + " : " +
-                                        entry.getValue().getAsJsonArray().get(i).getAsString(), e);
+                                        entry.getValue().getAsJsonArray().get(i).getAsString()
+                                        + "! " + e.getMessage() );
                             }
                             if (num != null){
                                 tmpArray.add(num);
@@ -199,9 +198,16 @@ public class ConfigReader {
         return map;
     }
 
+    private String readToString(File file){
+        try {
+            return FileUtils.readFileToString(file, "UTF-8");
+        } catch (IOException e) {
+            Log.error(e.getMessage());
+        }
 
-    // This is fancier than Map.putAll(Map)
-    // https://stackoverflow.com/questions/25773567/recursive-merge-of-n-level-maps
+        return null;
+    }
+
 
     /**
      * helper method used to merge maps together. Recursion is used to handle nested maps.
@@ -210,7 +216,7 @@ public class ConfigReader {
      * @param newMap
      * @return
      */
-    private Map deepMerge(Map original, Map newMap) {
+    public Map deepMerge(Map original, Map newMap) {
         for (Object key : newMap.keySet()) {
             if (newMap.get(key) instanceof Map && original.get(key) instanceof Map) {
                 Map originalChild = (Map) original.get(key);

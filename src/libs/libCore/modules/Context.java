@@ -3,13 +3,9 @@ package libs.libCore.modules;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Context {
+public abstract class Context {
 
-    private final Map<String, Map<Class<?>, Object>> internalMap;
-
-    public Context() {
-        internalMap = new HashMap<>();
-    }
+    protected Map<String, Map<Class<?>, Object>> internalMap;
 
     /**
      * Puts an object into the context in a form of HashMap
@@ -21,7 +17,7 @@ public class Context {
     public <T> void put(String textKey, Class<T> typeKey, T value) {
         Map<Class<?>, Object> mapForTextKey = getMapForTextKey(textKey);
         mapForTextKey.put(typeKey, value);
-        Log.debug("Ctx object " + textKey + " of type " + typeKey.toString() + " created or modified");
+        Log.debug("Object " + textKey + " of type " + typeKey.toString() + " created or modified in context for thread with id " + Thread.currentThread().getId());
     }
 
     /**
@@ -70,13 +66,9 @@ public class Context {
         if (internalMap.containsKey(textKey)) {
             return internalMap.get(textKey).get(typeKey);
         } else {
-            Log.warn("Ctx obj with key " + textKey + " does not exists or null!");
+            Log.warn("Object with key " + textKey + " does not exists or null in context for thread with id " + Thread.currentThread().getId() + "!");
             return null;
         }
     }
-
-    //public void clear () {
-    //    internalMap.clear();
-    //}
 
 }

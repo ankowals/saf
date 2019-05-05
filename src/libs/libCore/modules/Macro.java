@@ -15,7 +15,7 @@ public class Macro {
     private Context scenarioCtx;
 
     public Macro() {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
+        this.scenarioCtx = GlobalCtxSingleton.getInstance().get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
     }
 
 
@@ -38,32 +38,27 @@ public class Macro {
 
         result = new HashMap<>();
 
-        // Get the current date and time
-        LocalDateTime currentTime = LocalDateTime.now();
-
         //for each macro calculate new value and store it in a result map as string
         for (HashMap.Entry<String, Object> entry : macro.entrySet())
         {
-            //Log.debug("Found macro " + entry.getKey());
-
             //set default values for particular macro
             String calculatedValue = null;
             String type = null;
             String format = "MM/dd/yyyy HH:mm:ss S";
-            Integer length = 10;
-            Boolean useNumbers = true;
-            Boolean useLetters = true;
+            int length = 10;
+            boolean useNumbers = true;
+            boolean useLetters = true;
             String suffix = "";
             String prefix = "";
             String sZoneId = ZoneId.systemDefault().getId();
-            Integer addDays = 0;
-            Integer addWeeks = 0;
-            Integer addMonths = 0;
-            Integer addYears = 0;
-            Integer addHours = 0;
-            Integer addMinutes = 0;
-            Integer addSeconds = 0;
-            Integer addNanos = 0;
+            int addDays = 0;
+            int addWeeks = 0;
+            int addMonths = 0;
+            int addYears = 0;
+            int addHours = 0;
+            int addMinutes = 0;
+            int addSeconds = 0;
+            int addNanos = 0;
 
             //read user defined values for particular macro
             if (entry.getValue().getClass().getName().contains("HashMap")) {
@@ -145,15 +140,19 @@ public class Macro {
             if(!availableZones.contains(sZoneId)) {
                 Log.warn("Available macro zoneIds are as follows:");
                 for (String s : availableZones) {
-                    Log.info(s);
+                    Log.debug(s);
                 }
                 Log.error("Wrong zoneId defined for macro " + entry.getKey());
             }
 
-            //calculate new macro value
+            // Get the current date and time
+
             ZoneId zoneId = ZoneId.of(sZoneId);
+            ZonedDateTime currentTimeAtZone = ZonedDateTime.now(zoneId);
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
-            ZonedDateTime macroTime = currentTime.atZone(zoneId).plusYears(addYears)
+
+            //calculate new macro value
+            currentTimeAtZone = currentTimeAtZone.plusYears(addYears)
                     .plusMonths(addMonths)
                     .plusWeeks(addWeeks)
                     .plusDays(addDays)
@@ -162,23 +161,25 @@ public class Macro {
                     .plusSeconds(addSeconds)
                     .plusNanos(addNanos);
 
-            long epoch = macroTime.toEpochSecond();
+            long epoch = currentTimeAtZone.toEpochSecond();
+
+            LocalDateTime macroTime = LocalDateTime.ofInstant(currentTimeAtZone.toInstant(), zoneId);
 
             if(type.equals("startOfWeek")){
-                ZonedDateTime firstOfWeek = macroTime.with(ChronoField.DAY_OF_WEEK, 1); //ISO8601, Monday is first day of week
+                LocalDateTime firstOfWeek = macroTime.with(ChronoField.DAY_OF_WEEK, 1); //ISO8601, Monday is first day of week
                 calculatedValue = prefix + firstOfWeek.format(formatter) + suffix;
             }
             if(type.equals("endOfWeek")){
-                ZonedDateTime endOfWeek = macroTime.with(ChronoField.DAY_OF_WEEK, 7); //ISO8601, Sunday is last day of week
+                LocalDateTime endOfWeek = macroTime.with(ChronoField.DAY_OF_WEEK, 7); //ISO8601, Sunday is last day of week
                 calculatedValue = prefix + endOfWeek.format(formatter) + suffix;
             }
             if(type.equals("startOfMonth")){
-                ZonedDateTime firstOfMonth = macroTime.with(ChronoField.DAY_OF_MONTH, 1);
+                LocalDateTime firstOfMonth = macroTime.with(ChronoField.DAY_OF_MONTH, 1);
                 calculatedValue = prefix + firstOfMonth.format(formatter) + suffix;
             }
             if(type.equals("endOfMonth")){
                 Integer lengthOfMonth = macroTime.toLocalDate().lengthOfMonth();
-                ZonedDateTime endOfMonth = macroTime.with(ChronoField.DAY_OF_MONTH, lengthOfMonth);
+                LocalDateTime endOfMonth = macroTime.with(ChronoField.DAY_OF_MONTH, lengthOfMonth);
                 calculatedValue = prefix + endOfMonth.format(formatter) + suffix;
             }
             if(type.equals("date")) {
@@ -213,7 +214,6 @@ public class Macro {
         HashMap<String, Object> mapToEval = scenarioCtx.get(input,HashMap.class);
         if ( mapToEval != null ) {
             HashMap<String, Object> macros = scenarioCtx.get("Macro", HashMap.class);
-
             HashMap<String, String> macrosAfterEvaluation = mcr(macros);
 
             //evaluate macros
@@ -240,7 +240,7 @@ public class Macro {
                 for (int i=0; i < ((ArrayList) entry.getValue()).size(); i++){
                     if ( ((ArrayList) entry.getValue()).get(i).getClass().getName().contains("String")) {
                         for (HashMap.Entry<String, String> macroEntry : macrosAfterEvaluation.entrySet()) {
-                            if (((ArrayList) entry.getValue()).get(i).equals("mcr." + macroEntry.getKey())) {
+                            if (((ArrayList) entry.getValue()).get(i).equals("${mcr." + macroEntry.getKey() + "}")) {
                                 ((ArrayList) entry.getValue()).set(i,macroEntry.getValue());
                             }
                         }
@@ -251,7 +251,7 @@ public class Macro {
             } else {
                 if (entry.getValue().getClass().getName().contains("String")) {
                     for (HashMap.Entry<String, String> macroEntry : macrosAfterEvaluation.entrySet()) {
-                        if (entry.getValue().equals("mcr." + macroEntry.getKey())) {
+                        if (entry.getValue().equals("${mcr." + macroEntry.getKey() + "}")) {
                             map.put(entry.getKey(), macroEntry.getValue());
                         }
                     }

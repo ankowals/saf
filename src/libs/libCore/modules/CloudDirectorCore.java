@@ -25,23 +25,15 @@ public class CloudDirectorCore {
     private StepCore StepCore;
 
     private String authToken;
-    private ValidatableResponse vSessionResp;
-    private ValidatableResponse vOrgResp;
-    private ValidatableResponse vCatalogResp;
-    private ValidatableResponse vCatalogItemResp;
-    private ValidatableResponse vAppTemplateResp;
-    private ValidatableResponse vAppTemplateVmResp;
-    private ValidatableResponse vDcResp;
-    private ValidatableResponse vAppResp;
 
     public CloudDirectorCore() {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
+        this.scenarioCtx = GlobalCtxSingleton.getInstance().get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
         this.FileCore = scenarioCtx.get("FileCore",FileCore.class);
         this.Storage = scenarioCtx.get("Storage",Storage.class);
         this.StepCore = scenarioCtx.get("StepCore",StepCore.class);
     }
 
-    public void login(){
+    public ValidatableResponse login(){
 
         String url = Storage.get("Environment.Active.vCloudDirector.host");
         String api = Storage.get("Environment.Active.vCloudDirector.api");
@@ -68,6 +60,11 @@ public class CloudDirectorCore {
 
         url = url + "/api/sessions";
 
+        boolean useEncoding = Storage.get("Environment.Active.UseEncoding");
+        if ( useEncoding ){
+            passwd = StepCore.decodeString(passwd);
+        }
+
         //build specification
         RequestSpecification request = given()
                 .baseUri(url)
@@ -83,12 +80,12 @@ public class CloudDirectorCore {
                 .post();
 
         //print status code
-        Integer statusCode = response.getStatusCode();
+        int statusCode = response.getStatusCode();
         Log.debug("Response status code is " + statusCode);
 
         //print headers and extract auth token for re-usage in further requests
         Log.debug("Response headers are");
-        Boolean authHeaderPresent = false;
+        boolean authHeaderPresent = false;
         Headers allHeaders = response.headers();
         for( Header header : allHeaders){
             Log.debug(header.getName() + ": " + header.getValue());
@@ -113,7 +110,7 @@ public class CloudDirectorCore {
             Log.error("Authorization failed. Header x-vcloud-authorization is not present in the response.");
         }
 
-        vSessionResp = response.then();
+        return response.then();
     }
 
     public void logout(){
@@ -130,7 +127,7 @@ public class CloudDirectorCore {
                 .delete();
 
         //print status code
-        Integer statusCode = response.getStatusCode();
+        int statusCode = response.getStatusCode();
         Log.debug("Response status code is " + statusCode);
 
         //print headers and extract auth token for re-usage in further requests
@@ -140,10 +137,6 @@ public class CloudDirectorCore {
             Log.debug(header.getName() + ": " + header.getValue());
         }
 
-        //print response body
-        //Log.debug("Response body is");
-        //Log.debug(response.prettyPrint());
-
         //validate response status code
         if ( statusCode != 204 ) {
             Log.error("Wrong status code received. Logout failed!");
@@ -151,100 +144,84 @@ public class CloudDirectorCore {
 
     }
 
-    public void getOrganization(String name) {
+    public ValidatableResponse getFromHref(String href) {
+        Log.debug("Trigger request to get details from " + href);
+        RequestSpecification request = buildRequest(href);
+
+        return triggerGetRequest(request, 200);
+    }
+
+    public String getHrefOfOrganization(String name, ValidatableResponse loginResponse){
         Log.debug("Extract org href for " + name + " from response to /api/sessions request");
-        XmlPath xml = setRoot(vSessionResp,"Session");
-        String href = extractHref(xml,"Link.@type", "Link", "vcloud.org+xml", name);
-        Log.debug("Trigger request to get org " + name + " details");
-        RequestSpecification request = buildRequest(href);
-        vOrgResp = triggerGetRequest(request, 200);
+        XmlPath xml = setRoot(loginResponse,"Session");
+
+        return extractHref(xml,"Link.@type", "Link", "vcloud.org+xml", name);
     }
 
-    public void getCatalog(String name) {
+    public String getHrefOfCatalog(String name, ValidatableResponse getOrganizationResponse){
         Log.debug("Extract catalog href for " + name + " from response to /api/org request");
-        XmlPath xml = setRoot(vOrgResp,"Org");
-        String href = extractHref(xml,"Link.@type", "Link", "vcloud.catalog+xml", name);
-        Log.debug("Trigger request to get catalog " + name + " details");
-        RequestSpecification request = buildRequest(href);
-        vCatalogResp = triggerGetRequest(request, 200);
+        XmlPath xml = setRoot(getOrganizationResponse,"Org");
+
+        return extractHref(xml,"Link.@type", "Link", "vcloud.catalog+xml", name);
     }
 
-    public void getCatalogItem(String name) {
+    public String getHrefOfCatalogItem(String name, ValidatableResponse getCatalogResponse){
         Log.debug("Extract catalog item href for " + name + " from response to /api/catalog request");
-        XmlPath xml = setRoot(vCatalogResp,"Catalog");
-        String href = extractHref(xml,"CatalogItems.CatalogItem.@type", "CatalogItem", "vcloud.catalogItem+xml", name);
-        Log.debug("Trigger request to get catalog item " + name + " details");
-        RequestSpecification request = buildRequest(href);
-        vCatalogItemResp = triggerGetRequest(request, 200);
+        XmlPath xml = setRoot(getCatalogResponse,"Catalog");
 
+        return extractHref(xml,"CatalogItems.CatalogItem.@type", "CatalogItem", "vcloud.catalogItem+xml", name);
     }
 
-    public String getVAppTemplate(String name) {
+    public String getHrefOfVAppTemplate(String name, ValidatableResponse getCatalogItemResponse) {
         Log.debug("Extract vApp template entity href for " + name + " from response to /api/catalogItem request");
-        XmlPath xml = setRoot(vCatalogItemResp,"CatalogItem");
-        String href = extractHref(xml,"Entity.@type", "Entity", "vcloud.vAppTemplate+xml", name);
-        Log.debug("Trigger request to get vApp template " + name + " details");
-        RequestSpecification request = buildRequest(href);
-        vAppTemplateResp = triggerGetRequest(request, 200);
+        XmlPath xml = setRoot(getCatalogItemResponse,"CatalogItem");
 
-        Log.debug("href to be used in instantiateVAppTemplateParams request is " + href);
-
-        return href;
-
+        return extractHref(xml,"Entity.@type", "Entity", "vcloud.vAppTemplate+xml", name);
     }
 
-    public String getVmTemplateFromVAppTemplate(String name) {
+    public String getHrefOfVmTemplate(String name, ValidatableResponse getVAppTemplateResponse){
         Log.debug("Extract vm href for " + name + " from response to /api/vAppTemplate request");
-        XmlPath xml = setRoot(vAppTemplateResp,"VAppTemplate");
-        String href = extractHref(xml,"Children.Vm.@type", "Vm", "vcloud.vm+xml", name);
-        Log.debug("Trigger request to get vm " + name + " details");
-        RequestSpecification request = buildRequest(href);
-        vAppTemplateVmResp = triggerGetRequest(request, 200);
+        XmlPath xml = setRoot(getVAppTemplateResponse,"VAppTemplate");
 
-        return href;
+        return extractHref(xml,"Children.Vm.@type", "Vm", "vcloud.vm+xml", name);
     }
 
-    public String getVdc(String name) {
+    public String getHrefOfVdc(String name, ValidatableResponse getOrganizationResponse){
         Log.debug("Extract vdc href for " + name + " from response /api/org request");
-        XmlPath xml = setRoot(vOrgResp,"Org");
-        String href = extractHref(xml,"Link.@type", "Link", "vcloud.vdc+xml", name);
-        Log.debug("Trigger request to get vdc " + name + " details");
-        RequestSpecification request = buildRequest(href);
-        vDcResp = triggerGetRequest(request, 200);
+        XmlPath xml = setRoot(getOrganizationResponse,"Org");
 
+        return extractHref(xml,"Link.@type", "Link", "vcloud.vdc+xml", name);
+    }
+
+    public String getHrefOfInstantiateVAppTemplateParams(String name, ValidatableResponse getVdcResponse){
         Log.debug("Extract instantiateVAppTemplateParams href for " + name + " from response /api/vdc request");
-        xml = setRoot(vDcResp,"Vdc");
-        href = extractHref(xml,"Link.@type", "Link", "vcloud.instantiateVAppTemplateParams+xml", "");
-
+        XmlPath xml = setRoot(getVdcResponse,"Vdc");
+        String href = extractHref(xml,"Link.@type", "Link", "vcloud.instantiateVAppTemplateParams+xml", "");
         Log.debug("new vApp can be instantiated by triggering post request towards following url " + href);
 
         return href;
     }
 
-    public String getNetwork(String name) {
+    public String getHrefOfNetwork(String name, ValidatableResponse getOrganizationResponse) {
         Log.debug("Extract network href for " + name + " from response /api/org request");
+        XmlPath xml = setRoot(getOrganizationResponse,"Org");
 
-        ValidatableResponse resp = vOrgResp;
-
-        XmlPath xml = setRoot(resp,"Org");
-        String href = extractHref(xml,"Link.@type", "Link", "vcloud.orgNetwork+xml", name);
-
-        return href;
+        return extractHref(xml,"Link.@type", "Link", "vcloud.orgNetwork+xml", name);
     }
 
-    public String getVApp(String name){
+    public String getHrefOfVApp(String name, ValidatableResponse getVdcResponse){
         Log.debug("Extract vApp href for " + name + " from response /api/vdc request");
+        XmlPath xml = setRoot(getVdcResponse,"Vdc");
 
-        ValidatableResponse resp = vDcResp;
-
-        XmlPath xml = setRoot(resp,"Vdc");
-        String href = extractHref(xml,"ResourceEntities.ResourceEntity.@type", "ResourceEntity", "vcloud.vApp+xml", name);
-        Log.debug("Trigger request to get vApp " + name + " details");
-        RequestSpecification request = buildRequest(href);
-        vAppResp = triggerGetRequest(request, 200);
-
-        return href;
+        return extractHref(xml,"ResourceEntities.ResourceEntity.@type", "ResourceEntity", "vcloud.vApp+xml", name);
     }
+
+    public String getHrefOfVm(String name, ValidatableResponse getVAppResponse){
+        Log.debug("Extract vm href for " + name + " from response /api/vApp request");
+        XmlPath xml = setRoot(getVAppResponse,"VApp");
+        return extractHref(xml,"Children.Vm.@type", "Vm", "vcloud.vm+xml", name);
+    }
+
 
     public void createNewVAppFromTemplate(String vdcHref, String vAppTemplateEntityHref, String name, String network, String networkHref) {
         Log.debug("Create new VApp with name " + name + " from template");
@@ -307,49 +284,11 @@ public class CloudDirectorCore {
     }
 
 
-    public String getVmFromVApp(String name, String vAppHref){
-        Log.debug("Trigger request to get new vm " + name + " href from vApp " + vAppHref);
-
-        RequestSpecification request = buildRequest(vAppHref);
-        vAppResp = triggerGetRequest(request, 200);
-
-        Log.debug("Extract vm href for " + name + " from response /api/vApp request");
-        XmlPath xml = setRoot(vAppResp,"VApp");
-        String href = extractHref(xml,"Children.Vm.@type", "Vm", "vcloud.vm+xml", name);
-
-        return href;
-    }
-
-    public ValidatableResponse getVAppDetails(String vAppHref){
-        Log.debug("Trigger request to get details of vApp " + vAppHref);
-
-        RequestSpecification request = buildRequest(vAppHref);
-        ValidatableResponse response = triggerGetRequest(request, 200);
-
-        return response;
-
-    }
-
-
-    public ValidatableResponse getVmDetails(String vmHref){
-        Log.debug("Trigger request to get details of vm " + vmHref);
-
-        RequestSpecification request = buildRequest(vmHref);
-        ValidatableResponse response = triggerGetRequest(request, 200);
-
-        return response;
-
-    }
-
-
-
-    public void getVmNetworkCardsDetails(String vmHref){
+    public ValidatableResponse getVmNetworkCardsDetails(String vmHref){
         Log.debug("Trigger request to get network cards details of vm " + vmHref);
-
         RequestSpecification request = buildRequest(vmHref + "/virtualHardwareSection/networkCards");
-        ValidatableResponse response = triggerGetRequest(request, 200);
 
-
+        return triggerGetRequest(request, 200);
     }
 
 
@@ -378,7 +317,6 @@ public class CloudDirectorCore {
         String href = xml.getString("@href");
         href = href.replace("api/api","api");
         validateTaskStatus("success", href, "Failed to set memory size");
-
     }
 
 
@@ -407,7 +345,6 @@ public class CloudDirectorCore {
         String href = xml.getString("@href");
         href = href.replace("api/api","api");
         validateTaskStatus("success", href, "Failed to set number of Cpu");
-
     }
 
 
@@ -437,7 +374,6 @@ public class CloudDirectorCore {
         String href = xml.getString("@href");
         href = href.replace("api/api","api");
         validateTaskStatus("success", href, "Failed to disconnect network");
-
     }
 
 
@@ -467,9 +403,7 @@ public class CloudDirectorCore {
         String href = xml.getString("@href");
         href = href.replace("api/api","api");
         validateTaskStatus("success", href, "Failed to disconnect network");
-
     }
-
 
 
     public void setVmDisk(String vmHref, String initialDiskSize, String diskSize) {
@@ -541,7 +475,6 @@ public class CloudDirectorCore {
         String href = xml.getString("@href");
         href = href.replace("api/api","api");
         validateTaskStatus("success", href, "Failed to set GuestCustomization");
-
     }
 
 
@@ -556,7 +489,6 @@ public class CloudDirectorCore {
         String href = xml.getString("@href");
         href = href.replace("api/api","api");
         validateTaskStatus("success", href, "Failed to power on vm");
-
     }
 
 
@@ -576,7 +508,6 @@ public class CloudDirectorCore {
         String href = xml.getString("@href");
         href = href.replace("api/api","api");
         validateTaskStatus("success", href, "Failed to power off vm");
-
     }
 
 
@@ -598,7 +529,7 @@ public class CloudDirectorCore {
         Log.debug("Removing vm " + vmHref + " from VApp");
 
         //check status and deployment
-        ValidatableResponse details = getVmDetails(vmHref);
+        ValidatableResponse details = getFromHref(vmHref);
 
         XmlPath xml = setRoot(details,"details");
         String vmStatus = xml.getString("@status");
@@ -665,7 +596,7 @@ public class CloudDirectorCore {
         Log.debug("Checking status of task " + href);
 
         String status = "running";
-        Integer count = 0;
+        int count = 0;
         while ( status.equals("running") ){
             status = checkTaskStatus(href);
 
@@ -690,7 +621,6 @@ public class CloudDirectorCore {
 
 
     private String checkTaskStatus(String href){
-
         Log.debug("Trigger request to get status of task " + href);
         RequestSpecification request = buildRequest(href);
         ValidatableResponse response = triggerGetRequest(request, 200);
@@ -698,14 +628,11 @@ public class CloudDirectorCore {
         Log.debug("Extract status of Task " + href + " from response /api/task request");
 
         XmlPath xml = setRoot(response,"Task");
-        String result = xml.getString("@status");
-
-        return result;
+        return xml.getString("@status");
     }
 
 
     private XmlPath setRoot(ValidatableResponse vResp, String path){
-
         String respBody = vResp.extract().response().asString();
 
         //set xmlpath features (optional) and set root
@@ -714,19 +641,14 @@ public class CloudDirectorCore {
         features.put("http://apache.org/xml/features/disallow-doctype-decl", false);
         features.put("http://xml.org/sax/features/namespaces", false);
 
-        XmlPath xml = new XmlPath(respBody).
+        return new XmlPath(respBody).
                 using(XmlPathConfig.xmlPathConfig().with().features(features))
                 .setRoot(path);
-
-        //Log.debug("Response body is " + respBody);
-
-        return xml;
     }
 
     private String extractHref(XmlPath xml, String listPath, String type, String typeContent, String name) {
         List<String> links = xml.getList(listPath);
 
-        //Log.debug("Extract " + typeContent + " href from response");
         String href ="";
         for( String link : links ){
             if ( link.contains(typeContent) ) {
@@ -753,12 +675,10 @@ public class CloudDirectorCore {
         String api = Storage.get("Environment.Active.vCloudDirector.api");
 
         //build specification
-        RequestSpecification request = given()
+        return given()
                 .baseUri(url)
                 .header("x-vcloud-authorization", authToken)
                 .header("Accept", "application/*+xml;version=" + api);
-
-        return request;
     }
 
     private ValidatableResponse triggerGetRequest(RequestSpecification request, Integer expectedStatusCode){
@@ -790,9 +710,7 @@ public class CloudDirectorCore {
             Log.error("Wrong status code received " + statusCode + " but expected was " + expectedStatusCode + ". Request failed!");
         }
 
-        ValidatableResponse result = response.then();
-
-        return result;
+        return response.then();
     }
 
 
@@ -825,9 +743,7 @@ public class CloudDirectorCore {
             Log.error("Wrong status code received " + statusCode + " but expected was " + expectedStatusCode + ". Request failed!");
         }
 
-        ValidatableResponse result = response.then();
-
-        return result;
+        return response.then();
     }
 
     private ValidatableResponse triggerPutRequest(RequestSpecification request, Integer expectedStatusCode){
@@ -858,10 +774,7 @@ public class CloudDirectorCore {
             Log.error("Wrong status code received " + statusCode + " but expected was " + expectedStatusCode + ". Request failed!");
         }
 
-        ValidatableResponse result = response.then();
-
-        return result;
-
+        return response.then();
     }
 
 
@@ -893,10 +806,7 @@ public class CloudDirectorCore {
             Log.error("Wrong status code received " + statusCode + " but expected was " + expectedStatusCode + ". Request failed!");
         }
 
-        ValidatableResponse result = response.then();
-
-        return result;
-
+        return response.then();
     }
 
 }

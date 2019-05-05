@@ -23,16 +23,12 @@ public class CoreRestSteps extends BaseSteps {
      * It triggers GET request towards defined url<br>
      * It checks that http response code is 200 (OK)<br><br>
      *
-     * Uses following objects:<br>
-     *  Expected.statusOK<br>
-     *  env.REST_url
-     *
      */
     @Given("^service is available$")
     public void service_is_available(){
 
         String url = Storage.get("Environment.Active.Rest.url");
-        Integer expectedCode = Storage.get("Expected.statusOK");
+        int expectedCode = 200;
             given()
                     .when()
                     .log()
@@ -53,14 +49,11 @@ public class CoreRestSteps extends BaseSteps {
      *
      * @param name, String, name of the template that contains http body of the request
      */
-    @When("^json post request (.*?) is sent$")
-    public void json_post_request_is_sent(String name) {
-
+    @When("^send json post request (.*?)$")
+    public void send_json_post_request(String name) {
         String url = Storage.get("Environment.Active.Rest.url");
         String path = Storage.get("Environment.Active.Rest.url_post_suffix");
-
         url = url + path;
-
         File file = StepCore.evaluateTemplate(name);
 
         //build specification and use file template as a body content
@@ -94,8 +87,8 @@ public class CoreRestSteps extends BaseSteps {
      * @param name, String, name of the template that contains http body of the request
      * @param actionHeader, String, soap action that will be set in the header
      */
-    @When("^xml post request (.*?) with soap action header (.*?) is sent$")
-    public void xml_post_request_is_sent(String name, String actionHeader) {
+    @When("^send xml post request (.*?) with soap action header (.*?)$")
+    public void send_xml_post_request_with_soap_action_header(String name, String actionHeader) {
 
         String url = Storage.get("Environment.Active.Rest.url");
         File file = StepCore.evaluateTemplate(name);
@@ -134,14 +127,13 @@ public class CoreRestSteps extends BaseSteps {
      */
     @Then("^verify that status code is (.+)$")
     public void verify_that_status_code_is(String input){
-
         Integer statusCode = StepCore.checkIfInputIsVariable(input);
         ValidatableResponse response = scenarioCtx.get("response",ValidatableResponse.class);
 
-        try {
-            response.statusCode(statusCode);
-        } catch (AssertionError e) {
-            Log.error("", e);
+        int code = response.extract().statusCode();
+
+        if ( code != statusCode){
+            Log.error("Wrong status code received! Expected was " + statusCode + " but got " + code);
         }
 
     }
@@ -208,7 +200,7 @@ public class CoreRestSteps extends BaseSteps {
                 }
 
                 //execute comparison
-                AssertCore.validatableResponseBodyTableAssertion(response, key, action, expectedValue);
+                RestCore.validatableResponseBodyTableAssertion(response, key, action, expectedValue);
             }
         }
     }

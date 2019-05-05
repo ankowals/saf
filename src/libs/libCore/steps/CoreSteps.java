@@ -3,117 +3,21 @@ package libs.libCore.steps;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
 import libs.libCore.modules.*;
-import org.openqa.selenium.support.events.EventFiringWebDriver;
+
 import java.io.File;
 
-public class CoreSteps extends BaseSteps {
+public class CoreSteps extends BaseSteps{
 
     /**
      * Opens browser of particular type as defined in the environment configuration
      */
     @Given("^open browser$")
-    public void open_browser() {
-
-        //Just in case Skilui is in use -> we don't want to allow to open new browser window
-        //if tests are run in parallel on same host
-        if ( Storage.get("Environment.Active.WebDrivers.useSikuli") ){
-            StepCore.activateBrowserLock();
-            StepCore.lockBrowser();
-        }
-
-
+    public void open_browser(){
+        WebDriverObjectPool webDriverPool = globalCtx.get("WebDriverObjectPool", WebDriverObjectPool.class);
         String browser = Storage.get("Environment.Active.Web.browser");
-        EventFiringWebDriver driver = new DriverFactory().create(browser);
-        Boolean closeWebDriver = Storage.get("Environment.Active.WebDrivers.CloseBrowserAfterScenario");
-        if ( closeWebDriver ) {
-            scenarioCtx.put("Page", EventFiringWebDriver.class, driver);
-        } else {
-            globalCtx.put("Page", EventFiringWebDriver.class, driver);
-        }
-
+        webDriverPool.checkOut(browser);
         PageCore pageCore = new PageCore();
         scenarioCtx.put("PageCore", PageCore.class, pageCore);
-        PageCore = scenarioCtx.get("PageCore", PageCore.class);
-        Log.debug("Web driver created");
-    }
-
-
-    /**
-     * Opens browser of particular type
-     *
-     * @param browser, String, describes browser type
-     */
-    @Given("^open browser of type (.+)$")
-    public void open_browser_of_type(String browser) {
-
-        EventFiringWebDriver driver = new DriverFactory().create(browser);
-        Boolean closeWebDriver = Storage.get("Environment.Active.WebDrivers.CloseBrowserAfterScenario");
-        if ( closeWebDriver ) {
-            scenarioCtx.put("Page", EventFiringWebDriver.class, driver);
-        } else {
-            globalCtx.put("Page", EventFiringWebDriver.class, driver);
-        }
-
-        PageCore pageCore = new PageCore();
-        scenarioCtx.put("PageCore", PageCore.class, pageCore);
-        PageCore = scenarioCtx.get("PageCore", PageCore.class);
-        Log.debug("Web driver created");
-    }
-
-
-    /**
-     * Opens jdbc connection to database
-     */
-    @Given("^open db$")
-    public void open_db() {
-        Log.debug("Create new db connection");
-        SqlCore.open();
-        Log.debug("Connected to the data base");
-    }
-
-
-    /**
-     * Opens ssh connection to remote host
-     *
-     * @param node String, node identifier from ssh configuration
-     *
-     */
-    @Given("^open ssh to (.+)$")
-    public void open_ssh_to(String node) {
-
-        Log.debug("Create new ssh client");
-        SshCore.createClient(node);
-        Log.debug("Connected to " + node);
-    }
-
-    /**
-     * Loads configuration from a particular file {}
-     *
-     * @param arg1, String, file path relative to features directory (shall start without separator)
-     */
-    @And("^load configuration data from (.*?)$")
-    public void load_local_test_data(String arg1) {
-
-        String path = FileCore.getFeaturesPath() + File.separator + arg1;
-        ConfigReader Config = new ConfigReader();
-        Config.create(path);
-
-        Log.debug("Configuration from " + path + " loaded");
-    }
-
-
-    /**
-     * Triggers macro evaluation for TestData storage and Expected data storage
-     */
-    @And("^evaluate macros$")
-    public void eval_macro() {
-
-        Log.info("<- evaluating macros ->");
-        Macro.eval("TestData");
-        Macro.eval("Expected");
-
-        Log.debug("Test data storage after macro evaluation is");
-        Storage.print("TestData");
     }
 
 
@@ -125,9 +29,7 @@ public class CoreSteps extends BaseSteps {
      */
     @And("^set (.+) to (.+)$")
     public void set_to(String storageName, String value) {
-
         Object val = StepCore.checkIfInputIsVariable(value);
-
         Storage.set(storageName, val);
         Storage.get(storageName);
     }
@@ -165,20 +67,16 @@ public class CoreSteps extends BaseSteps {
      */
     @And("^pause execution$")
     public void pause_execution() {
-
         File workingDir = FileCore.createTempDir();
-        String autoItPath = Storage.get("Environment.Active.apps.autoIt");
         String scriptsPath = Storage.get("Environment.Active.libCoreScripts.path");
-        Integer timeout = Storage.get("Environment.Active.PauseDuration");
+        int timeout = Storage.get("Environment.Active.PauseDuration");
 
-        String cmd = autoItPath + " " + FileCore.getProjectPath() +
+        String cmd = FileCore.getProjectPath() +
                 File.separator + scriptsPath + File.separator + "pause.exe" + " " +
-                Integer.toString(timeout);
+                timeout;
 
         Log.debug("Calling autoIt pause script with timeout " + timeout + " seconds");
-
-        ExecutorCore.execute(cmd, workingDir, timeout+3, true);
-
+        ExecutorCore.execute(cmd, workingDir, timeout + 1);
         Log.debug("Pause canceled or timeout. Resuming execution");
     }
 
@@ -197,27 +95,59 @@ public class CoreSteps extends BaseSteps {
 
 
     /**
+     * Masks input using an encoding algorithm so it can't be easily read in the log file
+     * @param input String, input string to be encoded
+     */
+    @And("^encode string (.+)$")
+    public void encode_string(String input) {
+       String output = StepCore.encodeString(input);
+        Log.debug("Encoded input is " + output);
+    }
+
+
+    /**
      * Opens a gui app on a windows remote host without additional arguments
      *
      * @param node String,
-     * @param pathToApp String, path to the executable file
+     * @param path String, path to the executable file
      */
-    @Given("^on remote host (.+) open an app from (.+)")
-    public void on_remote_host_open_an_app_from(String node, String pathToApp) {
-        WinRSCore.startApp(node, pathToApp, "");
+    @Given("^on remote host (.+), open an app from (.+)$")
+    public void on_remote_host_open_an_app_from(String node, String path) {
+        String pathToApp = StepCore.checkIfInputIsVariable(path);
+        Storage.set("Environment.Active.App.path", pathToApp);
+        WiniumDriverObjectPool winiumDriverPool = globalCtx.get("WiniumDriverObjectPool", WiniumDriverObjectPool.class);
+        winiumDriverPool.checkOut(node);
+    }
+
+
+    /**
+     * Opens a gui app on a windows host with additional arguments
+     *
+     * @param path String, path to the executable file
+     * @param args String, app arguments
+     */
+    @Given("^open an app (.+) with additional arguments (.+)$")
+    public void open_an_app_with_additional_arguments(String path, String args) {
+        String pathToApp = StepCore.checkIfInputIsVariable(path);
+        String argsToApp = StepCore.checkIfInputIsVariable(args);
+        Storage.set("Environment.Active.App.path", pathToApp);
+        Storage.set("Environment.Active.App.args", argsToApp);
+        WiniumDriverObjectPool winiumDriverPool = globalCtx.get("WiniumDriverObjectPool", WiniumDriverObjectPool.class);
+        winiumDriverPool.checkOut("localhost");
     }
 
 
     /**
      * Opens a gui app on a windows host without additional arguments
      *
-     * @param pathToApp String, path to the executable file
-     * @param args String, app arguments
+     * @param path String, path to the executable file
      */
-    @Given("^open an app from (.+) with args (.+)")
-    public void open_an_app_from(String pathToApp, String args) {
-        ExecutorCore.startApp(pathToApp, args);
-        StepCore.sleep(2);
+    @Given("^open an app from (.+)$")
+    public void open_an_app_from(String path) {
+        String pathToApp = StepCore.checkIfInputIsVariable(path);
+        Storage.set("Environment.Active.App.path", pathToApp);
+        WiniumDriverObjectPool winiumDriverPool = globalCtx.get("WiniumDriverObjectPool", WiniumDriverObjectPool.class);
+        winiumDriverPool.checkOut("localhost");
     }
 
 }

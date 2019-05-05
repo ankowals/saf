@@ -6,10 +6,7 @@ import org.openqa.selenium.interactions.Action;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
-import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -19,20 +16,14 @@ import java.util.concurrent.TimeUnit;
 public class PageCore {
 
     private Context scenarioCtx;
-    private Context globalCtx;
     private Storage Storage;
-    private EventFiringWebDriver Page;
+    private EventFiringWebDriver driver;
 
+    //should depend on the driver to avoid null pointer exceptions!
     public PageCore () {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
-        this.globalCtx = ThreadContext.getContext("Global");
+        this.scenarioCtx = GlobalCtxSingleton.getInstance().get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
         this.Storage = scenarioCtx.get("Storage", Storage.class);
-        Boolean closeWebDriver = Storage.get("Environment.Active.WebDrivers.CloseBrowserAfterScenario");
-        if ( closeWebDriver ) {
-            this.Page = scenarioCtx.get("Page", EventFiringWebDriver.class);
-        } else {
-            this.Page = globalCtx.get("Page", EventFiringWebDriver.class);
-        }
+        this.driver = scenarioCtx.get("SeleniumWebDriver", EventFiringWebDriver.class);
     }
 
 
@@ -43,11 +34,7 @@ public class PageCore {
      * @return boolean
      */
     public Boolean titleContains(String pageTitle){
-        if(StringUtils.containsIgnoreCase(Page.getTitle(),pageTitle)){
-            return true;
-        }else{
-            return false;
-        }
+        return StringUtils.containsIgnoreCase(driver.getTitle(),pageTitle);
     }
 
 
@@ -61,11 +48,11 @@ public class PageCore {
     public void waitUntilTitleContains(String pageTitle) {
         Log.debug("Going to wait for page load and check title");
         Integer timeout = Storage.get("Environment.Active.Web.timeout");
-        WebDriverWait wait = new WebDriverWait(Page, timeout, 1000);
+        WebDriverWait wait = new WebDriverWait(driver, timeout, 1000);
         try {
             wait.until(ExpectedConditions.titleContains(pageTitle));
         } catch (TimeoutException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
     }
 
@@ -75,9 +62,12 @@ public class PageCore {
      * Does this in a loop and checks document.readState every 1 second.
      */
     public void waitForPageToLoad() {
+        if ( driver == null ){
+            Log.error("WebDriver null! Please make sure that step 'open browser' was executed!");
+        }
         Log.debug("Going to wait for page load");
         Integer timeOutInSeconds = Storage.get("Environment.Active.Web.timeout");
-        JavascriptExecutor js = Page;
+        JavascriptExecutor js = driver;
         String jsCommand = "return document.readyState";
         // Validate readyState before doing any waits
         if (js.executeScript(jsCommand).toString().equals("complete")) {
@@ -106,11 +96,11 @@ public class PageCore {
     public void waitForElementToBePresent(By locator) {
         Log.debug("Going to wait for an element identified " + locator.toString() + " to be present");
         Integer seconds = Storage.get("Environment.Active.Web.timeout");
-        WebDriverWait wait = new WebDriverWait(Page, seconds);
+        WebDriverWait wait = new WebDriverWait(driver, seconds);
         try {
             wait.until(ExpectedConditions.presenceOfElementLocated(locator));
         } catch (TimeoutException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
     }
 
@@ -124,48 +114,68 @@ public class PageCore {
     public void waitForElementToBeVisible(By locator) {
         Log.debug("Going to wait for an element identified " + locator.toString() + " to be visible");
         Integer seconds = Storage.get("Environment.Active.Web.timeout");
-        WebDriverWait wait = new WebDriverWait(Page, seconds);
+        WebDriverWait wait = new WebDriverWait(driver, seconds);
         try {
             wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
         } catch (TimeoutException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
     }
 
 
     /**
-     * Waits for an element to not be visible or present. Waits for max of browser_timeout second.
+     * Waits for an element to be not visible. Waits for max of browser_timeout second.
      * Implicit wait timer is ignored.
      *
      * @param locator By, web element locator - usually css selector or xpath
      */
-    public void waitForElementToBeRemoved(By locator) {
-        Log.debug("Going to wait for an element identified " + locator.toString() + " to be removed");
+    public void waitForElementToBeNotVisible(By locator) {
+        Log.debug("Going to wait for an element identified " + locator.toString() + " to be not visible");
         turnOffImplicitWaits();
         Integer timeOut = Storage.get("Environment.Active.Web.timeout");
-        WebDriverWait wait = new WebDriverWait(Page, timeOut);
+        WebDriverWait wait = new WebDriverWait(driver, timeOut);
         try {
             wait.until(ExpectedConditions.invisibilityOfElementLocated(locator));
         } catch (TimeoutException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
         turnOnImplicitWaits();
     }
 
 
     /**
-     * Checks if element is removed and returns true or false.
+     * Waits for an element to be not present. Waits for max of browser_timeout second.
+     * Implicit wait timer is ignored.
+     *
+     * @param locator By, web element locator - usually css selector or xpath
+     */
+    public void waitForElementToBeNotPresent(By locator) {
+        Log.debug("Going to wait for an element identified " + locator.toString() + " to be not present");
+        turnOffImplicitWaits();
+        Integer timeOut = Storage.get("Environment.Active.Web.timeout");
+        WebDriverWait wait = new WebDriverWait(driver, timeOut);
+        try {
+            wait.until(ExpectedConditions.numberOfElementsToBe(locator,0));
+        } catch (TimeoutException e) {
+            Log.error(e.getMessage());
+        }
+        turnOnImplicitWaits();
+    }
+
+
+    /**
+     * Checks if element is not visible and returns true or false.
      * Implicit wait timer is ignored.
      *
      * @param locator web element locator, usually css selector or xpath
      * @return boolean
      *
      */
-    protected boolean checkIfElemnetIsRemoved(By locator) {
+    protected boolean checkIfElemnetIsNotVisible(By locator) {
         turnOffImplicitWaits();
-        boolean result = false;
+        boolean result;
         try {
-            result = ExpectedConditions.invisibilityOfElementLocated(locator).apply(Page);
+            result = ExpectedConditions.invisibilityOfElementLocated(locator).apply(driver);
         }
         finally {
             turnOnImplicitWaits();
@@ -179,7 +189,7 @@ public class PageCore {
      * helper function
      */
     private void turnOffImplicitWaits() {
-        Page.manage().timeouts().implicitlyWait(500, TimeUnit.MILLISECONDS);
+        driver.manage().timeouts().implicitlyWait(500, TimeUnit.MILLISECONDS);
     }
 
 
@@ -189,44 +199,7 @@ public class PageCore {
      */
     private void turnOnImplicitWaits() {
         Integer seconds = Storage.get("Environment.Active.Web.timeout");
-        Page.manage().timeouts().implicitlyWait(seconds, TimeUnit.SECONDS);
-    }
-
-
-    /**
-     * Looks for a visible OR invisible element via the provided locator for up
-     * to maxWaitTime. Returns as soon as the element is found.
-     *
-     * @param byLocator
-     * @param maxWaitTime - In seconds
-     * @return
-     *
-     */
-    public WebElement findElementWithFluentTimeout(final By byLocator, int maxWaitTime) {
-        Log.debug("Going to wait for an element identified " + byLocator.toString() + " to be present with timeout " + maxWaitTime);
-        if (Page == null) {
-            Log.error("Web Driver not started or null!");
-        }
-
-
-        FluentWait<EventFiringWebDriver> wait = new FluentWait<>(Page).withTimeout(Duration.ofSeconds(maxWaitTime))
-                .pollingEvery(Duration.ofMillis(200));
-        try {
-            return wait.until((EventFiringWebDriver webDriver) -> {
-                turnOffImplicitWaits();
-                List<WebElement> elems = Page.findElements(byLocator);
-                turnOnImplicitWaits();
-                if (elems.size() > 0) {
-                    return elems.get(0);
-                } else {
-                    Log.warn("Element identified " + byLocator + " not found");
-                    return null;
-                }
-            });
-        } catch (Exception e) {
-            Log.warn("Timeout! Element identified " + byLocator + " not found");
-            return null;
-        }
+        driver.manage().timeouts().implicitlyWait(seconds, TimeUnit.SECONDS);
     }
 
 
@@ -237,14 +210,7 @@ public class PageCore {
      * @return WebElement
      */
     public WebElement findElement(By locator) {
-
-        ExecutionTimer t_FindBy = new ExecutionTimer();
-        Log.debug("Looking for an element identified " + locator);
-        WebElement element = Page.findElement(locator);
-        t_FindBy.end();
-        Log.debug("Element found after " + t_FindBy.duration()  + " ms");
-
-        return element;
+        return driver.findElement(locator);
     }
 
 
@@ -255,19 +221,7 @@ public class PageCore {
      * @return List<WebElement>
      */
     public List<WebElement> findElements(By locator) {
-
-        Integer count = 0;
-
-        ExecutionTimer t_FindBy = new ExecutionTimer();
-        Log.debug("Looking for elements identified " + locator);
-        List<WebElement> elements = Page.findElements(locator);
-        t_FindBy.end();
-        if (elements != null ) {
-            count = elements.size();
-        }
-        Log.debug(count + " elements found after " + t_FindBy.duration()  + " ms");
-
-        return elements;
+        return driver.findElements(locator);
     }
 
 
@@ -277,7 +231,27 @@ public class PageCore {
      * @return String
      */
     public String getTitle() {
-        return Page.getTitle();
+        return driver.getTitle();
+    }
+
+
+    /**
+     * Retrieves value of WebElement attribute<br>
+     *     Returns an empty string in case of an exception
+     *
+     * @param locator By, locator used to identify web element
+     * @param attribute String, name of the attribute of an element
+     * @return String
+     */
+    public String getAttribute(By locator, String attribute) {
+        WebElement elem = findElement(locator);
+        try {
+            Log.debug("Going to extract an attribute " + attribute + " of an element identified " + locator);
+            return elem.getAttribute(attribute);
+        } catch (StaleElementReferenceException e) {
+            Log.warn(e.getMessage());
+            return "";
+        }
     }
 
 
@@ -288,9 +262,9 @@ public class PageCore {
      */
     public void open(String url) {
         try {
-            Page.get(url);
+            driver.get(url);
         } catch (Exception e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
     }
 
@@ -301,9 +275,9 @@ public class PageCore {
      */
     public void close() {
         try {
-            Page.close();
+            driver.close();
         } catch (Exception e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
     }
 
@@ -314,7 +288,7 @@ public class PageCore {
      * @return String
      */
     public String getCurrentUrl() {
-        return Page.getCurrentUrl();
+        return driver.getCurrentUrl();
     }
 
 
@@ -323,7 +297,7 @@ public class PageCore {
      *
      */
     public void maximizeWindow () {
-        Page.manage().window().maximize();
+        driver.manage().window().maximize();
         Log.debug("Window maximized");
     }
 
@@ -335,10 +309,9 @@ public class PageCore {
      * @return Object
      */
     public Object executeJs (String script) {
-
         Log.debug("Going to execute js");
         ExecutionTimer t_FindBy = new ExecutionTimer();
-        Object result = Page.executeScript(script);
+        Object result = driver.executeScript(script);
         t_FindBy.end();
         Log.debug("Js execution done in " + t_FindBy.duration()  + " ms");
 
@@ -353,13 +326,15 @@ public class PageCore {
      * @param to WebElement, web element where to drop the previous one
      */
     public void dragAndDrop (WebElement from, WebElement to) {
-
-        Actions builder = new Actions(Page);
+        ExecutionTimer t_FindBy = new ExecutionTimer();
+        Actions builder = new Actions(driver);
         Action dragAndDrop = builder.clickAndHold(from)
                                     .moveToElement(to)
                                     .release(to)
                                     .build();
         dragAndDrop.perform();
+        t_FindBy.end();
+        Log.debug("Drag and drop action performed within " + t_FindBy.duration()  + " ms");
     }
 
 
@@ -369,13 +344,13 @@ public class PageCore {
      * @param element WebElement, web element on which double click shall be performed
      */
     public void doubleClick (WebElement element) {
-
-        Actions builder = new Actions(Page);
+        Actions builder = new Actions(driver);
         Action doubleClick = builder.moveToElement(element)
                                     .doubleClick()
                                     .build();
 
         doubleClick.perform();
+        Log.debug("Double click performed");
     }
 
 
@@ -385,11 +360,13 @@ public class PageCore {
      * @param element WebElement, web element on which mouse hover shall be done
      */
     public void hoverOver (WebElement element) {
-
-        Actions builder = new Actions(Page);
+        ExecutionTimer t_FindBy = new ExecutionTimer();
+        Actions builder = new Actions(driver);
         Action hoverOver = builder.moveToElement(element).build();
 
         hoverOver.perform();
+        t_FindBy.end();
+        Log.debug("Mouse hover over " + element.toString() + " executed within " + t_FindBy.duration()  + " ms");
     }
 
 
@@ -399,11 +376,13 @@ public class PageCore {
      * @param element WebElement, web element on which mouse hover shall be done and click performed
      */
     public void hoverOverAndClick (WebElement element) {
-
-        Actions builder = new Actions(Page);
+        ExecutionTimer t_FindBy = new ExecutionTimer();
+        Actions builder = new Actions(driver);
         Action hoverOver = builder.moveToElement(element).click().build();
 
         hoverOver.perform();
+        t_FindBy.end();
+        Log.debug("Mouse hover over " + element.toString() + " and click executed within " + t_FindBy.duration()  + " ms");
     }
 
 
@@ -414,7 +393,7 @@ public class PageCore {
      * @return String
      */
     public String getElementSource (WebElement element) {
-        return (String)((JavascriptExecutor)Page).executeScript("return arguments[0].innerHTML;", element);
+        return (String)((JavascriptExecutor) driver).executeScript("return arguments[0].innerHTML;", element);
     }
 
 
@@ -424,13 +403,16 @@ public class PageCore {
      * @param locator By, locator of web element like xpath or css selector
      */
     public void scrollTo (By locator) {
-        WebElement element = Page.findElement(locator);
-        ((JavascriptExecutor) Page).executeScript("arguments[0].scrollIntoView(true);", element);
+        ExecutionTimer t_FindBy = new ExecutionTimer();
+        WebElement element = driver.findElement(locator);
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
         try {
             Thread.sleep(200);
         } catch (InterruptedException e) {
             //don't do anything
         }
+        t_FindBy.end();
+        Log.debug("Scroll to element identified " + locator.toString() + " executed within " + t_FindBy.duration()  + " ms");
     }
 
 
@@ -440,12 +422,11 @@ public class PageCore {
      * @param locator By, locator of web element like xpath or css selector
      */
     public void switchToIFrame (By locator) {
-        WebElement iFrame = Page.findElement(locator);
-        //Page.switchTo().defaultContent(); // you are now outside any frame
+        WebElement iFrame = driver.findElement(locator);
         try {
-            Page.switchTo().frame(iFrame);
+            driver.switchTo().frame(iFrame);
         } catch (NoSuchFrameException e){
-            Log.error( "", e );
+            Log.error(e.getMessage());
         }
 
         Log.debug("Switched to iFrame located by " + locator);
@@ -456,7 +437,7 @@ public class PageCore {
      * switches focus to default content
      */
     public void switchFromIFrameToDefaultContent () {
-        Page.switchTo().defaultContent(); // you are now outside any frame
+        driver.switchTo().defaultContent(); // you are now outside any frame
         Log.debug("Switched to default content");
     }
 
@@ -467,7 +448,7 @@ public class PageCore {
      * @param id Integer, window identifier
      */
     public void switchToWindow(Integer id) {
-        Set handles = Page.getWindowHandles();
+        Set handles = driver.getWindowHandles();
         String[] individualHandle = new String[handles.size()];
         Iterator it = handles.iterator();
         int i = 0;
@@ -477,12 +458,12 @@ public class PageCore {
         }
 
         try {
-            Page.switchTo().window(individualHandle[id]);
+            driver.switchTo().window(individualHandle[id]);
         } catch (NoSuchWindowException e){
-            Log.error( "", e );
+            Log.error(e.getMessage());
         }
 
-        Page.switchTo().defaultContent();
+        driver.switchTo().defaultContent();
         Log.debug("Switched to window identified by " + individualHandle[id]);
     }
 
@@ -492,19 +473,19 @@ public class PageCore {
      * Simulates pressing of CTRL+Tab keys combination
      */
     public void switchTab() {
-        Page.findElement(By.cssSelector("body")).sendKeys(Keys.CONTROL +"\t");
-        Page.switchTo().defaultContent();
+        driver.findElement(By.cssSelector("body")).sendKeys(Keys.CONTROL +"\t");
+        driver.switchTo().defaultContent();
         Log.debug("Switched to new tab");
     }
 
 
     /**
-     * opens new tab open in the browser
+     * opens new tab in the browser
      * Simulates pressing of CTRL+t keys combination
      */
     public void openNewTab() {
-        Page.findElement(By.cssSelector("body")).sendKeys(Keys.CONTROL +"t");
-        Page.switchTo().defaultContent();
+        driver.findElement(By.cssSelector("body")).sendKeys(Keys.CONTROL +"t");
+        driver.switchTo().defaultContent();
         Log.debug("New tab open");
     }
 
@@ -514,7 +495,7 @@ public class PageCore {
      * Simulates pressing of CTRL+n keys combination
      */
     public void openNewWindow() {
-        Page.findElement(By.cssSelector("body")).sendKeys(Keys.CONTROL +"n");
+        driver.findElement(By.cssSelector("body")).sendKeys(Keys.CONTROL +"n");
         Log.debug("New window open");
     }
 
@@ -527,14 +508,14 @@ public class PageCore {
     public Alert waitForAlert() {
         Log.debug("Going to wait for an alert window");
         Integer seconds = Storage.get("Environment.Active.Web.timeout");
-        WebDriverWait wait = new WebDriverWait(Page, seconds);
+        WebDriverWait wait = new WebDriverWait(driver, seconds);
         try {
             wait.until(ExpectedConditions.alertIsPresent());
         } catch (TimeoutException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
 
-        return Page.switchTo().alert();
+        return driver.switchTo().alert();
     }
 
 
@@ -544,66 +525,12 @@ public class PageCore {
     public byte[] takeScreenshot() {
         byte[] screenshot = null;
         try {
-            screenshot = ((TakesScreenshot) Page).getScreenshotAs(OutputType.BYTES);
+            screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
         } catch (WebDriverException e) {
-            Log.error( "Screenshot can't be taken. Make sure that driver was started!", e );
+            Log.error("Screenshot can't be taken. Make sure that driver was started! " + e.getMessage());
         }
 
         return screenshot;
-    }
-
-
-    /**
-     * awaits for a page refresh
-     */
-    public void awaitForAnElementToBeRefreshed(WebElement element){
-
-        Log.debug("Awaiting for page refresh");
-        Integer timeout = Storage.get("Environment.Active.Web.timeout");
-        WebDriverWait wait = new WebDriverWait(Page, timeout);
-        try {
-            wait.until(ExpectedConditions.stalenessOf(element));
-        } catch (AssertionError | StaleElementReferenceException e){
-            Log.warn("Refresh was done, element is no longer attached to the dom");
-        }
-
-    }
-
-
-    /**
-     * Attempts to click on an element multiple times (to avoid stale element
-     * exceptions caused by rapid DOM refreshes)
-     *
-     * @param by By, element locator
-     */
-    public void dependableClick(By by)
-    {
-        final int MAXIMUM_WAIT_TIME = 10;
-        final int MAX_STALE_ELEMENT_RETRIES = 5;
-
-        WebDriverWait wait = new WebDriverWait(Page, MAXIMUM_WAIT_TIME);
-        int retries = 0;
-        while (true)
-        {
-            try
-            {
-                wait.until(ExpectedConditions.elementToBeClickable(by)).click();
-
-                return;
-            }
-            catch (StaleElementReferenceException e)
-            {
-                if (retries < MAX_STALE_ELEMENT_RETRIES)
-                {
-                    retries++;
-                    continue;
-                }
-                else
-                {
-                    Log.error("", e);
-                }
-            }
-        }
     }
 
 }

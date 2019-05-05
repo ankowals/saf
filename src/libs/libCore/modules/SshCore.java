@@ -6,100 +6,51 @@ import net.schmizz.sshj.connection.ConnectionException;
 import net.schmizz.sshj.connection.channel.direct.Session;
 import net.schmizz.sshj.sftp.SFTPClient;
 import net.schmizz.sshj.transport.TransportException;
-import net.schmizz.sshj.transport.verification.HostKeyVerifier;
-import net.schmizz.sshj.userauth.UserAuthException;
 import net.schmizz.sshj.xfer.FileSystemFile;
 import net.sf.expectit.Expect;
 import net.sf.expectit.ExpectBuilder;
 import org.apache.commons.io.FilenameUtils;
-
 import java.io.File;
 import java.io.IOException;
-import java.security.PublicKey;
 import java.util.concurrent.TimeUnit;
-
 import static net.sf.expectit.filter.Filters.removeColors;
 import static net.sf.expectit.filter.Filters.removeNonPrintable;
-import static net.sf.expectit.matcher.Matchers.contains;
+import static net.sf.expectit.matcher.Matchers.regexp;
 
 @SuppressWarnings("unchecked")
 public class SshCore {
 
     private Context scenarioCtx;
-    private Storage Storage;
-    private SSHClient client;
-    private Session session;
-    private Expect expect;
+    private SshClientObjectPool sshClientObjectPool;
 
     public SshCore() {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
-        this.Storage = scenarioCtx.get("Storage", Storage.class);
+        this.scenarioCtx = GlobalCtxSingleton.getInstance().get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
+        this.sshClientObjectPool = GlobalCtxSingleton.getInstance().get("SshClientObjectPool", SshClientObjectPool.class);
     }
-
-
-    /**
-     * Creates new Ssh client and opens connection. Uses password authentication.
-     *
-     * @param node, String, node name as defined in configuration Environment.Active.Ssh.node
-     */
-    public void createClient(String node) {
-
-        String address = Storage.get("Environment.Active.Ssh." + node + ".host");
-        Integer port = Storage.get("Environment.Active.Ssh." + node + ".port");
-        String user = Storage.get("Environment.Active.Ssh." + node + ".user");
-        String passwd = Storage.get("Environment.Active.Ssh." + node + ".password");
-
-        if ( address == null ) {
-            Log.error("Environment.Active.Ssh. " + node + ".host " + " is null or empty!");
-        }
-        if ( port == null ) {
-            port = 22;
-        }
-        if ( user == null ) {
-            Log.error("Environment.Active.Ssh. " + node + ".user " + " is null or empty!");
-        }
-        if ( passwd == null ) {
-            Log.error("Environment.Active.Ssh. " + node + ".password " + " is null or empty!");
-        }
-
-        try {
-            client = new SSHClient();
-            client.addHostKeyVerifier(dummyHostKeyVerifier());
-            client.connect(address, port);
-        } catch (IOException e) {
-            Log.error("Unable to connect via ssh to " + node + " as " + user
-                    + " on " + address + " and port " + port, e);
-        }
-
-        try {
-            client.authPassword(user, passwd);
-        } catch (UserAuthException e) {
-            closeClient();
-            Log.error("", e);
-        } catch (TransportException e) {
-            closeClient();
-            Log.error("", e);
-        }
-
-        Log.debug("Connected via ssh to " + node + " as " + user + " on " + address + " and port " + port);
-    }
-
 
     /**
      * Starts Ssh session that can be used for single command execution
      * helper function used by execute
      *
      */
-    private void startSession() {
+    private Session startSession(SSHClient client) {
         try {
-            session = client.startSession();
+            Session session = client.startSession();
             session.allocateDefaultPTY();
-        } catch (ConnectionException e) {
-            closeClient();
-            Log.error("", e);
-        } catch (TransportException e) {
-            closeClient();
-            Log.error("", e);
+
+            return session;
+        } catch (ConnectionException | TransportException e) {
+            Log.error(e.getMessage());
+        }
+
+        return null;
+    }
+
+    private void stopSession(Session session){
+        try {
+            session.close();
+        } catch (ConnectionException | TransportException e) {
+            Log.error(e.getMessage());
         }
     }
 
@@ -111,79 +62,69 @@ public class SshCore {
      * @param cmd, String, command to execute
      * @param timeout, Integer, timeout
      *
-     * @return SSHResult, result set that contains stdout, stderr and exit status code
+     * @return SshResult, result set that contains stdout, stderr and exit status code
      */
-    public SSHResult execute(String cmd, Integer timeout) {
-        startSession();
-        Session.Command command;
-        SSHResult result = null;
+    public ExecResult execute(String node, String cmd, Integer timeout) {
+        SSHClient client = sshClientObjectPool.checkOut(node);
+        Session session = startSession(client);
         try {
-            command = session.exec(cmd);
+            //Log.debug("Going to execute following command via ssh " + cmd);
+            Session.Command command = session.exec(cmd);
             command.join(timeout, TimeUnit.SECONDS);
-            Integer exitStatus = command.getExitStatus();
+            int exitStatus = command.getExitStatus();
             String stdout = IOUtils.readFully(command.getInputStream()).toString();
             String stderr = IOUtils.readFully(command.getErrorStream()).toString();
-            result = new SSHResult(stdout, stderr, exitStatus);
-        } catch (ConnectionException e) {
-            Log.error("", e);
-        } catch (TransportException e) {
-            Log.error("", e);
+            return new ExecResult(stdout, stderr, exitStatus);
         } catch (IOException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         } finally {
-            closeSession();
+            stopSession(session);
+            sshClientObjectPool.checkIn(node, client);
         }
 
-        return result;
+        return new ExecResult("", "", Integer.MIN_VALUE);
     }
 
 
     /**
      * Checks that particular file exists on remote host
      *
-     * @param nodeName, String, node name as defined in configuration Environment.Active.Ssh.node
+     * @param node, String, node name as defined in configuration Environment.Active.Ssh.node
      * @param pathToFile, String, path to the file on remote host
      *
      * @return Boolean, true if file exits, false otherwise
      */
-    public Boolean checkThatFileExists(String nodeName, String pathToFile) {
-        Boolean result = false;
-
-        createClient(nodeName);
-        SSHResult output = execute("test -e " + pathToFile,60);
-        closeClient();
-
-        if ( output.getExitCode() == 0 ) {
-            result = true;
+    public Boolean checkThatFileExists(String node, String pathToFile) {
+        int exitCode = execute(node, "test -e " + pathToFile,60).getExitCode();
+        if ( exitCode == 0 ) {
+            return true;
         }
 
-        return result;
-
+        return false;
     }
 
 
     /**
      * Waits for a file to be present on a remote host for defined time duration
      *
-     * @param nodeName, String, node name as defined in configuration Environment.Active.Ssh.node
+     * @param node, String, node name as defined in configuration Environment.Active.Ssh.node
      * @param pathToFile, String, path to the file on remote host
      * @param timeout, Integer, timeout
      *
      * @return Boolean, true if file exists, false otherwise
      */
-    public Boolean waitForFile(String nodeName, String pathToFile, Integer timeout) {
-
+    public Boolean waitForFile(String node, String pathToFile, Integer timeout) {
         if ( timeout < 0 ) {
             return false;
         }
-        Boolean result = checkThatFileExists(nodeName, pathToFile);
+        Boolean result = checkThatFileExists(node, pathToFile);
         if ( result.equals(false) ) {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 //don't do anything
             }
-            return waitForFile(nodeName, pathToFile, timeout - 1);
+            return waitForFile(node, pathToFile, timeout - 1);
         }
 
         return result;
@@ -193,51 +134,40 @@ public class SshCore {
     /**
      * Checks that node is accessible
      *
-     * @param nodeName, String, node name as defined in configuration Environment.Active.Ssh.node
+     * @param node, String, node name as defined in configuration Environment.Active.Ssh.node
      *
      * @return Boolean, true if alive, false otherwise
      */
-    public Boolean checkThatNodeIsAlive(String nodeName){
-        Boolean result = false;
-
-        createClient(nodeName);
-        String cmd = "echo alive";
-        SSHResult output = execute(cmd, 60);
-        closeClient();
-
-        if ( output.getExitCode() == 0 ) {
-            result = true;
+    public Boolean checkThatNodeIsAlive(String node){
+        int exitCode = execute(node, "echo alive", 60).getExitCode();
+        if ( exitCode == 0 ) {
+            return true;
         }
 
-        return result;
+        return false;
     }
 
 
     /**
      * Downloads file from remote node using scp
      *
-     * @param nodeName, String, node name as defined in configuration Environment.Active.Ssh.node
+     * @param node, String, node name as defined in configuration Environment.Active.Ssh.node
      * @param pathToFileOnRemote, String, path to the file on remote host
      * @param pathToLocalDir, String, path to the directory where file shall be downloaded
      *
      * @return File, file handle
      */
-    public File downloadFileViaScp(String nodeName, String pathToFileOnRemote, String pathToLocalDir){
-        createClient(nodeName);
+    public File downloadFileViaScp(String node, String pathToFileOnRemote, String pathToLocalDir){
+        SSHClient client = sshClientObjectPool.checkOut(node);
         String fileName = FilenameUtils.getName(pathToFileOnRemote);
 
         try {
+            Log.debug("Downloading file " + pathToFileOnRemote + " to " + pathToLocalDir + " via scp");
             client.newSCPFileTransfer().download(pathToFileOnRemote, new FileSystemFile(pathToLocalDir));
         } catch (IOException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         } finally {
-            closeClient();
-        }
-
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            //don't do anything
+            sshClientObjectPool.checkIn(node, client);
         }
 
         return new File(pathToLocalDir + File.separator + fileName);
@@ -247,117 +177,117 @@ public class SshCore {
     /**
      * Uploads file via scp
      *
-     * @param nodeName, String, node name as defined in configuration Environment.Active.Ssh.node
+     * @param node, String, node name as defined in configuration Environment.Active.Ssh.node
      * @param pathToLocalFile, String, path to the file on local host
      * @param pathToUploadDirOnRemote, String, path to the directory where file shall be uploaded on remote host
      *
      * @return Boolean, true if upload was successful, false otherwise
      */
-    public Boolean uploadFileViaScp(String nodeName, String pathToLocalFile, String pathToUploadDirOnRemote) {
-        Boolean result = false;
+    public Boolean uploadFileViaScp(String node, String pathToLocalFile, String pathToUploadDirOnRemote) {
+        SSHClient client = sshClientObjectPool.checkOut(node);
 
-        createClient(nodeName);
         try {
+            Log.debug("Uploading file " + pathToLocalFile + " to " + pathToUploadDirOnRemote + " via scp");
             client.newSCPFileTransfer().upload(new FileSystemFile(pathToLocalFile), pathToUploadDirOnRemote);
-            result = true;
+
+            return true;
+
         } catch (IOException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         } finally {
-            closeClient();
+            sshClientObjectPool.checkIn(node, client);
         }
 
-        return result;
+        return false;
     }
 
 
     /**
      * Downloads file from remote node using sftp
      *
-     * @param nodeName, String, node name as defined in configuration Environment.Active.Ssh.node
+     * @param node, String, node name as defined in configuration Environment.Active.Ssh.node
      * @param pathToFileOnRemote, String, path to the file on remote host
      * @param pathToLocalDir, String, path to the directory where file shall be downloaded
      *
      * @return File, file handle
      */
-    public File downloadFileViaSftp(String nodeName, String pathToFileOnRemote, String pathToLocalDir) {
-        createClient(nodeName);
+    public File downloadFileViaSftp(String node, String pathToFileOnRemote, String pathToLocalDir) {
+        SSHClient client = sshClientObjectPool.checkOut(node);
         String fileName = FilenameUtils.getName(pathToFileOnRemote);
+
         try {
             SFTPClient sftp = client.newSFTPClient();
-            try {
-                sftp.get(pathToFileOnRemote, new FileSystemFile(pathToLocalDir));
-            } finally {
-                sftp.close();
-            }
+            Log.debug("Downloading file " + pathToFileOnRemote + " to " + pathToLocalDir + " via sftp");
+            sftp.get(pathToFileOnRemote, new FileSystemFile(pathToLocalDir));
+            sftp.close();
         } catch (IOException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         } finally {
-            closeClient();
+            sshClientObjectPool.checkIn(node, client);
         }
 
         return new File(pathToLocalDir + File.separator + fileName);
-
     }
 
 
     /**
      * Uploads file via sftp
      *
-     * @param nodeName, String, node name as defined in configuration Environment.Active.Ssh.node
+     * @param node, String, node name as defined in configuration Environment.Active.Ssh.node
      * @param pathToLocalFile, String, path to the file on local host
      * @param pathToUploadDirOnRemote, String, path to the directory where file shall be uploaded on remote host
      *
      * @return Boolean, true if upload was successful, false otherwise
      */
-    public Boolean uploadFileViaSftp(String nodeName, String pathToLocalFile, String pathToUploadDirOnRemote) {
-        Boolean result = false;
+    public Boolean uploadFileViaSftp(String node, String pathToLocalFile, String pathToUploadDirOnRemote) {
+        SSHClient client = sshClientObjectPool.checkOut(node);
 
-        createClient(nodeName);
         try {
             SFTPClient sftp = client.newSFTPClient();
-            try {
-                sftp.put(new FileSystemFile(pathToLocalFile), pathToUploadDirOnRemote);
-                result = true;
-            } finally {
-                sftp.close();
-            }
+            Log.debug("Uploading file " + pathToLocalFile + " to " + pathToUploadDirOnRemote + " via sftp");
+            sftp.put(new FileSystemFile(pathToLocalFile), pathToUploadDirOnRemote);
+            sftp.close();
+
+            return true;
+
         } catch (IOException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         } finally {
-            closeClient();
+            sshClientObjectPool.checkIn(node, client);
         }
 
-        return result;
+        return false;
     }
 
 
     /**
-     * Starts interactive shell
+     * Starts interactive shell. <br>
+     *     Please remember that by default ony 10 sessions can be open due to ssh configuration on the server side.
      *
      * @param timeout, Integer, timeout used for supervision of each command
      */
-    public void startShell(Integer timeout){
-        startSession();
+    public void startShell(String node, Integer timeout){
+        SSHClient client = sshClientObjectPool.checkOut(node);
+        Session session = startSession(client);
         try {
             Session.Shell shell = session.startShell();
-            expect = new ExpectBuilder()
+            Expect expect = new ExpectBuilder()
                     .withOutput(shell.getOutputStream())
                     .withInputs(shell.getInputStream(), shell.getErrorStream())
+                    .withEchoInput(System.out)
+                    //.withEchoOutput(System.out)
                     .withTimeout(timeout, TimeUnit.SECONDS)
                     .withInputFilters(removeColors(), removeNonPrintable())
                     .withExceptionOnFailure()
                     .build();
-        } catch (ConnectionException e) {
-            closeClient();
-            Log.error("", e);
-        } catch (TransportException e) {
-            closeClient();
-            Log.error("", e);
-        } catch (IOException e) {
-            closeClient();
-            Log.error("", e);
-        }
 
+            scenarioCtx.put("SshExpect_" + node, Expect.class, expect);
+            scenarioCtx.put("SshShellClient_" + node, SSHClient.class, client);
+            scenarioCtx.put("Session_" + node, Session.class, session);
+
+        } catch (IOException e) {
+            Log.error(e.getMessage());
+        }
     }
 
 
@@ -365,91 +295,51 @@ public class SshCore {
      * Executes a command in am interactive shell. Shell has to be open to make use of this method.
      * It shall be closed when all commands are executed using separate method.
      *
+     * @param node, String, node name as defined in configuration Environment.Active.Ssh.node
      * @param cmd, String, command to execute
      * @param expectedOutput, String, expected output in stdout, it can be prompt or string
-     *
-     * @return SSHResult, result set that contains stdout, stderr="" and exit status code=0
      */
-    public SSHResult executeInShell(String cmd, String expectedOutput) {
-        String stdout;
-        SSHResult result = null;
+    public ExecResult executeInShell(String node, String cmd, String expectedOutput) {
+        Expect expect = scenarioCtx.get("SshExpect_" + node, Expect.class);
+        if ( expect == null ){
+            Log.error("Expect object null or empty! Please make sure that interactive shall was started!");
+        }
         try {
+            //Log.debug("Command to execute via interactive ssh shell is " + cmd);
             expect.sendLine(cmd);
-            stdout  = expect.expect(contains(expectedOutput)).getInput();
-            Log.debug(stdout);
-            result = new SSHResult(stdout, "", 0);
+            String stdOut  = expect.expect(regexp(expectedOutput)).getBefore();
+            return new ExecResult(stdOut, "", 0);
         } catch (Exception e) {
-            closeShell();
-            closeSession();
-            closeClient();
-            Log.error("", e);
+            stopShell(node);
+            Log.error(e.getMessage());
         }
 
-        return result;
+        return new ExecResult("","", Integer.MIN_VALUE);
     }
 
 
     /**
      * Closes interactive shell
      */
-    public void closeShell() {
-        try {
-            expect.close();
-        } catch (IOException e) {
-            Log.error("", e);
+    public void stopShell(String node) {
+        Expect expect = scenarioCtx.get("SshExpect_" + node, Expect.class);
+        SSHClient client = scenarioCtx.get("SshShellClient_" + node, SSHClient.class);
+        Session session = scenarioCtx.get("Session_" + node, Session.class);
+        if ( expect == null ){
+            Log.error("Expect object null or empty! Please make sure that interactive shall was started!");
         }
-        closeSession();
-    }
-
-
-    /**
-     * Closes session
-     * helper function used by execute method
-     */
-    private void closeSession() {
         try {
+            if ( expect != null ) {
+                expect.close();
+            }
             if ( session != null ) {
-                Boolean isOpen = session.isOpen();
-                if (isOpen) {
-                    session.close();
-                }
-            }
-        } catch (TransportException e) {
-            Log.error("", e);
-        } catch (ConnectionException e) {
-            Log.error("", e);
-        }
-    }
-
-
-    /**
-     * Closes ssh client and connection to remote host
-     */
-    public void closeClient() {
-        try {
-            if ( client != null ) {
-                Boolean isConnected = client.isConnected();
-                if (isConnected) {
-                    client.disconnect();
-                }
+                stopSession(session);
             }
         } catch (IOException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
+        } finally {
+            sshClientObjectPool.checkIn(node, client);
         }
-    }
-
-
-    /**
-     * creates a blank host key verifier
-     * helper function used by createClient method to always pass key verification
-     */
-    private HostKeyVerifier dummyHostKeyVerifier() {
-        return new HostKeyVerifier() {
-            @Override
-            public boolean verify(String arg0, int arg1, PublicKey arg2) {
-                return true;
-            }
-        };
     }
 
 }

@@ -12,7 +12,7 @@ public class DateParser {
 
     // List of all date formats that we want to parse.
     // Add your own format here.
-    private static List<String> dateFormats = new ArrayList<String>() {{
+    private static final List<String> dateFormats = new ArrayList<String>() {{
         add("dd.MM.yyyy");
         add("dd.MMM.yyyy");
         add("M/dd/yyyy");
@@ -22,7 +22,7 @@ public class DateParser {
         add("dd-MMM-yyyy");
     }};
 
-    private static List<String> regexList = new ArrayList<String>() {{
+    private static final List<String> regexList = new ArrayList<String>() {{
         add("\\d\\d[.]\\d\\d[.]\\d\\d\\d\\d");
         add("\\d\\d[.][a-zA-Z]{3}[.]\\d\\d\\d\\d");
         add("[0-9]{1,2}[/]\\d\\d[/]\\d\\d\\d\\d");
@@ -70,7 +70,7 @@ public class DateParser {
                     return date;
                 }
             } catch (ParseException e) {
-                Log.error("", e);
+                Log.error(e.getMessage());
             }
         }
 

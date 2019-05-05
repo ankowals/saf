@@ -3,24 +3,28 @@ package libs.libCore.modules;
 @SuppressWarnings("unchecked")
 public class BasePage {
 
-    protected Context scenarioCtx;
     protected Context globalCtx;
+    protected Context scenarioCtx;
     protected StepCore StepCore;
     protected PageCore PageCore;
     protected SqlCore SqlCore;
     protected Storage Storage;
     protected FileCore FileCore;
-    protected AssertCore AssertCore;
+    protected RestCore RestCore;
+    protected CsvCore CsvCore;
+    protected StringCore StringCore;
 
     public BasePage () {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
-        this.globalCtx = ThreadContext.getContext("Global");
+        this.globalCtx = GlobalCtxSingleton.getInstance();
+        this.scenarioCtx = globalCtx.get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
         this.StepCore = scenarioCtx.get("StepCore",StepCore.class);
+        this.StringCore = scenarioCtx.get("StringCore",StringCore.class);
         this.PageCore  = scenarioCtx.get("PageCore",PageCore.class);
         this.SqlCore = scenarioCtx.get("SqlCore",SqlCore.class);
         this.Storage = scenarioCtx.get("Storage", Storage.class);
         this.FileCore = scenarioCtx.get("FileCore",FileCore.class);
-        this.AssertCore = scenarioCtx.get("AssertCore", AssertCore.class);
+        this.RestCore = scenarioCtx.get("RestCore", RestCore.class);
+        this.CsvCore = scenarioCtx.get("CsvCore", CsvCore.class);
 
         PageCore.waitForPageToLoad();
     }

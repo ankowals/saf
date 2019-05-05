@@ -20,12 +20,15 @@ import java.util.regex.Pattern;
 public class SqlCore {
 
     private Context scenarioCtx;
+    private Context globalCtx;
     private FileCore FileCore;
-    private Connection Sql;
     private Storage Storage;
+    private JdbcDriverObjectPool jdbcDriverObjectPool;
 
     public SqlCore() {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
+        this.globalCtx = GlobalCtxSingleton.getInstance();
+        this.scenarioCtx = globalCtx.get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
+        this.jdbcDriverObjectPool = globalCtx.get("JdbcDriverObjectPool", JdbcDriverObjectPool.class);
         this.FileCore = scenarioCtx.get("FileCore",FileCore.class);
         this.Storage = scenarioCtx.get("Storage", Storage.class);
     }
@@ -36,25 +39,18 @@ public class SqlCore {
      * and Environment.Active.JdbcDrivers
      *
      */
-    public void open(){
-        Sql = new DBConnector().create();
+    private Connection open(String connectionString){
+        Log.debug("Opening db connection to " + connectionString);
+        return jdbcDriverObjectPool.checkOut(connectionString);
     }
 
 
     /**
      * Closes open jdbc connection
-     *
      */
-    public void close() {
-        if (Sql != null) {
-            try {
-                Log.debug("Db connection cleanup started");
-                Sql.close();
-                Log.debug("Db connection cleanup done");
-            } catch (SQLException e) {
-                Log.error("", e);
-            }
-        }
+    private void close(String connectionString, Connection connection) {
+        Log.debug("Closing db connection to " + connectionString);
+        jdbcDriverObjectPool.checkIn(connectionString, connection);
     }
 
     /**
@@ -63,8 +59,7 @@ public class SqlCore {
      * @param SqlQuery String, query to be executed
      * @return List<Map<String,Object>>
      */
-    public List<Map<String,Object>> selectList (String SqlQuery) {
-
+    public List<Map<String,Object>> selectList (String connectionString, String SqlQuery) {
         Log.debug("Going to execute Sql query " + SqlQuery);
         //MapListHandler: Multiple rows of data will be returned by the Sql query
         // Each row of data will be encapsulated into a Map,
@@ -72,11 +67,14 @@ public class SqlCore {
         QueryRunner runner = new QueryRunner();
         List<Map<String,Object>> list = null;
 
+        Connection connection = open(connectionString);
         try {
-            list = runner.query(Sql, SqlQuery, new MapListHandler());
+            list = runner.query(connection, SqlQuery, new MapListHandler());
             Log.debug("Sql query executed");
         } catch (SQLException e) {
-            Log.error( "", e );
+            Log.error(e.getMessage());
+        } finally {
+            close(connectionString, connection);
         }
 
         return list;
@@ -89,24 +87,26 @@ public class SqlCore {
      * @param list List<Map<String, Object>>, list as returned by method selectList
      */
     public void printList(List<Map<String, Object>> list) {
-        Log.debug("Query result is");
         if ( list.size() > 0 ) {
-            //print header
+            StringBuilder row = new StringBuilder();
+            //extract header
             Map<String, Object> firstRow = list.get(0);
-            String header = "";
             for (Map.Entry<String, Object> lme : firstRow.entrySet()) {
-                header = header + ", " + lme.getKey();
+                row.append(lme.getKey());
+                row.append(", ");
             }
-            Log.debug(header.substring(2));
-
-            //print rows
+            row.deleteCharAt(row.lastIndexOf(","));
+            row.append(System.lineSeparator());
+            //extract data rows
             for (Map<String, Object> map : list) {
-                String row = "";
                 for (Map.Entry<String, Object> lme : map.entrySet()) {
-                    row = row + ", " + lme.getValue();
+                    row.append(lme.getValue());
+                    row.append(", ");
                 }
-                Log.debug(row.substring(2));
+                row.deleteCharAt(row.lastIndexOf(","));
+                row.append(System.lineSeparator());
             }
+            Log.debug("Query result is" + System.lineSeparator() + row.toString().trim());
         }
     }
 
@@ -119,31 +119,32 @@ public class SqlCore {
      */
     public String listToString(List<Map<String, Object>> list) {
 
-        String result = "";
-        String n = System.lineSeparator();
+        StringBuilder result = new StringBuilder();
 
         if ( list.size() > 0 ) {
             //append header to string
             Map<String, Object> firstRow = list.get(0);
-            String header = "";
             for (Map.Entry<String, Object> lme : firstRow.entrySet()) {
-                header = header + ", " + lme.getKey();
+                result.append(lme.getKey());
+                result.append(", ");
             }
-            result = header + n;
+            result.deleteCharAt(result.lastIndexOf(","));
+            result.append(System.lineSeparator());
 
             //append rows to string
             for (Map<String, Object> map : list) {
-                String row = "";
                 for (Map.Entry<String, Object> lme : map.entrySet()) {
-                    row = row + ", " + lme.getValue();
+                    result.append(lme.getValue());
+                    result.append(", ");
                 }
-                result = result + row + n;
+                result.deleteCharAt(result.lastIndexOf(","));
+                result.append(System.lineSeparator());
             }
 
-            return result.trim();
+            return result.toString().trim();
         }
 
-        return result;
+        return result.toString();
     }
 
 
@@ -164,25 +165,30 @@ public class SqlCore {
         if ( list.size() > 0 ) {
             //write header to file
             Map<String, Object> firstRow = list.get(0);
-            String header = "";
+            StringBuilder row = new StringBuilder();
             for (Map.Entry<String, Object> lme : firstRow.entrySet()) {
-                header = header + ", " + lme.getKey();
+                row.append(lme.getKey());
+                row.append(", ");
             }
-            FileCore.writeToFile(temp, header.substring(2) + System.getProperty("line.separator"));
+            row.deleteCharAt(row.lastIndexOf(","));
+            row.append(System.lineSeparator());
 
             //append rows to file
             for (Map<String, Object> map : list) {
-                String row = "";
                 for (Map.Entry<String, Object> lme : map.entrySet()) {
-                    row = row + ", " + lme.getValue();
+                    row.append(lme.getValue());
+                    row.append(", ");
                 }
-                FileCore.appendToFile(temp, row.substring(2) + System.getProperty("line.separator"));
+                row.deleteCharAt(row.lastIndexOf(","));
+                row.append(System.lineSeparator());
             }
+
+            FileCore.writeToFile(temp, row.toString().trim());
 
             return temp;
 
         } else {
-            FileCore.appendToFile(temp, "" + System.getProperty("line.separator"));
+            FileCore.appendToFile(temp, "" + System.lineSeparator());
         }
 
         return temp;
@@ -196,19 +202,21 @@ public class SqlCore {
      * @param SqlQuery String, query to be executed
      * @return Integer
      */
-    public Integer selectScalar (String SqlQuery) {
-
+    public Integer selectScalar (String connectionString, String SqlQuery) {
         Log.debug("Going to execute Sql query " + SqlQuery);
         //ScalarHandler: Single value of data will be returned by the Sql query
         ScalarHandler<Integer> scalarHandler = new ScalarHandler<>();
         QueryRunner runner = new QueryRunner();
         Integer scalar = null;
 
+        Connection connection = open(connectionString);
         try {
-            scalar = runner.query(Sql, SqlQuery, scalarHandler);
+            scalar = runner.query(connection, SqlQuery, scalarHandler);
             Log.debug("Sql query executed");
         } catch (SQLException e) {
-            Log.error("", e );
+            Log.error(e.getMessage());
+        } finally {
+            close(connectionString, connection);
         }
 
         return scalar;
@@ -221,22 +229,20 @@ public class SqlCore {
      * @param SqlQuery String, query to be executed
      * @return Integer
      */
-    public void insert (String SqlQuery) {
-
+    public void insert (String connectionString, String SqlQuery) {
         Log.debug("Going to execute Sql " + SqlQuery);
-        //ScalarHandler<Integer> scalarHandler = new ScalarHandler<>();
-        //Integer scalar = null;
         QueryRunner runner = new QueryRunner();
 
+        Connection connection = open(connectionString);
         try {
-            //scalar = runner.insert(Sql, SqlQuery, scalarHandler);
-            runner.insert(Sql, SqlQuery, new ScalarHandler<>());
+            runner.insert(connection, SqlQuery, new ScalarHandler<>());
             Log.debug("Sql query executed");
         } catch (SQLException e) {
-            Log.error( "", e );
+            Log.error(e.getMessage());
+        } finally {
+            close(connectionString, connection);
         }
 
-        //return scalar;
     }
 
 
@@ -247,17 +253,19 @@ public class SqlCore {
      * @param SqlQuery String, query to be executed
      * @return Integer
      */
-    public Integer update (String SqlQuery) {
-
+    public Integer update (String connectionString, String SqlQuery) {
         Log.debug("Going to execute Sql " + SqlQuery);
-        Integer scalar = 0;
+        int scalar = 0;
         QueryRunner runner = new QueryRunner();
 
+        Connection connection = open(connectionString);
         try {
-            scalar = runner.update(Sql, SqlQuery);
+            scalar = runner.update(connection, SqlQuery);
             Log.debug("Sql query executed");
         } catch (SQLException e) {
-            Log.error( "", e );
+            Log.error(e.getMessage());
+        } finally {
+            close(connectionString, connection);
         }
 
         return scalar;
@@ -270,17 +278,19 @@ public class SqlCore {
      * @param SqlQuery String, query to be executed
      * @return Integer
      */
-    public Integer delete (String SqlQuery) {
-
+    public Integer delete (String connectionString, String SqlQuery) {
         Log.debug("Going to execute Sql " + SqlQuery);
-        Integer scalar = 0;
+        int scalar = 0;
         QueryRunner runner = new QueryRunner();
 
+        Connection connection = open(connectionString);
         try {
-            scalar = runner.update(Sql, SqlQuery);
+            scalar = runner.update(connection, SqlQuery);
             Log.debug("Sql query executed");
         } catch (SQLException e) {
-            Log.error( "", e );
+            Log.error(e.getMessage());
+        } finally {
+            close(connectionString, connection);
         }
 
         return scalar;
@@ -297,25 +307,25 @@ public class SqlCore {
      * @param truncateBeforeLoad boolean, switch to truncate data before insert
      * @param typeMapping String, name of the Storage with mapping of data types in the columns (shall be List<String>)
      */
-    public void insertFromFile(File file, String tableName, boolean truncateBeforeLoad, String typeMapping) {
+    public void insertFromFile(String connectionString, File file, String tableName, boolean truncateBeforeLoad, String typeMapping) {
         String SQL_INSERT = "INSERT INTO ${table}(${keys}) VALUES(${values})";
         String TABLE_REGEX = "\\$\\{table\\}";
         String KEYS_REGEX = "\\$\\{keys\\}";
         String VALUES_REGEX = "\\$\\{values\\}";
-        Character seprator = ',';
+        Character separator = ',';
         CSVReader csvReader = null;
         String[] headerRow = null;
 
         try {
             csvReader = new CSVReader(new FileReader(file));
         } catch (FileNotFoundException e) {
-            Log.error("", e);
+            Log.error(e.getMessage());
         }
 
         try {
             headerRow = csvReader.readNext();
         } catch (IOException e) {
-            Log.error( "", e );
+            Log.error(e.getMessage());
         }
 
         if ( null == headerRow ) {
@@ -335,13 +345,14 @@ public class SqlCore {
         String[] nextLine;
         PreparedStatement ps = null;
 
+        Connection connection = open(connectionString);
         try {
-            Sql.setAutoCommit(false);
-            ps = Sql.prepareStatement(query);
+            connection.setAutoCommit(false);
+            ps = connection.prepareStatement(query);
 
             if(truncateBeforeLoad) {
                 //delete data from table before loading csv
-                Sql.createStatement().execute("DELETE FROM " + tableName);
+                connection.createStatement().execute("DELETE FROM " + tableName);
             }
 
             final int batchSize = 1000;
@@ -350,111 +361,110 @@ public class SqlCore {
                 Log.debug("Reading csv file");
                 while ((nextLine = csvReader.readNext()) != null) {
 
-                    if (null != nextLine) {
-
-                        List<String> colToTypeList = Storage.get(typeMapping);
-                        if ( colToTypeList == null ) {
-                            Log.error("Type mapping " + typeMapping + " null!");
-                        }
-                        if ( colToTypeList.size() < 1 ) {
-                            Log.error("Type mapping " + typeMapping + " empty!");
-                        }
-                        if ( colToTypeList.size() != nextLine.length ) {
-                            Log.error("Number of columns in the file (" + nextLine.length +
-                                    ") and in type mapping (" + colToTypeList.size() +
-                                    ") is not equal");
-                        }
-
-                        int index = 1;
-                        for (String string : nextLine) {
-                            int idx = index -1;
-                            //type mapping
-                            if ( Storage.get(typeMapping+"["+idx+"]").equals("NUMERIC") ||
-                                    Storage.get(typeMapping+"["+idx+"]").equals("DECIMAL") ){
-                                BigDecimal number = new BigDecimal(string);
-                                ps.setBigDecimal(index++, number);
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("VARCHAR") ||
-                                    Storage.get(typeMapping+"["+idx+"]").equals("CHARACTER") ||
-                                    Storage.get(typeMapping+"["+idx+"]").equals("LONGVARCHAR") ){
-                                ps.setString(index++, string);
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("BIT") ) {
-                                Boolean b = BooleanUtils.toBoolean(string);
-                                ps.setBoolean(index++, b);
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("TINYINT") ||
-                                    Storage.get(typeMapping+"["+idx+"]").equals("SMALLINT") ||
-                                    Storage.get(typeMapping+"["+idx+"]").equals("INTEGER") ) {
-                                Integer number = Integer.getInteger(string);
-                                ps.setInt(index++, number);
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("BIGINT") ) {
-                                Long number = Long.getLong(string);
-                                ps.setLong(index++, number);
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("REAL") ) {
-                                Float number = Float.parseFloat(string);
-                                ps.setFloat(index++, number);
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("FLOAT") ||
-                                    Storage.get(typeMapping+"["+idx+"]").equals("DOUBLE PRECISION") ) {
-                                Double number = Double.valueOf(string);
-                                ps.setDouble(index++, number);
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("BINARY") ||
-                                    Storage.get(typeMapping+"["+idx+"]").equals("VARBINARY") ||
-                                    Storage.get(typeMapping+"["+idx+"]").equals("LONGVARBINARY") ){
-                                Log.error("Wrong type provided. " + "" +
-                                        "BINARY, VARBINARY and LONGVARBINARY are not supported");
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("DATE") ) {
-                                    Date date = DateParser.convertToDate(string);
-                                    ps.setDate(index++, new java.sql.Date(date.getTime()));
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("TIME") ) {
-                                Pattern p = Pattern.compile("\\d\\d:\\d\\d:\\d\\d"); // not perfect but good enough;)
-                                Matcher m = p.matcher(string);
-                                if (m.matches()) {
-                                    Time time = Time.valueOf(string);
-                                    ps.setTime(index++, time);
-                                } else {
-                                    Log.error("Wrong time format provided. Expected is hh:mm:ss" +
-                                    " but was " + string);
-                                }
-                            } else if ( Storage.get(typeMapping+"["+idx+"]").equals("TIMESTAMP") ) {
-                                try {
-                                    Timestamp timestamp = Timestamp.valueOf(string);
-                                    ps.setTimestamp(index++, timestamp);
-                                } catch ( IllegalArgumentException e) {
-                                    Log.error("Wrong timestamp format provided", e);
-                                }
-                            } else {
-                                Log.error("Wrong type provided. Type in typeMapping[" + idx + "] not known");
-                            }
-                        }
-                        ps.addBatch();
+                    List<String> colToTypeList = Storage.get(typeMapping);
+                    if ( colToTypeList == null ) {
+                        Log.error("Type mapping " + typeMapping + " null!");
                     }
+                    if ( colToTypeList.size() < 1 ) {
+                        Log.error("Type mapping " + typeMapping + " empty!");
+                    }
+                    if ( colToTypeList.size() != nextLine.length ) {
+                        Log.error("Number of columns in the file (" + nextLine.length +
+                                ") and in type mapping (" + colToTypeList.size() +
+                                ") is not equal");
+                    }
+
+                    int index = 1;
+                    for (String string : nextLine) {
+                        int idx = index -1;
+                        //type mapping
+                        if ( Storage.get(typeMapping+"["+idx+"]").equals("NUMERIC") ||
+                                Storage.get(typeMapping+"["+idx+"]").equals("DECIMAL") ){
+                            BigDecimal number = new BigDecimal(string);
+                            ps.setBigDecimal(index++, number);
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("VARCHAR") ||
+                                Storage.get(typeMapping+"["+idx+"]").equals("CHARACTER") ||
+                                Storage.get(typeMapping+"["+idx+"]").equals("LONGVARCHAR") ){
+                            ps.setString(index++, string);
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("BIT") ) {
+                            boolean b = BooleanUtils.toBoolean(string);
+                            ps.setBoolean(index++, b);
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("TINYINT") ||
+                                Storage.get(typeMapping+"["+idx+"]").equals("SMALLINT") ||
+                                Storage.get(typeMapping+"["+idx+"]").equals("INTEGER") ) {
+                            int number = Integer.getInteger(string);
+                            ps.setInt(index++, number);
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("BIGINT") ) {
+                            long number = Long.getLong(string);
+                            ps.setLong(index++, number);
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("REAL") ) {
+                            float number = Float.parseFloat(string);
+                            ps.setFloat(index++, number);
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("FLOAT") ||
+                                Storage.get(typeMapping+"["+idx+"]").equals("DOUBLE PRECISION") ) {
+                            double number = Double.valueOf(string);
+                            ps.setDouble(index++, number);
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("BINARY") ||
+                                Storage.get(typeMapping+"["+idx+"]").equals("VARBINARY") ||
+                                Storage.get(typeMapping+"["+idx+"]").equals("LONGVARBINARY") ){
+                            Log.error("Wrong type provided. " + "" +
+                                    "BINARY, VARBINARY and LONGVARBINARY are not supported");
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("DATE") ) {
+                                Date date = DateParser.convertToDate(string);
+                                ps.setDate(index++, new java.sql.Date(date.getTime()));
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("TIME") ) {
+                            Pattern p = Pattern.compile("\\d\\d:\\d\\d:\\d\\d"); // not perfect but good enough;)
+                            Matcher m = p.matcher(string);
+                            if (m.matches()) {
+                                Time time = Time.valueOf(string);
+                                ps.setTime(index++, time);
+                            } else {
+                                Log.error("Wrong time format provided. Expected is hh:mm:ss" +
+                                " but was " + string);
+                            }
+                        } else if ( Storage.get(typeMapping+"["+idx+"]").equals("TIMESTAMP") ) {
+                            try {
+                                Timestamp timestamp = Timestamp.valueOf(string);
+                                ps.setTimestamp(index++, timestamp);
+                            } catch ( IllegalArgumentException e) {
+                                Log.error("Wrong timestamp format provided! " + e.getMessage());
+                            }
+                        } else {
+                            Log.error("Wrong type provided. Type in typeMapping[" + idx + "] not known");
+                        }
+                    }
+                    ps.addBatch();
+
                     if (++count % batchSize == 0) {
                         ps.executeBatch();
                     }
                 }
             } catch (IOException e) {
-                Log.error( "", e );
+                Log.error(e.getMessage());
             }
             ps.executeBatch(); // insert remaining records
-            Sql.commit();
+            connection.commit();
             Log.debug("Sql batch query executed");
         } catch (SQLException e) {
             try {
-                Sql.rollback();
+                connection.rollback();
             } catch (SQLException e1) {
-                Log.error( "SQL batch query rollback execution failed", e1 );
+                Log.error("SQL batch query rollback execution failed! " + e1.getMessage() );
             }
-            Log.error( "", e );
+            Log.error(e.getMessage());
         } finally {
             if (null != ps)
                 try {
                     ps.close();
                 } catch (SQLException e) {
-                    Log.error( "", e );
+                    Log.error(e.getMessage());
                 }
             try {
                 csvReader.close();
             } catch (IOException e) {
-                Log.error( "", e );
+                Log.error(e.getMessage());
             }
+            close(connectionString, connection);
         }
     }
 

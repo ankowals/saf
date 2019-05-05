@@ -16,19 +16,19 @@ public class WiniumCore {
 
     private Context scenarioCtx;
     private StepCore StepCore;
-    private WiniumDriver App;
+    private WiniumDriver driver;
 
     // PicoContainer injects class SharedContext
     public WiniumCore() {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
+        this.scenarioCtx = GlobalCtxSingleton.getInstance().get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
         this.StepCore = scenarioCtx.get("StepCore",StepCore.class);
-        this.App = scenarioCtx.get("App", WiniumDriver.class);
+        this.driver = scenarioCtx.get("WiniumDesktopDriver", WiniumDriver.class);
     }
 
     public String getSessionId(){
-        Log.debug("Session id is " + App.getSessionId().toString());
+        Log.debug("Session id is " + driver.getSessionId().toString());
 
-        return App.getSessionId().toString();
+        return driver.getSessionId().toString();
 
     }
 
@@ -42,7 +42,7 @@ public class WiniumCore {
 
         ExecutionTimer t_FindBy = new ExecutionTimer();
         Log.debug("Looking for an element identified " + locator);
-        WebElement element = App.findElement(locator);
+        WebElement element = driver.findElement(locator);
         t_FindBy.end();
         Log.debug("Element found after " + t_FindBy.duration()  + " ms");
 
@@ -60,7 +60,7 @@ public class WiniumCore {
 
         ExecutionTimer t_FindBy = new ExecutionTimer();
         Log.debug("Looking for elements identified " + locator);
-        List<WebElement> elements = App.findElements(locator);
+        List<WebElement> elements = driver.findElements(locator);
         t_FindBy.end();
         Log.debug("Elements found after " + t_FindBy.duration()  + " ms");
 
@@ -73,13 +73,13 @@ public class WiniumCore {
 
         //focusNewWindow();
 
-        Boolean result = false;
+        boolean result = false;
         WebElement element = null;
 
         if ( timeout < 0 ){
             //focusNewWindow();
             Log.warn("An element identified " + locator + " not found!");
-            return result;
+            return false;
         }
 
         try {
@@ -93,7 +93,7 @@ public class WiniumCore {
         }
 
         if ( element != null && isEnabled){
-            Boolean currentState = false;
+            boolean currentState = false;
             try {
                 currentState = element.isEnabled();
             }catch (WebDriverException e){
@@ -110,18 +110,15 @@ public class WiniumCore {
             return awaitForAnElement(locator, timeout - interval, interval, isEnabled);
         }
 
-        return result;
+        return true;
     }
 
 
     public void clickAnElement(By locator){
         Log.debug("About to click an element identified " + locator);
-
         WebElement element = findElement(locator);
         element.click();
-
         Log.debug("Element clicked");
-
     }
 
     public void enterIntoAnElement(By locator, String text){
@@ -145,7 +142,7 @@ public class WiniumCore {
     public Boolean checkIfAnElementIsPresent(By locator){
         Log.debug("Checking if an element identified " + locator + " is present");
 
-        Boolean result = false;
+        boolean result = false;
 
         ExecutionTimer t_FindBy = new ExecutionTimer();
         try {
@@ -167,7 +164,7 @@ public class WiniumCore {
     public Boolean checkIfItemWithTextIsPresentInComboBoxIdentifiedBy(By locator, String text){
         Log.debug("Looking for combo box identified " + locator);
 
-        Boolean result =  false;
+        boolean result =  false;
         WebElement comboBox = findElement(locator);
 
         Log.debug("Opening combo box identified " + locator);
@@ -206,13 +203,12 @@ public class WiniumCore {
         Log.debug("An entry with text " + text + " has been chosen");
     }
 
-
-    public void moveByOffsetAndClick(WebElement element, Integer xOffset, Integer yOffset){
+    public void moveByOffsetToAnElementAndClick(WebElement element, Integer xOffset, Integer yOffset){
         Log.debug("About to move to element " + element + " by x offset " + xOffset +
                 " and y offset " + yOffset + " and click");
 
         ExecutionTimer t_FindBy = new ExecutionTimer();
-        new Actions(App).moveToElement(element, 0, 0)
+        new Actions(driver).moveToElement(element, 0, 0)
                 .moveByOffset(xOffset, yOffset)
                 .click()
                 .build().perform();
@@ -220,14 +216,23 @@ public class WiniumCore {
         Log.debug("Click executed after " + t_FindBy.duration()  + " ms");
     }
 
+    public void moveToCoordinatesAndClick(int xCor, int yCor){
+        Log.debug("About to move to coordinates x=" + xCor + " and y=" + yCor + " and click");
+
+        ExecutionTimer t_FindBy = new ExecutionTimer();
+        new Actions(driver).moveByOffset(xCor, yCor)
+                .click()
+                .build().perform();
+        t_FindBy.end();
+        Log.debug("Click executed after " + t_FindBy.duration()  + " ms");
+
+    }
 
     public byte[] takeScreenshot() {
-
-        StepCore.sleep(1);
         byte[] screenshot = null;
 
         try {
-            screenshot = ((TakesScreenshot) App).getScreenshotAs(OutputType.BYTES);
+            screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
         } catch (WebDriverException e) {
             Log.warn("Screenshot can't be taken. Make sure that driver was started!");
             StringWriter sw = new StringWriter();
@@ -263,18 +268,17 @@ public class WiniumCore {
     //new window becomes first element in windows list [that is not the case if there is a relationship parent->child]
     public void focusWindow(Integer windowIdentifier){
         getWindowHandles();
-        Object count = nthElement(App.getWindowHandles(), windowIdentifier);
+        Object count = nthElement(driver.getWindowHandles(), windowIdentifier);
         if ( count != null ) {
             Log.debug("Going to switch to window with handle " + count.toString());
-            App.switchTo().window(count.toString());
+            driver.switchTo().window(count.toString());
         }
     }
-
 
     //get windows handles,
     //for example powershell or windows cmd windows are returned here but we do not want to switch to them!
     private List<String> getWindowHandles(){
-        Set<String> handles = App.getWindowHandles();
+        Set<String> handles = driver.getWindowHandles();
 
         List<String> handlesList = new ArrayList<>();
         for ( Object handle : handles ){
@@ -287,7 +291,7 @@ public class WiniumCore {
             Log.debug("Parent window handle is " + handlesList.get(0));
             String currentHandle = "";
             try {
-                currentHandle = App.getWindowHandle();
+                currentHandle = driver.getWindowHandle();
             } catch (WebDriverException e){
                 Log.warn("Current window handle couldn't be retrieved!");
             }
@@ -299,7 +303,7 @@ public class WiniumCore {
 
 
     public void closeApplication(){
-        App.close();
+        driver.close();
     }
 
 }

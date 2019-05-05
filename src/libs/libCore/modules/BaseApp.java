@@ -10,19 +10,17 @@ public class BaseApp {
     protected SqlCore SqlCore;
     protected Storage Storage;
     protected FileCore FileCore;
-    protected AssertCore AssertCore;
-    protected WinRMCore WinRMCore;
     protected WinRSCore WinRSCore;
+    protected StringCore StringCore;
 
     public BaseApp () {
-        this.scenarioCtx = ThreadContext.getContext("Scenario");
-        this.globalCtx = ThreadContext.getContext("Global");
+        this.globalCtx = GlobalCtxSingleton.getInstance();
+        this.scenarioCtx = globalCtx.get("ScenarioCtxObjectPool", ScenarioCtxObjectPool.class).checkOut();
         this.StepCore = scenarioCtx.get("StepCore",StepCore.class);
+        this.StringCore = scenarioCtx.get("StringCore",StringCore.class);
         this.SqlCore = scenarioCtx.get("SqlCore",SqlCore.class);
         this.Storage = scenarioCtx.get("Storage", Storage.class);
         this.FileCore = scenarioCtx.get("FileCore",FileCore.class);
-        this.AssertCore = scenarioCtx.get("AssertCore", AssertCore.class);
-        this.WinRMCore = scenarioCtx.get("WinRMCore", WinRMCore.class);
         this.WinRSCore = scenarioCtx.get("WinRSCore", WinRSCore.class);
         this.WiniumCore = scenarioCtx.get("WiniumCore", WiniumCore.class);
 
