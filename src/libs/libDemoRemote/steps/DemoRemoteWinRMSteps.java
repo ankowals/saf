@@ -7,8 +7,6 @@ import libs.libCore.modules.BaseSteps;
 import libs.libCore.modules.Log;
 import org.testng.Assert;
 
-import java.io.File;
-
 public class DemoRemoteWinRMSteps extends BaseSteps {
 
     @Given("^remote host (.+) is accessible via winRM$")

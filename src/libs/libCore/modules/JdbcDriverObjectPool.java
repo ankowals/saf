@@ -12,8 +12,8 @@ public class JdbcDriverObjectPool extends AbstractObjectPool<Connection>{
     }
 
     @Override
-    protected Connection create(String connectionString){
-        return new JdbcDriverFactory().create(connectionString);
+    protected Connection create(String dbIdentifier){
+        return new JdbcDriverFactory().create(dbIdentifier);
     }
 
     @Override

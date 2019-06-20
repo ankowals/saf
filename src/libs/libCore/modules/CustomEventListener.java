@@ -376,7 +376,7 @@ public class CustomEventListener implements ConcurrentEventListener {
         //get project global configuration
         HashMap<String, Object> tMap = globalCtx.get("ProjectDefaultConfiguration", HashMap.class);
 
-        //make a deep copy of global config and put each key and value paris into scenario context
+        //make a deep copy of global config and put each key and value pairs into scenario context
         Cloner cloner = new Cloner();
         HashMap<String, Object> globalConfig = cloner.deepClone(tMap);
 
@@ -754,6 +754,7 @@ public class CustomEventListener implements ConcurrentEventListener {
         Map<String, Object> defaultEnvConfig = storage.get("Environment.Default");
         Map<String, Object> sshConfig = storage.get("Ssh");
         Map<String, Object> winRmConfig = storage.get("WinRM");
+        Map<String, Object> dbConfig = storage.get("Db");
         if ( defaultEnvConfig == null || defaultEnvConfig.size() == 0 ){
             Log.error("Default configuration Environment."
                     + " Default not found or empty. Please create it!");
@@ -768,10 +769,15 @@ public class CustomEventListener implements ConcurrentEventListener {
         if ( winRmConfig == null ) {
             Log.error("WinRM object does not exists or null. Please create it!");
         }
+        if ( dbConfig == null ) {
+            Log.error("Db object does not exists or null. Please create it!");
+        }
         //merge ssh with default
         defaultEnvConfig.put("Ssh", sshConfig);
         //merge winRM with default
         defaultEnvConfig.put("WinRM", winRmConfig);
+        //merge db with default
+        defaultEnvConfig.put("Db", dbConfig);
 
         //check if cmd argument ctx.Environment.Active.name was provided and Environment.Active.name property shall be overwritten
         String cmd_arg  = System.getProperty("ctx.Environment.Active.name");

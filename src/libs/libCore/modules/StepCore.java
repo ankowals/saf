@@ -508,33 +508,15 @@ public class StepCore {
 
     public String encodeString(String input) {
         Log.debug("Encoding input is " + input);
-        String secretKey = Storage.get("Environment.Active.EncoderKey");
-        String decryptedKey = "";
-        try {
-            decryptedKey = new String(Base64.getDecoder().decode(secretKey), "UTF-8");
-        } catch (UnsupportedEncodingException e){
-            Log.error(e.getMessage());
-        }
 
-        return StringEncoder.encrypt(input, decryptedKey);
+        return StringEncoder.encrypt(input);
     }
 
 
     public String decodeString(String input) {
         Log.debug("Decoding input string " + input);
-        //String secretKey = Storage.get("Environment.Active.EncoderKey");
 
-        //do not log secret key value
-        Map<String, Object> envMap = scenarioCtx.get("Environment", HashMap.class);
-        String secretKey = (String)((Map)envMap.get("Active")).get("EncoderKey");
-
-        String decryptedKey = "";
-        try {
-            decryptedKey = new String(Base64.getDecoder().decode(secretKey), "UTF-8");
-        } catch (UnsupportedEncodingException e){
-            Log.error(e.getMessage());
-        }
-        return StringEncoder.decrypt(input, decryptedKey);
+        return StringEncoder.decrypt(input);
     }
 
 }

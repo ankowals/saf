@@ -35,22 +35,22 @@ public class SqlCore {
 
 
     /**
-     * Opens new jdbc connection using params from the configuration Environment.Active.Jdbc
+     * Opens new jdbc connection using params from the configuration Environment.Active.Db
      * and Environment.Active.JdbcDrivers
      *
      */
-    private Connection open(String connectionString){
-        Log.debug("Opening db connection to " + connectionString);
-        return jdbcDriverObjectPool.checkOut(connectionString);
+    private Connection open(String dbIdentifier){
+        Log.debug("Opening db connection to " + dbIdentifier);
+        return jdbcDriverObjectPool.checkOut(dbIdentifier);
     }
 
 
     /**
      * Closes open jdbc connection
      */
-    private void close(String connectionString, Connection connection) {
-        Log.debug("Closing db connection to " + connectionString);
-        jdbcDriverObjectPool.checkIn(connectionString, connection);
+    private void close(String dbIdentifier, Connection connection) {
+        Log.debug("Closing db connection to " + dbIdentifier);
+        jdbcDriverObjectPool.checkIn(dbIdentifier, connection);
     }
 
     /**
@@ -59,7 +59,7 @@ public class SqlCore {
      * @param SqlQuery String, query to be executed
      * @return List<Map<String,Object>>
      */
-    public List<Map<String,Object>> selectList (String connectionString, String SqlQuery) {
+    public List<Map<String,Object>> selectList (String dbIdentifier, String SqlQuery) {
         Log.debug("Going to execute Sql query " + SqlQuery);
         //MapListHandler: Multiple rows of data will be returned by the Sql query
         // Each row of data will be encapsulated into a Map,
@@ -67,14 +67,14 @@ public class SqlCore {
         QueryRunner runner = new QueryRunner();
         List<Map<String,Object>> list = null;
 
-        Connection connection = open(connectionString);
+        Connection connection = open(dbIdentifier);
         try {
             list = runner.query(connection, SqlQuery, new MapListHandler());
             Log.debug("Sql query executed");
         } catch (SQLException e) {
             Log.error(e.getMessage());
         } finally {
-            close(connectionString, connection);
+            close(dbIdentifier, connection);
         }
 
         return list;
@@ -202,21 +202,21 @@ public class SqlCore {
      * @param SqlQuery String, query to be executed
      * @return Integer
      */
-    public Integer selectScalar (String connectionString, String SqlQuery) {
+    public Integer selectScalar (String dbIdentifier, String SqlQuery) {
         Log.debug("Going to execute Sql query " + SqlQuery);
         //ScalarHandler: Single value of data will be returned by the Sql query
         ScalarHandler<Integer> scalarHandler = new ScalarHandler<>();
         QueryRunner runner = new QueryRunner();
         Integer scalar = null;
 
-        Connection connection = open(connectionString);
+        Connection connection = open(dbIdentifier);
         try {
             scalar = runner.query(connection, SqlQuery, scalarHandler);
             Log.debug("Sql query executed");
         } catch (SQLException e) {
             Log.error(e.getMessage());
         } finally {
-            close(connectionString, connection);
+            close(dbIdentifier, connection);
         }
 
         return scalar;
@@ -229,18 +229,18 @@ public class SqlCore {
      * @param SqlQuery String, query to be executed
      * @return Integer
      */
-    public void insert (String connectionString, String SqlQuery) {
+    public void insert (String dbIdentifier, String SqlQuery) {
         Log.debug("Going to execute Sql " + SqlQuery);
         QueryRunner runner = new QueryRunner();
 
-        Connection connection = open(connectionString);
+        Connection connection = open(dbIdentifier);
         try {
             runner.insert(connection, SqlQuery, new ScalarHandler<>());
             Log.debug("Sql query executed");
         } catch (SQLException e) {
             Log.error(e.getMessage());
         } finally {
-            close(connectionString, connection);
+            close(dbIdentifier, connection);
         }
 
     }
@@ -253,19 +253,19 @@ public class SqlCore {
      * @param SqlQuery String, query to be executed
      * @return Integer
      */
-    public Integer update (String connectionString, String SqlQuery) {
+    public Integer update (String dbIdentifier, String SqlQuery) {
         Log.debug("Going to execute Sql " + SqlQuery);
         int scalar = 0;
         QueryRunner runner = new QueryRunner();
 
-        Connection connection = open(connectionString);
+        Connection connection = open(dbIdentifier);
         try {
             scalar = runner.update(connection, SqlQuery);
             Log.debug("Sql query executed");
         } catch (SQLException e) {
             Log.error(e.getMessage());
         } finally {
-            close(connectionString, connection);
+            close(dbIdentifier, connection);
         }
 
         return scalar;
@@ -278,19 +278,19 @@ public class SqlCore {
      * @param SqlQuery String, query to be executed
      * @return Integer
      */
-    public Integer delete (String connectionString, String SqlQuery) {
+    public Integer delete (String dbIdentifier, String SqlQuery) {
         Log.debug("Going to execute Sql " + SqlQuery);
         int scalar = 0;
         QueryRunner runner = new QueryRunner();
 
-        Connection connection = open(connectionString);
+        Connection connection = open(dbIdentifier);
         try {
             scalar = runner.update(connection, SqlQuery);
             Log.debug("Sql query executed");
         } catch (SQLException e) {
             Log.error(e.getMessage());
         } finally {
-            close(connectionString, connection);
+            close(dbIdentifier, connection);
         }
 
         return scalar;
@@ -307,7 +307,7 @@ public class SqlCore {
      * @param truncateBeforeLoad boolean, switch to truncate data before insert
      * @param typeMapping String, name of the Storage with mapping of data types in the columns (shall be List<String>)
      */
-    public void insertFromFile(String connectionString, File file, String tableName, boolean truncateBeforeLoad, String typeMapping) {
+    public void insertFromFile(String dbIdentifier, File file, String tableName, boolean truncateBeforeLoad, String typeMapping) {
         String SQL_INSERT = "INSERT INTO ${table}(${keys}) VALUES(${values})";
         String TABLE_REGEX = "\\$\\{table\\}";
         String KEYS_REGEX = "\\$\\{keys\\}";
@@ -345,7 +345,7 @@ public class SqlCore {
         String[] nextLine;
         PreparedStatement ps = null;
 
-        Connection connection = open(connectionString);
+        Connection connection = open(dbIdentifier);
         try {
             connection.setAutoCommit(false);
             ps = connection.prepareStatement(query);
@@ -464,7 +464,7 @@ public class SqlCore {
             } catch (IOException e) {
                 Log.error(e.getMessage());
             }
-            close(connectionString, connection);
+            close(dbIdentifier, connection);
         }
     }
 

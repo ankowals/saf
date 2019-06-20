@@ -20,12 +20,12 @@ public class CoreDbSteps extends BaseSteps {
      * inputTypeMapping : ["NUMERIC","VARCHAR","VARCHAR"], where file name is input.csv<br>
      * input.csv file shall be located in subdirectory resources
      *
-     * @param url String, connection string of the database that shall be used
+     * @param identifier String, database identifier from Environment.Active.Db
      * @param params Map, table that contains sql query and template name
      */
     @Given("^load into a table in (.+) database$")
-    public void load_data_from_csv_file_into_a_table(String url, Map<String, String> params) {
-        String connectionString = StepCore.checkIfInputIsVariable(url);
+    public void load_data_from_csv_file_into_a_table(String identifier, Map<String, String> params) {
+        String dbIdentifier = StepCore.checkIfInputIsVariable(identifier);
 
         String fileName = "";
         String tableName = "";
@@ -50,20 +50,20 @@ public class CoreDbSteps extends BaseSteps {
         File input = new File(FileCore.getCurrentFeatureDirPath() + "/resources/" + fileName + ".csv");
         StepCore.attachFileToReport(fileName + ".csv", "text/csv", input.getAbsolutePath());
         Log.debug("Path to csv input file is " + input.getAbsolutePath());
-        SqlCore.insertFromFile(connectionString, input, tableName,true, "TestData." + fileName + "TypeMapping");
+        SqlCore.insertFromFile(dbIdentifier, input, tableName,true, "TestData." + fileName + "TypeMapping");
     }
 
     /**
      * Executes sql query in desired database and compares results with a template.<br>
      * Sql query and template name shall be passed to this step as a table.
      *
-     * @param url String, connection string of the database that shall be used
+     * @param identifier String, database identifier from Environment.Active.Db
      * @param params Map, table that contains sql query and template name
      */
     @Then("^verify in (.+) database$")
-    public void verify_in_database(String url, Map<String, String> params) {
+    public void verify_in_database(String identifier, Map<String, String> params) {
 
-        String connectionString = StepCore.checkIfInputIsVariable(url);
+        String dbIdentifier = StepCore.checkIfInputIsVariable(identifier);
 
         String query = "";
         String templateName = "";
@@ -89,7 +89,7 @@ public class CoreDbSteps extends BaseSteps {
         }
 
         String queryAfterReplacement = StepCore.replaceInString(query);
-        List<Map<String,Object>> list = SqlCore.selectList(connectionString, queryAfterReplacement);
+        List<Map<String,Object>> list = SqlCore.selectList(dbIdentifier, queryAfterReplacement);
 
         SqlCore.printList(list);
         String resName = "sqlSelectQueryResults";
@@ -110,13 +110,13 @@ public class CoreDbSteps extends BaseSteps {
      * Executes update sql statement in desired database.<br>
      * Multiple statements can be provided if more than one update shall be executed.
      *
-     * @param url String, connection string of the database that shall be used
+     * @param identifier String, database identifier from Environment.Active.Db
      * @param params Map, table that contains sql statement
      */
     @When("^edit in (.+) database$")
-    public void edit_in_database(String url, List<String> params) {
+    public void edit_in_database(String identifier, List<String> params) {
 
-        String connectionString = StepCore.checkIfInputIsVariable(url);
+        String dbIdentifier = StepCore.checkIfInputIsVariable(identifier);
 
         //handle params
         if ( ! params.isEmpty() ) {
@@ -124,7 +124,7 @@ public class CoreDbSteps extends BaseSteps {
                 String statement = StepCore.checkIfInputIsVariable(row);
 
                 String statementAfterReplacement = StepCore.replaceInString(statement);
-                Integer result = SqlCore.update(connectionString, statementAfterReplacement);
+                Integer result = SqlCore.update(dbIdentifier, statementAfterReplacement);
                 if (result == 0){
                     Log.warn("No rows were updated!");
                 } else {
@@ -139,20 +139,20 @@ public class CoreDbSteps extends BaseSteps {
      * Executes insert sql statement in desired database.<br>
      * Multiple statements can be provided if more than one insert shall be executed.
      *
-     * @param url String, connection string of the database that shall be used
+     * @param identifier String, database identifier from Environment.Active.Db
      * @param params Map, table that contains sql statement
      */
     @When("^insert into (.+) database$")
-    public void insert_into_database(String url, List<String> params) {
+    public void insert_into_database(String identifier, List<String> params) {
 
-        String connectionString = StepCore.checkIfInputIsVariable(url);
+        String dbIdentifier = StepCore.checkIfInputIsVariable(identifier);
 
         //handle params
         if ( ! params.isEmpty() ) {
             for (String row : params) {
                 String statement = StepCore.checkIfInputIsVariable(row);
                 String statementAfterReplacement = StepCore.replaceInString(statement);
-                SqlCore.insert(connectionString, statementAfterReplacement);
+                SqlCore.insert(dbIdentifier, statementAfterReplacement);
                 Log.warn("Insert statement was executed but not feedback was provided how many rows were inserted!");
             }
         }
@@ -164,13 +164,13 @@ public class CoreDbSteps extends BaseSteps {
      * Executes delete sql statement in desired database.<br>
      * Multiple statements can be provided if more than one delete shall be executed.
      *
-     * @param url String, connection string of the database that shall be used
+     * @param identifier String, database identifier from Environment.Active.Db
      * @param params Map, table that contains sql statement
      */
     @When("^delete from (.+) database$")
-    public void delete_from_database(String url, List<String> params) {
+    public void delete_from_database(String identifier, List<String> params) {
 
-        String connectionString = StepCore.checkIfInputIsVariable(url);
+        String dbIdentifier = StepCore.checkIfInputIsVariable(identifier);
 
         //handle params
         if ( ! params.isEmpty() ) {
@@ -178,7 +178,7 @@ public class CoreDbSteps extends BaseSteps {
             for (String row : params) {
                 String statement = StepCore.checkIfInputIsVariable(row);
                 String statementAfterReplacement = StepCore.replaceInString(statement);
-                Integer result = SqlCore.delete(connectionString, statementAfterReplacement);
+                Integer result = SqlCore.delete(dbIdentifier, statementAfterReplacement);
                 if ( result == 0 ){
                     Log.warn("No rows were deleted!");
                 } else {
@@ -188,8 +188,6 @@ public class CoreDbSteps extends BaseSteps {
         }
 
     }
-
-
 
 
 }
