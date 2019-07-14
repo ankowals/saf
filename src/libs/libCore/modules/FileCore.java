@@ -37,11 +37,13 @@ public class FileCore {
     }
 
     /**
-     * Returns paths to files that meets criteria like name or extension
-     * Search is done in subdirectories as well
+     * Returns paths to files that meets criteria like name or extension<br>
+     *  Search is done in subdirectories as well<br>
+     *  Regular expression is used as an input<br>
+     *  For example to match files with extension like '.config' following regEx can be used '.*\\.config$'
      *
      * @param sDir String, directory to search
-     * @param criteria String, search criteria, for example file name or file extension
+     * @param criteria String, search criteria, regex to match for example file name or file extension
      * @return result List, paths to found files
      */
     public List<String> searchForFile(String sDir, String criteria){
