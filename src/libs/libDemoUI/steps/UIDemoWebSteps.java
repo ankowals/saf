@@ -46,12 +46,23 @@ public class UIDemoWebSteps extends BaseSteps {
     }
 
 
+    /**
+     * searches for a particular product on the main page
+     *
+     * @param name String
+     */
     @When("in the browser, search for product with name {testdata}")
     public void in_the_browser_search_for_product_with_name(String name) {
         main = new MainPage();
         results = main.searchForProduct(name);
     }
 
+
+    /**
+     * verifies how many products were return by search query
+     *
+     * @param expectedResults Integer
+     */
     @Then("in the browser, verify that {testdata} results were returned")
     public void in_the_brwoser_verify_that_results_were_returned(Integer expectedResults) {
         int actualResutls = results.getNumberOfResults();

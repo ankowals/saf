@@ -18,3 +18,4 @@ Feature: demo Ui
     Given open browser
     When in the browser, search for product with name TestData.Product1
     Then in the browser, verify that Expected.SearchResultsNumber results were returned
+      And in the browser, verify that 7 results were returned
