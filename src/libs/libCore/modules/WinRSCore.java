@@ -42,7 +42,7 @@ public class WinRSCore {
      * @param node String, node name from winrm configuration of the remote that shall be used
      * @return Map, Verified properties of a connection
      */
-    Map<String, String> verifyConnectionDetails(String node){
+    public Map<String, String> verifyConnectionDetails(String node){
         //check if connection details were already verified
         Map<String, String> connectionDetails = globalCtx.get("WinRsConnectionDetails_" + node, Map.class);
         if ( connectionDetails != null ){
@@ -92,7 +92,7 @@ public class WinRSCore {
      * @param name String, FQDN of a remote host
      * @return String, ip version 4 of a remote host
      */
-    String getIpOfHost(String name){
+    public String getIpOfHost(String name){
         Log.debug("Checking ip address of host " + name);
 
         //validate if name is an ip address if so no need to do anything else

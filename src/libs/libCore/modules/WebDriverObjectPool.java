@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class WebDriverObjectPool extends AbstractObjectPool<EventFiringWebDriver>{
+public class WebDriverObjectPool extends AbstractObjectPool<EventFiringWebDriver> {
 
     WebDriverObjectPool(){
         this.available = new HashMap<>();

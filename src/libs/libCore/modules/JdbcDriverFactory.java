@@ -85,7 +85,7 @@ public class JdbcDriverFactory {
         try {
             URLClassLoader ucl = new URLClassLoader(new URL[]{url});
             Driver d = (Driver) Class.forName(classname, true, ucl).newInstance();
-            DriverManager.registerDriver(new DriverShim(d));
+            DriverManager.registerDriver(new JdbcDriverShim(d));
             Log.debug("Connection to " + dbIdentifier + " is open");
 
             return DriverManager.getConnection(connectionString);

@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
 
-public class JdbcDriverObjectPool extends AbstractObjectPool<Connection>{
+public class JdbcDriverObjectPool extends AbstractObjectPool<Connection> {
 
     JdbcDriverObjectPool(){
         this.available = new HashMap<>();

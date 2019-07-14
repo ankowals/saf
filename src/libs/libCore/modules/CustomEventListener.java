@@ -557,7 +557,7 @@ public class CustomEventListener implements ConcurrentEventListener {
     }
 
     private void readConfigFiles(FileCore fileCore, String dir, ConfigReader configReader){
-        List<String> configFiles = fileCore.searchForFile(dir,".config");
+        List<String> configFiles = fileCore.searchForFile(dir,".*\\.config$");
         if(configFiles.size()!=0) {
             for (String configFile : configFiles) {
                 configReader.create(configFile);

@@ -13,6 +13,8 @@ public class MainPage extends BasePage {
 
     //selectors
     private static final By dressesButtonSelector = By.xpath("(//*[@class='sf-with-ul' and @title='Dresses'])[last()]");
+    private static final By searchInput = By.xpath("//*[@id='search_query_top']");
+    private static final By searchButton = By.xpath("//button[@name='submit_search']");
 
     private void load(){
         String url = Storage.get("Environment.Active.Web.url");
@@ -39,4 +41,23 @@ public class MainPage extends BasePage {
 
         return new ProductPage();
     }
+
+    public ResultsPage searchForProduct(String product){
+        Log.debug("Searching for " + product);
+
+        WebElement searchIn = PageCore.findElement(searchInput);
+        searchIn.clear();
+        searchIn.sendKeys(product);
+
+        WebElement searchBtn = PageCore.findElement(searchButton);
+        searchBtn.click();
+
+        //await for page
+        PageCore.waitUntilTitleContains("Search - My Store");
+
+        return new ResultsPage();
+
+
+    }
+
 }
