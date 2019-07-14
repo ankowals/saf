@@ -9,10 +9,10 @@ import java.util.logging.Logger;
  * Used to start jdbc driver by providing a path to it.
  */
 
-class DriverShim implements Driver {
+class JdbcDriverShim implements Driver {
     private Driver driver;
 
-    DriverShim(Driver d) {
+    JdbcDriverShim(Driver d) {
         this.driver = d;
     }
 

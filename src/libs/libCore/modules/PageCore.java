@@ -26,6 +26,15 @@ public class PageCore {
         this.driver = scenarioCtx.get("SeleniumWebDriver", EventFiringWebDriver.class);
     }
 
+    /**
+     * Returns driver. Can be null if not instantiated
+     *
+     * @return WebDriver
+     */
+    public WebDriver getDriver(){
+        return driver;
+    }
+
 
     /**
      * Checks if page title contains specified string
@@ -33,10 +42,9 @@ public class PageCore {
      * @param pageTitle title of the page
      * @return boolean
      */
-    public Boolean titleContains(String pageTitle){
+    public boolean titleContains(String pageTitle){
         return StringUtils.containsIgnoreCase(driver.getTitle(),pageTitle);
     }
-
 
 
     /**
@@ -176,6 +184,30 @@ public class PageCore {
         boolean result;
         try {
             result = ExpectedConditions.invisibilityOfElementLocated(locator).apply(driver);
+        }
+        finally {
+            turnOnImplicitWaits();
+        }
+        return result;
+    }
+
+
+    /**
+     * Checks if element is visible and returns true or false.
+     * Implicit wait timer is ignored.
+     *
+     * @param locator web element locator, usually css selector or xpath
+     * @return boolean
+     *
+     */
+    protected boolean checkIfElemnetIsVisible(By locator) {
+        turnOffImplicitWaits();
+        boolean result = false;
+        try {
+            WebElement elem = ExpectedConditions.visibilityOfElementLocated(locator).apply(driver);
+            if ( elem != null ) {
+                result = true;
+            }
         }
         finally {
             turnOnImplicitWaits();
@@ -504,6 +536,8 @@ public class PageCore {
      * waits for an Alert pop up
      * Simulates pressing of CTRL+t keys combination
      * Switches focus to the alert pop Up
+     *
+     * @return Alert
      */
     public Alert waitForAlert() {
         Log.debug("Going to wait for an alert window");
@@ -521,6 +555,8 @@ public class PageCore {
 
     /**
      * takes screenshot of the web browser window
+     *
+     * @return byte[]
      */
     public byte[] takeScreenshot() {
         byte[] screenshot = null;

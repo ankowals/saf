@@ -1,16 +1,20 @@
 package libs.libDemoUI.steps;
 
 import cucumber.api.java.en.Given;
+import cucumber.api.java.en.Then;
+import cucumber.api.java.en.When;
 import libs.libCore.modules.BaseSteps;
 import libs.libCore.modules.Log;
 import libs.libDemoUI.modules.WebPOM.MainPage;
 import libs.libDemoUI.modules.WebPOM.ProductPage;
+import libs.libDemoUI.modules.WebPOM.ResultsPage;
 
 public class UIDemoWebSteps extends BaseSteps {
 
     //create global variables for this class
     MainPage main;
     ProductPage product;
+    ResultsPage results;
 
     /**
      * navigates to demo page in the web browser
@@ -40,4 +44,22 @@ public class UIDemoWebSteps extends BaseSteps {
         //share page title with other steps
         scenarioCtx.put("pageTitle", String.class, title);
     }
+
+
+    @When("in the browser, search for product with name {testdata}")
+    public void in_the_browser_search_for_product_with_name(String name) {
+        main = new MainPage();
+        results = main.searchForProduct(name);
+    }
+
+    @Then("in the browser, verify that {testdata} results were returned")
+    public void in_the_brwoser_verify_that_results_were_returned(Integer expectedResults) {
+        int actualResutls = results.getNumberOfResults();
+
+        if ( actualResutls != expectedResults ){
+            Log.error("Expected to find " + expectedResults + " but found " + actualResutls + "!");
+        }
+    }
+
+
 }

@@ -44,11 +44,11 @@ public class FileCore {
      * @param criteria String, search criteria, for example file name or file extension
      * @return result List, paths to found files
      */
-    public ArrayList<String> searchForFile(String sDir, String criteria){
-        ArrayList<String> result = new ArrayList<>();
+    public List<String> searchForFile(String sDir, String criteria){
+        List<String> result = new ArrayList<>();
         try {
             try (Stream<Path> stream = Files.find(Paths.get(sDir), 99,
-                    (path, attr) -> String.valueOf(path).endsWith(criteria))) {
+                    (path, attr) -> String.valueOf(path).matches(criteria))) {
                 stream.map(String::valueOf)
                         .forEach(x -> result.add(x));
             }

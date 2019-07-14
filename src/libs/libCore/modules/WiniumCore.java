@@ -25,6 +25,21 @@ public class WiniumCore {
         this.driver = scenarioCtx.get("WiniumDesktopDriver", WiniumDriver.class);
     }
 
+
+    /**
+     * Gets WiniumDriver
+     *
+     * @return WiniumDriver
+     */
+    public WiniumDriver getDriver(){
+        return driver;
+    }
+
+    /**
+     * Gets session id
+     *
+     * @return String
+     */
     public String getSessionId(){
         Log.debug("Session id is " + driver.getSessionId().toString());
 
@@ -68,7 +83,17 @@ public class WiniumCore {
     }
 
 
-    public Boolean awaitForAnElement(By locator, Integer timeout, Integer interval, Boolean isEnabled){
+    /**
+     * Waits for an element. An element can be enabled or disabled.
+     *
+     * @param locator By
+     * @param timeout int
+     * @param interval int
+     * @param isEnabled boolean
+     *
+     * @return boolean
+     */
+    public boolean awaitForAnElement(By locator, int timeout, int interval, boolean isEnabled){
         Log.debug("Awaiting for an element identified " + locator + " with timeout of " + timeout + " and interval " + interval + " and of isEnabled state " + isEnabled);
 
         //focusNewWindow();
@@ -114,6 +139,11 @@ public class WiniumCore {
     }
 
 
+    /**
+     * Clicks an element
+     *
+     * @param locator
+     */
     public void clickAnElement(By locator){
         Log.debug("About to click an element identified " + locator);
         WebElement element = findElement(locator);
@@ -121,6 +151,13 @@ public class WiniumCore {
         Log.debug("Element clicked");
     }
 
+
+    /**
+     * Enters text into an input element
+     *
+     * @param locator By
+     * @param text String
+     */
     public void enterIntoAnElement(By locator, String text){
         Log.debug("About to enter text " + text + " into an element identified " + locator);
 
@@ -139,7 +176,13 @@ public class WiniumCore {
     }
 
 
-    public Boolean checkIfAnElementIsPresent(By locator){
+    /**
+     * Checks if element is present
+     *
+     * @param locator By
+     * @return boolean
+     */
+    public boolean checkIfAnElementIsPresent(By locator){
         Log.debug("Checking if an element identified " + locator + " is present");
 
         boolean result = false;
@@ -161,7 +204,14 @@ public class WiniumCore {
     }
 
 
-    public Boolean checkIfItemWithTextIsPresentInComboBoxIdentifiedBy(By locator, String text){
+    /**
+     * Checks if element with particular text is present in a Combo Box
+     *
+     * @param locator By
+     * @param text String
+     * @return boolean
+     */
+    public boolean checkIfItemWithTextIsPresentInComboBoxIdentifiedBy(By locator, String text){
         Log.debug("Looking for combo box identified " + locator);
 
         boolean result =  false;
@@ -189,6 +239,12 @@ public class WiniumCore {
     }
 
 
+    /**
+     * Selects an element with text from Combo Box identified by locator
+     *
+     * @param locator By
+     * @param text String
+     */
     public void selectItemWithTextFromComboBoxIdentifiedBy(By locator, String text){
         Log.debug("Looking for combo box identified " + locator);
 
@@ -203,7 +259,15 @@ public class WiniumCore {
         Log.debug("An entry with text " + text + " has been chosen");
     }
 
-    public void moveByOffsetToAnElementAndClick(WebElement element, Integer xOffset, Integer yOffset){
+
+    /**
+     * Moves mouse by an offse and clicks particular element
+     *
+     * @param element WebElement
+     * @param xOffset int
+     * @param yOffset int
+     */
+    public void moveByOffsetToAnElementAndClick(WebElement element, int xOffset, int yOffset){
         Log.debug("About to move to element " + element + " by x offset " + xOffset +
                 " and y offset " + yOffset + " and click");
 
@@ -216,6 +280,13 @@ public class WiniumCore {
         Log.debug("Click executed after " + t_FindBy.duration()  + " ms");
     }
 
+
+    /**
+     * Moves mouse to particular point
+     *
+     * @param xCor int
+     * @param yCor int
+     */
     public void moveToCoordinatesAndClick(int xCor, int yCor){
         Log.debug("About to move to coordinates x=" + xCor + " and y=" + yCor + " and click");
 
@@ -228,6 +299,11 @@ public class WiniumCore {
 
     }
 
+    /**
+     * Takes screenshot
+     *
+     * @return byte[]
+     */
     public byte[] takeScreenshot() {
         byte[] screenshot = null;
 
@@ -243,6 +319,12 @@ public class WiniumCore {
         return screenshot;
     }
 
+
+    /**
+     * attaches screenshot to the report and set its name
+     *
+     * @param name String
+     */
     public void getScreenshotAndAttachItToReport(String name){
         byte[] screenshot = takeScreenshot();
         if (name.length() > 256) {
@@ -302,6 +384,9 @@ public class WiniumCore {
     }
 
 
+    /**
+     * Closes an application
+     */
     public void closeApplication(){
         driver.close();
     }

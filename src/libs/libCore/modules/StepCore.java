@@ -62,6 +62,9 @@ public class StepCore {
         if(value.getClass().getName().contains("Double")){
             return Double.class;
         }
+        if(value.getClass().getName().contains("Float")){
+            return Float.class;
+        }
         if(value.getClass().getName().contains("Integer")){
             return Integer.class;
         }
@@ -94,7 +97,6 @@ public class StepCore {
      */
     public <T> T checkIfInputIsVariable(String input) {
         T result = (T) input;
-        //Storage Storage = scenarioCtx.get("Storage", Storage.class);
         T tmp = Storage.get(input);
 
         //check if String contains boolean
@@ -117,6 +119,12 @@ public class StepCore {
                         //do nothing just return Long
                     }
                 }
+                if ( num instanceof Double ){
+                    double tVal = (double) num;
+                    if ((double)(float)tVal == tVal) {
+                        num = num.floatValue();
+                    }
+                }
             } catch (Exception e) {
                 Log.debug("Checking if String " + input + " contains numeric value");
                 Log.error("Not able to parse String " + input + " to Number! " + e.getMessage());
@@ -124,6 +132,21 @@ public class StepCore {
             Class<T> typeKey = (Class<T>) getType(num);
             result = typeKey.cast(num);
             Log.debug("Converting String " + input + " to number of class " + result.getClass().getName());
+        }
+
+        //enforce string if requested
+        if ( input.startsWith("\"") && input.endsWith("\"") ) {
+            input = input.replaceFirst("\"", "");
+            input = StringUtils.removeEnd(input, "\"");
+            Class<T> typeKey = (Class<T>) getType(input);
+            result = typeKey.cast(input);
+            Log.debug("Converting String " + input + " to string of class " + result.getClass().getName());
+        } else if (input.startsWith("'") && input.endsWith("'")) {
+            input = input.replaceFirst("'", "");
+            input = StringUtils.removeEnd(input, "'");
+            Class<T> typeKey = (Class<T>) getType(input);
+            result = typeKey.cast(input);
+            Log.debug("Converting String " + input + " to string of class " + result.getClass().getName());
         }
 
         if ( tmp != null ){
@@ -224,18 +247,18 @@ public class StepCore {
 
         //search for template first in local dir
         Log.debug("Looking for template " + templateName + " in " + localTemplateDir);
-        ArrayList<String> templates = FileCore.searchForFile(localTemplateDir,templateName + ".template");
+        List<String> templates = FileCore.searchForFile(localTemplateDir,".*" + templateName + "\\.template$");
 
         //if local template not found search for it in global dir
         if ( templates.size() < 1 ) {
             Log.debug("Looking for template " + templateName + " in " + globalTemplateDir);
-            templates = FileCore.searchForFile(globalTemplateDir,templateName + ".template");
+            templates = FileCore.searchForFile(globalTemplateDir,".*" + templateName + "\\.template$");
         }
 
         //if global template not found search for it in default dir
         if ( templates.size() < 1 ) {
             Log.debug("Looking for template " + templateName + " in " + defaultTemplateDir);
-            templates = FileCore.searchForFile(defaultTemplateDir,templateName + ".template");
+            templates = FileCore.searchForFile(defaultTemplateDir,".*" + templateName + "\\.template$");
         }
 
         if ( templates.size() < 1 ) {

@@ -1,6 +1,6 @@
 @demoDb
 Feature: demo db
-  
+
   Scenario: Load data from csv file to dB
 
     Given load into a table in DemoDb database
